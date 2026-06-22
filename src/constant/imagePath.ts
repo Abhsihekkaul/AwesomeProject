@@ -11,7 +11,15 @@ const imagePath = {
     LeftIcon: require("../assets/icons/left-arrow.png"),
     PostIcon: require("../assets/icons/post.png"),
     LoveIcon: require("../assets/icons/love.png"),
-    ShareIcon : require("../assets/icons/send.png")
+    ShareIcon: require("../assets/icons/send.png"),
+    HomeIcon: require("../assets/icons/home.png"),
+    GroupIcon: require("../assets/icons/people.png"),
+    ChatIcon: require("../assets/icons/chat.png"),
+    HelpIcon: require("../assets/icons/staff.png"),
+    User: require("../assets/icons/user2.png"),
+    Help: require("../assets/icons/help.png"),
+    ReportIcon: require("../assets/icons/report.png"),
+    UploadIcon : require("../assets/icons/upload.png")
 } as const;
 
 export default imagePath

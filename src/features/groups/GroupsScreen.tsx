@@ -50,7 +50,7 @@ export default function GroupsScreen() {
 
   return (
     <ScreenWrapper>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
           <Text style={styles.title}>Support Groups</Text>
           <Pressable onPress={() => navigation.navigate("RequestGroup")} style={styles.requestBtn}>
@@ -154,10 +154,6 @@ export default function GroupsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: moderateScale(16),
-    paddingBottom: 120
-  },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
   title: { fontSize: scale(24), fontWeight: "800", color: colors.text },
   requestBtn: {

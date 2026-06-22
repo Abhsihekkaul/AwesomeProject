@@ -1,6 +1,13 @@
-import React from "react";
-import { Platform, Text } from "react-native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import React, { useRef, useState } from "react";
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import PagerView from "react-native-pager-view";
 
 import HomeScreen from "../features/home/HomeScreen";
 import GroupsScreen from "../features/groups/GroupsScreen";
@@ -9,9 +16,20 @@ import PsychologicalHelpScreen from "../features/help/PsychologicalHelpScreen";
 import ProfileScreen from "../features/profile/ProfileScreen";
 
 import { colors } from "../theme/colors";
-import { scale } from "react-native-size-matters";
+import {
+  moderateScale,
+  moderateVerticalScale,
+  scale,
+} from "react-native-size-matters";
+import imagePath from "../constant/imagePath";
 
-const Tab = createBottomTabNavigator();
+const tabs = [
+  { key: "Home", label: "Home", icon: imagePath.HomeIcon, component: HomeScreen },
+  { key: "Groups", label: "Groups", icon: imagePath.GroupIcon, component: GroupsScreen },
+  { key: "Chats", label: "Chats", icon: imagePath.ChatIcon, component: ChatsScreen },
+  { key: "Help", label: "Help", icon: imagePath.HelpIcon, component: PsychologicalHelpScreen },
+  { key: "Profile", label: "Profile", icon: imagePath.User, component: ProfileScreen },
+];
 
 const emoji = (label: string, focused: boolean) => (
   <Text
@@ -25,69 +43,105 @@ const emoji = (label: string, focused: boolean) => (
 );
 
 export default function MainTabNavigator() {
+  const pagerRef = useRef<PagerView>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const { width } = useWindowDimensions();
+
+  const onTabPress = (index: number) => {
+    setActiveIndex(index);
+    pagerRef.current?.setPage(index);
+  };
+
   return (
-    <Tab.Navigator
-      initialRouteName="Home"
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        
-        tabBarShowLabel: true,
-        tabBarActiveTintColor: '#007AFF',
-        tabBarStyle: {
-          height: 70,
-          paddingTop: 8,
-          paddingBottom: 8,
-          paddingHorizontal: 16,
-          borderTopColor: "#E6ECF5",
-          position: 'absolute',
-          // backgroundColor: Platform.OS == 'ios' ? "transparent" : 'white' ,
-          // make changes to above when i will be working onto building the glass ui 
-          backgroundColor: "white"
-        },
+    <View style={styles.container}>
+      <PagerView
+        ref={pagerRef}
+        style={styles.pager}
+        initialPage={0}
+        onPageSelected={(e) => setActiveIndex(e.nativeEvent.position)}
+      >
+        {tabs.map((tab) => {
+          const ScreenComponent = tab.component;
+          return (
+            <View key={tab.key} style={{ flex: 1, width }}>
+              <ScreenComponent />
+            </View>
+          );
+        })}
+      </PagerView>
 
-        tabBarLabelStyle: {
-          fontSize: scale(12),
-          fontWeight: "600",
-        },
+      <View style={styles.tabBar}>
+        {tabs.map((tab, index) => {
+          const focused = activeIndex === index;
 
-        // tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: "#8A9CB5",
-
-        tabBarIcon: ({ focused }) => {
-          if (route.name === "Home") return emoji("🏠", focused);
-          if (route.name === "Groups") return emoji("👥", focused);
-          if (route.name === "Chats") return emoji("💬", focused);
-          if (route.name === "Help") return emoji("❤️", focused);
-          if (route.name === "Profile") return emoji("👤", focused);
-
-          return emoji("•", focused);
-        },
-      })}
-    >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-      />
-
-      <Tab.Screen
-        name="Groups"
-        component={GroupsScreen}
-      />
-
-      <Tab.Screen
-        name="Chats"
-        component={ChatsScreen}
-      />
-
-      <Tab.Screen
-        name="Help"
-        component={PsychologicalHelpScreen}
-      />
-
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-      />
-    </Tab.Navigator>
+          return (
+            <Pressable
+              key={tab.key}
+              onPress={() => onTabPress(index)}
+              style={[styles.tabItem, focused && styles.tabItemFocused]}
+            >
+              <Image
+                source={tab.icon}
+                style={[
+                  styles.tabIcon,
+                  { opacity: focused ? 1 : 0.7 },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.tabLabel,
+                  { color: focused ? "#007AFF" : "#8A9CB5" },
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "white",
+  },
+  pager: {
+    flex: 1,
+  },
+  tabBar: {
+    height: 70,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingHorizontal: 16,
+    borderTopColor: "#E6ECF5",
+    borderTopWidth: 1,
+    backgroundColor: "white",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: moderateVerticalScale(8),
+    borderRadius: moderateScale(14),
+    marginHorizontal: moderateScale(4),
+  },
+  tabItemFocused: {
+    backgroundColor: "#EEF1F5",
+  },
+  tabIcon: {
+    height: moderateVerticalScale(20),
+    width: moderateScale(20),
+    resizeMode: "contain",
+    marginBottom: 4,
+  },
+  tabLabel: {
+    fontSize: scale(12),
+    fontWeight: "600",
+  },
+});

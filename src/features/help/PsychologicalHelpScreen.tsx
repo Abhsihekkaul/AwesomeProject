@@ -57,7 +57,12 @@ export default function PsychologicalHelpScreen() {
   return (
     <ScreenWrapper>
     <ScrollView showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>Psychological Help</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>Psycological Help</Text>
+        <Pressable onPress={() => navigation.navigate("RequestGroup")} style={styles.requestBtn}>
+          <Text style={styles.requestText}>＋ Become a Doctor ?</Text>
+        </Pressable>
+      </View>
       <Text style={styles.sub}>Verified professionals who understand chronic illness</Text>
 
       <SearchBar placeholder="Search by name or specialty..." />
@@ -108,7 +113,14 @@ export default function PsychologicalHelpScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 32, fontWeight: "800", color: colors.text },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
+  title: { fontSize: scale(24), fontWeight: "800", color: colors.text },
+  requestBtn: {
+    backgroundColor: "#EAF1FF",
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
   sub: { fontSize: scale(18), color: "#6F87A6", marginTop: 8, marginBottom: 16, lineHeight: 26 },
   filters: { flexDirection: "row" },
   card: {

@@ -69,21 +69,29 @@ export default function PostCard({ post }: Props) {
 
             {/* Actions */}
             <View style={styles.actions}>
-                <Pressable style={styles.actionBtn}>
+                <Pressable >
                     <Image style={styles.love} source={imagePath.HeartIcon} />
                     <Text>{post.supportCount}</Text>
                 </Pressable>
 
-                <Pressable style={styles.actionBtn}>
-                    <Text>🙏 {post.helpfulCount}</Text>
+                <Pressable >
+                    <Image style={styles.love} source={imagePath.Help} />
+                    <Text> {post.helpfulCount}</Text>
                 </Pressable>
 
-                <Pressable style={styles.actionBtn}>
-                    <Text>💬 {post.commentCount}</Text>
+                <Pressable >
+                    <Image style={styles.love} source={imagePath.ChatIcon} />
+                    <Text> {post.commentCount}</Text>
                 </Pressable>
 
-                <Pressable style={styles.actionBtn}>
-                    <Text>↗️ Share</Text>
+                <Pressable>
+                    <Image style={styles.love} source={imagePath.ShareIcon} />
+                    <Text> {post.commentCount}</Text>
+                </Pressable>
+
+                <Pressable>
+                    <Image style={styles.love} source={imagePath.ReportIcon} />
+                    <Text> {post.commentCount}</Text>
                 </Pressable>
             </View>
         </View>
@@ -145,20 +153,13 @@ const styles = StyleSheet.create({
     actions: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginTop: 14,
-        paddingTop: 12,
-        borderTopWidth: 1,
-        borderTopColor: "#EEF2F7",
+        paddingTop: moderateVerticalScale(14),
+        paddingHorizontal : moderateScale(4),
     },
 
-    actionBtn: {
-        display: "flex",
-        flexDirection : "column",
-        paddingVertical: 4,
-    },
 
     love: {
-        height: moderateVerticalScale(10),
-        width : moderateScale(15)
+        height: moderateVerticalScale(18),
+        width : moderateScale(18)
     }
 });

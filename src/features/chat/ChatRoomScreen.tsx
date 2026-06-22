@@ -8,12 +8,16 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  
+  Image,
+
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../theme/colors";
-import { moderateScale, scale } from "react-native-size-matters";
+import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
+import imagePath from "../../constant/imagePath";
+import { TextStyles } from "../../theme/typography";
+import { radius } from "../../theme/radius";
 
 type MessageProps = {
   mine?: boolean;
@@ -52,67 +56,103 @@ export default function ChatRoomScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>‹</Text>
-        </Pressable>
+        <View style={styles.header}>
+          <Pressable onPress={() => navigation.goBack()}>
+            <Image source={imagePath.LeftIcon} style={styles.backButton} />
+          </Pressable>
 
-        <View style={styles.headerCenter}>
-          <Text style={styles.name}>Alex K.</Text>
-          <Text style={styles.status}>● Online · Fibromyalgia</Text>
+          <View style={styles.headerCenter}>
+            <Text style={styles.name}>Alex K.</Text>
+            <Text style={styles.status}>● Online · Fibromyalgia</Text>
+          </View>
         </View>
 
-        <Text style={styles.privacy}>🔒 E2E</Text>
-      </View>
 
-      <View style={styles.matchBox}>
-        <Text style={styles.matchTitle}>87% Compatibility Match</Text>
+        <ScrollView showsVerticalScrollIndicator={false}>
+  <Message
+    text="I've found that pacing myself and not pushing through pain helps the most. Also, warm baths before sleep. What's been your biggest challenge lately?"
+    time="10:18 AM"
+  />
 
-        <Text style={styles.matchText}>
-          You and Alex both live with fibromyalgia and are in similar stages of
-          your journey. Matched by HealCircle&apos;s private algorithm.
-        </Text>
-      </View>
+  <Message
+    mine
+    text="Definitely the unpredictability. You never know when a bad day is coming. I've been trying journaling — it helps me notice patterns."
+    time="10:22 AM"
+  />
 
-      <ScrollView
-        contentContainerStyle={styles.chatArea}
-        showsVerticalScrollIndicator={false}
-      >
-        <Message
-          text="I've found that pacing myself and not pushing through pain helps the most. Also, warm baths before sleep. What's been your biggest challenge lately?"
-          time="10:18 AM"
-        />
+  <Message
+    text="That's such a good idea. I should try that. It's really comforting to talk to someone who gets it. 💙"
+    time="10:24 AM"
+  />
 
-        <Message
-          mine
-          text="Definitely the unpredictability. You never know when a bad day is coming. I've been trying journaling — it helps me notice patterns."
-          time="10:22 AM"
-        />
+  <Message
+    mine
+    text="I feel the same way. Most people are supportive, but unless they've experienced it themselves, it's hard for them to fully understand."
+    time="10:25 AM"
+  />
 
-        <Message
-          text="That's such a good idea. I should try that. It's really comforting to talk to someone who gets it. 💙"
-          time="10:24 AM"
-        />
-      </ScrollView>
+  <Message
+    text="Exactly. Sometimes I spend more energy explaining my condition than actually managing it."
+    time="10:27 AM"
+  />
 
-      <View style={styles.supportBar}>
-        <Text style={styles.supportText}>
-          🛡 Need support? Access crisis resources in the Help tab.
-        </Text>
-      </View>
+  <Message
+    mine
+    text="That sounds exhausting. Have you found anything that helps on difficult days?"
+    time="10:29 AM"
+  />
 
-      <View style={styles.inputBar}>
-        <Text style={styles.emoji}>☺</Text>
+  <Message
+    text="I've started keeping my expectations realistic. Instead of focusing on everything I can't do, I try to celebrate the small wins."
+    time="10:31 AM"
+  />
 
-        <TextInput
-          placeholder="Write something supportive..."
-          placeholderTextColor="#9AA6BA"
-          style={styles.input}
-        />
+  <Message
+    mine
+    text="I like that mindset. I've been trying to do something similar—breaking tasks into smaller steps so they feel less overwhelming."
+    time="10:33 AM"
+  />
 
-        <Pressable style={styles.sendBtn}>
-          <Text style={styles.send}>✈</Text>
-        </Pressable>
+  <Message
+    text="That's smart. Some days even getting out for a short walk feels like a huge achievement."
+    time="10:35 AM"
+  />
+
+  <Message
+    mine
+    text="Absolutely. Progress isn't always obvious, but those small moments add up over time."
+    time="10:36 AM"
+  />
+
+  <Message
+    text="Thank you for saying that. I needed the reminder today. 😊"
+    time="10:38 AM"
+  />
+
+  <Message
+    mine
+    text="Anytime. And if you're having a rough day, remember you're not facing it alone."
+    time="10:40 AM"
+  />
+
+  <Message
+    text="That means a lot. It's amazing how much difference a simple conversation can make."
+    time="10:41 AM"
+  />
+</ScrollView>
+
+
+        <View style={styles.inputBar}>
+          <Image source={imagePath.UploadIcon} style={styles.uploadIcon} />
+          <TextInput
+            placeholder="Write something supportive..."
+            placeholderTextColor="#9AA6BA"
+            style={styles.input}
+          />
+
+          <Pressable style={styles.sendBtn}>
+            <Image source={imagePath.RightIcon} style={styles.sendBtn} />
+          </Pressable>
         </View>
       </KeyboardAvoidingView>
     </ScreenWrapper>
@@ -124,16 +164,15 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: moderateScale(20),
-    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#E3EAF4",
-  },
+    paddingBottom : moderateVerticalScale(4),
+  },  
 
-  back: {
-    fontSize: scale(36),
-    color: colors.text,
-    marginRight: moderateScale(8),
+  backButton : {
+    height: moderateVerticalScale(16),
+    width: moderateVerticalScale(16),
+    marginRight: moderateScale(16),
   },
 
   headerCenter: {
@@ -141,52 +180,20 @@ const styles = StyleSheet.create({
   },
 
   name: {
-    fontSize: scale(22),
-    fontWeight: "800",
-    color: colors.text,
+    fontSize: TextStyles.body,
+    fontWeight: "600",
   },
 
   status: {
     color: "#4E79C7",
-    marginTop: moderateScale(4),
-    fontSize: scale(15),
+    marginTop: moderateScale(2),
+    fontSize: TextStyles.caption,
   },
-
-  privacy: {
-    color: "#4FA57B",
-    fontWeight: "800",
-    backgroundColor: "#E8F6EE",
-    paddingHorizontal: moderateScale(12),
-    paddingVertical: moderateScale(8),
-    borderRadius: moderateScale(999),
-  },
-
-  matchBox: {
-    margin: moderateScale(16),
-    backgroundColor: "#EEE7FF",
-    borderRadius: moderateScale(22),
-    padding: moderateScale(16),
-    borderWidth: moderateScale(1),
-    borderColor: "#D7C6F6",
-  },
-
-  matchTitle: {
-    color: "#7453C8",
-    fontSize: scale(18),
-    fontWeight: "800",
-  },
-
-  matchText: {
-    color: "#7453C8",
-    fontSize: scale(15),
-    lineHeight: moderateScale(22),
-    marginTop: moderateScale(6),
-  },
-
-  chatArea: {
-    paddingHorizontal: moderateScale(16),
-    paddingBottom: moderateScale(18),
-  },
+  
+  // chatArea: {
+  //   paddingHorizontal: moderateScale(16),
+  //   paddingBottom: moderateScale(18),
+  // },
 
   msgWrap: {
     flexDirection: "row",
@@ -196,7 +203,7 @@ const styles = StyleSheet.create({
 
   smallAvatar: {
     width: moderateScale(34),
-    height: moderateScale(34),
+    height: moderateVerticalScale(34),
     borderRadius: moderateScale(17),
     backgroundColor: "#E9EEF8",
     alignItems: "center",
@@ -206,15 +213,15 @@ const styles = StyleSheet.create({
 
   smallAvatarText: {
     color: "#4E79C7",
-    fontWeight: "800",
-    fontSize: scale(12),
+    fontWeight: "600",
+    fontSize: TextStyles.stepCounts,
   },
 
   bubble: {
     maxWidth: "78%",
     backgroundColor: colors.white,
-    padding: moderateScale(14),
-    borderRadius: moderateScale(18),
+    padding: moderateScale(12),
+    borderRadius: radius.md,
     borderWidth: moderateScale(1),
     borderColor: "#E3EAF4",
   },
@@ -226,8 +233,8 @@ const styles = StyleSheet.create({
 
   msgText: {
     color: colors.text,
-    fontSize: scale(17),
-    lineHeight: moderateScale(25),
+    fontSize: TextStyles.stepCounts,
+    lineHeight: moderateScale(22),
   },
 
   mineText: {
@@ -245,55 +252,41 @@ const styles = StyleSheet.create({
     color: "#DCE6FA",
   },
 
-  supportBar: {
-    backgroundColor: "#EAF1FF",
-    padding: moderateScale(12),
-    borderTopWidth: moderateScale(1),
-    borderTopColor: "#DCE5F3",
-  },
-
-  supportText: {
-    color: "#4E79C7",
-    fontSize: scale(14),
-  },
-
   inputBar: {
     flexDirection: "row",
     alignItems: "center",
-    padding: moderateScale(12),
-    backgroundColor: colors.white,
+    padding: moderateScale(6),
+    // backgroundColor: colors.white,
     borderTopWidth: moderateScale(1),
     borderTopColor: "#E3EAF4",
+    paddingHorizontal : moderateScale(4)
   },
 
-  emoji: {
-    fontSize: scale(24),
-    color: "#8A9CB5",
+  uploadIcon: {
+    height: moderateVerticalScale(20),
+    width : moderateScale(22),
     marginRight: moderateScale(10),
   },
 
   input: {
     flex: 1,
-    backgroundColor: "#EEF3FB",
-    borderRadius: moderateScale(22),
-    paddingHorizontal: moderateScale(16),
-    height: moderateScale(54),
-    fontSize: scale(16),
-    color: colors.text,
+    backgroundColor: "#f5f9ff",
+    borderRadius: radius.md,
+    paddingHorizontal: moderateScale(8),
+    height: moderateVerticalScale(32),
+    fontSize: TextStyles.stepCounts,
   },
 
   sendBtn: {
-    width: moderateScale(54),
-    height: moderateScale(54),
-    borderRadius: 27,
-    backgroundColor: "#EEF3FB",
-    marginLeft: 10,
+    width: moderateScale(20),
+    height: moderateScale(18),
+    marginLeft: moderateScale(10),
     alignItems: "center",
     justifyContent: "center",
   },
 
-  send: {
-    fontSize: 22,
-    color: "#8A9CB5",
-  },
+  // send: {
+  //   fontSize: 22,
+  //   color: "#8A9CB5",
+  // },
 });

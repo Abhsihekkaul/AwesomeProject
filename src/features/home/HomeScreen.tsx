@@ -138,8 +138,8 @@ const styles = StyleSheet.create({
   },
   
   HeartBtn: {
-    height: 20,
-    width : 20,
+    height: moderateVerticalScale(20),
+    width : moderateScale(22),
     marginRight: moderateScale(12)
   },
 
@@ -169,8 +169,8 @@ const styles = StyleSheet.create({
     justifyContent: "center", 
   },
   Numbers: {
-    fontSize: TextStyles.stepCounts,
-    fontWeight: "500"
+    fontSize: TextStyles.body,
+    fontWeight: "600"
   },
   quickTitle: {
     marginTop : moderateVerticalScale(4),

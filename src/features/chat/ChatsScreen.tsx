@@ -3,13 +3,31 @@ import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../theme/colors";
 import UserAvatar from "../../components/ui/UserAvatar";
-import { scale } from "react-native-size-matters";
+import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
+import { TextStyles } from "../../theme/typography";
+import { radius } from "../../theme/radius";
 
 const chats = [
   { name: "Alex K.", last: "I've found that pacing myself helps the most...", time: "10:22 AM", unread: 2, initials: "AK" },
   { name: "Maya Harrison", last: "Finally found a sleep routine that works", time: "23m ago", unread: 0, initials: "MH" },
   { name: "Jamie L.", last: "Yes! The 4–7–8 technique changed my sleep quality...", time: "18m ago", unread: 0, initials: "JL" },
+
+  // Indian users
+  { name: "Priya Sharma", last: "Meditation before bed has really helped me relax.", time: "12m ago", unread: 1, initials: "PS" },
+  { name: "Arjun Mehta", last: "I've been tracking my mood daily and it's useful.", time: "25m ago", unread: 0, initials: "AM" },
+  { name: "Neha Verma", last: "The breathing exercises worked surprisingly well!", time: "32m ago", unread: 3, initials: "NV" },
+  { name: "Rohan Kapoor", last: "Anyone else journaling before sleep?", time: "45m ago", unread: 0, initials: "RK" },
+  { name: "Ananya Gupta", last: "My anxiety levels have dropped this month.", time: "1h ago", unread: 1, initials: "AG" },
+  { name: "Karan Singh", last: "Walking after dinner improved my sleep quality.", time: "1h ago", unread: 0, initials: "KS" },
+  { name: "Isha Malhotra", last: "Thank you all for the support ❤️", time: "2h ago", unread: 0, initials: "IM" },
+  { name: "Rahul Nair", last: "Trying a digital detox this weekend.", time: "3h ago", unread: 2, initials: "RN" },
+  { name: "Sneha Reddy", last: "I finally completed a full week of mindfulness.", time: "4h ago", unread: 0, initials: "SR" },
+  { name: "Vikram Joshi", last: "Consistency is harder than I expected.", time: "5h ago", unread: 0, initials: "VJ" },
+  { name: "Meera Iyer", last: "Sharing a gratitude list really helps.", time: "6h ago", unread: 4, initials: "MI" },
+  { name: "Aditya Khanna", last: "The sleep sounds feature is amazing.", time: "8h ago", unread: 0, initials: "AK" },
+  { name: "Pooja Bansal", last: "Anyone have tips for staying focused at work?", time: "9h ago", unread: 1, initials: "PB" },
+  { name: "Aman Chawla", last: "Small daily improvements add up over time.", time: "Yesterday", unread: 0, initials: "AC" },
 ];
 
 export default function ChatsScreen() {
@@ -40,14 +58,64 @@ export default function ChatsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  title: { fontSize: 32, fontWeight: "800", color: colors.text },
-  sub: { fontSize: 18, color: "#6F87A6", marginTop: 8, marginBottom: 16 },
-  card: { flexDirection: "row", alignItems: "center", backgroundColor: colors.white, borderRadius: 22, borderWidth: 1, borderColor: "#E3EAF4", padding: 16, marginBottom: 12 },
-  row: { flexDirection: "row", justifyContent: "space-between" },
-  name: { fontSize: 18, fontWeight: "800", color: colors.text },
-  time: { color: "#6F87A6", fontSize: scale(14) },
-  last: { color: colors.text, marginTop: 4, fontSize: scale(16) },
-  badge: { width: 24, height: 24, borderRadius: 12, backgroundColor: "#4FA57B", alignItems: "center", justifyContent: "center" },
-  badgeText: { color: colors.white, fontSize: scale(12), fontWeight: "800" },
+
+  title: {
+    fontSize: TextStyles.title,
+    fontWeight: "600",
+  },
+
+  sub: {
+    fontSize: TextStyles.caption,
+    color: "#6F87A6",
+    marginTop: moderateVerticalScale(6) 
+  },
+
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
+    borderWidth: 0.2,
+    borderColor: "#b8bbc0",
+    padding: moderateScale(10),
+    marginVertical: moderateVerticalScale(4)
+  },
+
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap : moderateScale(4)
+  },
+
+  name: {
+    fontSize: TextStyles.body,
+    fontWeight: "600",
+  },
+
+  time: {
+    color: "#6F87A6",
+    fontSize: TextStyles.caption,
+  },
+
+  last: {
+    marginTop: moderateVerticalScale(2),
+    fontSize: TextStyles.caption,
+    opacity : 0.5,
+  },
+
+  badge: {
+    width: moderateScale(20),
+    height: moderateVerticalScale(20),
+    borderRadius: "100%",
+    backgroundColor: "#6070e4",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+
+  badgeText: {
+    color: colors.white,
+    fontSize: TextStyles.caption,
+    fontWeight: "600"
+  },
+
 });
