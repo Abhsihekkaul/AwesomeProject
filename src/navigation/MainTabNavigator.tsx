@@ -8,20 +8,21 @@ import {
   useWindowDimensions,
 } from "react-native";
 import PagerView from "react-native-pager-view";
-
-import HomeScreen from "../features/home/HomeScreen";
-import GroupsScreen from "../features/groups/GroupsScreen";
 import ChatsScreen from "../features/chat/ChatsScreen";
+import GroupsScreen from "../features/groups/GroupsScreen";
 import PsychologicalHelpScreen from "../features/help/PsychologicalHelpScreen";
+import HomeScreen from "../features/home/HomeScreen";
 import ProfileScreen from "../features/profile/ProfileScreen";
 
-import { colors } from "../theme/colors";
 import {
   moderateScale,
   moderateVerticalScale,
   scale,
 } from "react-native-size-matters";
+
 import imagePath from "../constant/imagePath";
+import { colors } from "../theme/colors";
+import { TextStyles } from "../theme/typography";
 
 const tabs = [
   { key: "Home", label: "Home", icon: imagePath.HomeIcon, component: HomeScreen },
@@ -112,10 +113,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tabBar: {
-    height: 70,
-    paddingTop: 8,
-    paddingBottom: 8,
-    paddingHorizontal: 16,
+    height: moderateVerticalScale(70),
+    paddingVertical: moderateVerticalScale(8),
+    paddingHorizontal: moderateScale(16),
     borderTopColor: "#E6ECF5",
     borderTopWidth: 1,
     backgroundColor: "white",
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   tabLabel: {
-    fontSize: scale(12),
-    fontWeight: "600",
+    fontSize: TextStyles.caption,
+    fontWeight: "500",
   },
 });

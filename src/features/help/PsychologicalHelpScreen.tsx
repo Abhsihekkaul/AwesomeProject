@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../theme/colors";
 import SearchBar from "../../components/ui/SearchBar";
@@ -8,6 +8,8 @@ import UserAvatar from "../../components/ui/UserAvatar";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import { TextStyles } from "../../theme/typography";
+import { radius } from "../../theme/radius";
+import imagePath from "../../constant/imagePath";
 
 const doctors = [
   {
@@ -50,6 +52,67 @@ const doctors = [
     bg: "#FFF4E8",
     color: "#E67E22",
   },
+  // --- New Entries Below ---
+  {
+    initials: "ER",
+    name: "Dr. Elena Rodriguez",
+    role: "Clinical Social Worker",
+    rating: "4.85 (142)",
+    tags: ["Caregiver Burnout", "Family Therapy"],
+    next: "Tomorrow, 1:00 PM",
+    bg: "#E8FAFF",
+    color: "#2C8C9E", // Teal theme
+  },
+  {
+    initials: "DO",
+    name: "Dr. David Okafor",
+    role: "Psychiatrist",
+    rating: "4.9 (88)",
+    tags: ["Medication Management", "ADHD"],
+    next: "Fri, 9:00 AM",
+    bg: "#FFE8E8",
+    color: "#C85353", // Muted red/pink theme
+  },
+  {
+    initials: "JL",
+    name: "Dr. James Lin",
+    role: "Neuropsychologist",
+    rating: "4.75 (115)",
+    tags: ["Brain Fog", "CBT"],
+    next: "Today, 5:30 PM",
+    bg: "#FFF9E6",
+    color: "#B38600", // Warm gold theme
+  },
+  {
+    initials: "FA",
+    name: "Dr. Fatima Al-Sayed",
+    role: "Holistic Therapist",
+    rating: "4.95 (210)",
+    tags: ["Mindfulness", "Somatic Experiencing"],
+    next: "Mon, Jun 17",
+    bg: "#EBEFFF",
+    color: "#3F51B5", // Indigo theme
+  },
+  {
+    initials: "RV",
+    name: "Dr. Robert Vance",
+    role: "Pain Psychologist",
+    rating: "4.8 (76)",
+    tags: ["Fibromyalgia", "ACT"],
+    next: "Tue, Jun 18",
+    bg: "#F2F0F5",
+    color: "#6B5B95", // Deep mauve theme
+  },
+  {
+    initials: "SO",
+    name: "Dr. Sophia Ortiz",
+    role: "Licensed Counselor",
+    rating: "4.9 (150)",
+    tags: ["Medical Trauma", "Depression"],
+    next: "Tomorrow, 11:30 AM",
+    bg: "#FFF0F5",
+    color: "#D87093", // Pale violet red theme
+  }
 ];
 
 export default function PsychologicalHelpScreen() {
@@ -57,141 +120,186 @@ export default function PsychologicalHelpScreen() {
 
   return (
     <ScreenWrapper>
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>Psycological Help</Text>
-      <Text style={styles.sub}>Verified professionals who understand chronic illness</Text>
-      <SearchBar  placeholder="Search by name or specialty..." />
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 14 }}>
-        <View style={styles.filters}>
-          <CategoryChip label="All" active />
-          <CategoryChip label="Available Now" />
-          <CategoryChip label="Psychologist" />
-          <CategoryChip label="Psychiatrist" />
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.headerContainer}>
+          <Text style={styles.title}>Psychological Help</Text>
+          <Text style={styles.BecomeDoctor}>Want to be doctor ?</Text>
+          <Text style={styles.sub}>Verified professionals who understand chronic illness</Text>
         </View>
-      </ScrollView>
 
-      {doctors.map((d) => (
-        <Pressable
-          key={d.name}
-          onPress={() => navigation.navigate("ConsultantProfile", { name: d.name })}
-          style={styles.card}
-        >
-          <UserAvatar initials={d.initials} size={moderateScale(42)} bg={d.bg} color={d.color} />
-          <View style={styles.CardText}>
-            <View style={styles.rowBetween}>
-              <View>
-                <Text style={styles.name}>{d.name} ✓</Text>
-                <Text style={styles.role}>{d.role}</Text>
-              </View>
-              <Text style={styles.rating}>⭐ {d.rating}</Text>
-            </View>
+        <SearchBar placeholder="Find new Doctors ..." />
 
-            <View style={styles.tagsRow}>
-              {d.tags.map((t) => (
-                <View key={t} style={styles.tag}><Text style={styles.tagText}>{t}</Text></View>
-              ))}
-            </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+          <View style={styles.filters}>
+            <CategoryChip label="All" active />
+            <CategoryChip label="My Doctors" />
+            <CategoryChip label="Available Now" />
           </View>
-        </Pressable>
-      ))}
+        </ScrollView>
+
+        <View style={styles.listContainer}>
+          {doctors.map((d) => (
+            <Pressable
+              key={d.name}
+              onPress={() => navigation.navigate("ConsultantProfile", { name: d.name })}
+              style={styles.card}
+            >
+              <UserAvatar
+                initials={d.initials}
+                size={moderateScale(46)}
+                bg={d.bg}
+                color={d.color}
+              />
+
+              <View style={styles.CardText}>
+                <View style={styles.rowBetween}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.name}>{d.name} ✓</Text>
+                    <Text style={styles.role}>{d.role}</Text>
+                  </View>
+                  <View style={styles.RatingSetting}>
+                    <Image source={imagePath.StarIcon} style={styles.Star} />
+                    <Text style={styles.rating}>{d.rating}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.tagsRow}>
+                  {d.tags.map((t) => (
+                    <View key={t} style={styles.tag}>
+                      <Text style={styles.tagText}>{t}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </Pressable>
+          ))}
+        </View>
       </ScrollView>
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
+  headerContainer: {
+    marginBottom: moderateVerticalScale(12),
+  },
+
   title: {
     fontSize: TextStyles.title,
     fontWeight: "600",
-    color: colors.text
+    color: colors.text,
   },
-  sub: {
-    fontSize: TextStyles.caption,
-    opacity : 0.4,
+  BecomeDoctor: {
+    fontSize: TextStyles.stepCounts,
+    color: "#5d76be",
+    fontWeight : "800"
   },
 
-  // searchBar: {
-  //   marginVertical : moderateVerticalScale(6) 
-  // },
-  
-  filters: {
-    flexDirection: "row",
-    gap : moderateScale(4),
+  sub: {
+    fontSize: TextStyles.caption,
+    opacity: 0.5,
+    marginTop: moderateVerticalScale(2),
   },
   
+  filterScroll: {
+    marginTop: moderateVerticalScale(14),
+    marginBottom: moderateVerticalScale(8),
+  },
+
+  filters: {
+    flexDirection: "row",
+    gap: moderateScale(8),
+  },
+
+  listContainer: {
+    paddingBottom: moderateVerticalScale(20),
+  },
+
   card: {
-    flexDirection: "column",
+    flexDirection: "row",
+    alignItems: "flex-start",
     backgroundColor: colors.white,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "#E3EAF4",
-    padding: 16,
-    marginTop: 14,
+    borderRadius: radius.md,
+    borderWidth: 0.2,
+    borderColor: "#b8bbc0",
+    padding: moderateScale(12),
+    marginTop: moderateVerticalScale(10),
   },
 
   CardText: {
     flex: 1,
-    marginLeft: 14 
+    marginLeft: moderateScale(12),
   },
+
   rowBetween: {
     flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
+
   name: {
     fontSize: TextStyles.body,
     fontWeight: "600",
+    color: colors.text,
   },
+
+ 
   role: {
-    fontSize: TextStyles.stepCounts,
-    opacity : 0.4,
-    marginTop: 4
+    fontSize: TextStyles.caption,
+    opacity: 0.5,
+    marginTop: moderateVerticalScale(2),
+  },
+
+  RatingSetting: {
+    display: "flex",
+    flexDirection: "row",
+  },
+
+  Star: {
+    height: moderateVerticalScale(16),
+    width: moderateScale(16),
   },
   rating: {
-    color: "#E67E22",
-    fontSize: scale(16),
-    fontWeight: "800",
+    marginLeft : moderateScale(4),
+    color: "#93b0f4",
+    fontSize: TextStyles.caption,
+    fontWeight: "600",
   },
   tagsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginTop: 10,
+    marginTop: moderateVerticalScale(8),
+    gap: moderateScale(6),
   },
   tag: {
-    backgroundColor: "#EEE7FF",
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-    marginBottom: 8,
+    backgroundColor: "#7984fb",
+    borderRadius: moderateScale(12),
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateVerticalScale(4),
   },
   tagText: {
-    color: "#7453C8",
-    fontWeight: "700",
-    fontSize: 13,
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: moderateScale(12),
   },
   bottomRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 6,
+    marginTop: moderateVerticalScale(6),
   },
   next: {
     color: "#4FA57B",
-    fontSize: scale(15),
-    fontWeight: "700",
+    fontSize: scale(13),
+    fontWeight: "600",
   },
   session: {
     backgroundColor: "#EAF1FF",
     color: "#4E79C7",
-    fontWeight: "700",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginLeft: 8,
+    fontWeight: "600",
+    borderRadius: moderateScale(12),
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateVerticalScale(4),
+    marginLeft: moderateScale(8),
     overflow: "hidden",
-  },
-  arrow: {
-    marginLeft: "auto",
-    color: "#8A9CB5",
-    fontSize: 26,
   },
 });

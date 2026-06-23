@@ -6,7 +6,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { moderateScale, moderateVerticalScale } from "react-native-size-matters";
+import { moderateScale } from "react-native-size-matters";
 
 type Props = {
   children: React.ReactNode;
@@ -19,7 +19,7 @@ const ScreenWrapper = ({
   children,
   style,
   barStyle = "dark-content",
-  backgroundColor = "#F5F8FD",
+  backgroundColor = "#F5F8FD", // Note: Change this to "#FFFFFF" if you want a pure white background overall
 }: Props) => {
   return (
     <>
@@ -29,6 +29,7 @@ const ScreenWrapper = ({
       />
 
       <SafeAreaView
+        edges={['top', 'left', 'right', 'bottom']} // <--- ADD THIS LINE
         style={[
           styles.container,
           { backgroundColor },

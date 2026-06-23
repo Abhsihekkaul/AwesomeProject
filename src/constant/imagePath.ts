@@ -19,7 +19,8 @@ const imagePath = {
     User: require("../assets/icons/user2.png"),
     Help: require("../assets/icons/help.png"),
     ReportIcon: require("../assets/icons/report.png"),
-    UploadIcon : require("../assets/icons/upload.png")
+    UploadIcon: require("../assets/icons/upload.png"),
+    StarIcon: require("../assets/icons/star.png"),
 } as const;
 
 export default imagePath

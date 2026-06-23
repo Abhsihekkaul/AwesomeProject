@@ -247,11 +247,11 @@ const styles = StyleSheet.create({
   inputBar: {
     flexDirection: "row",
     alignItems: "center",
-    padding: moderateScale(6),
+    padding: moderateScale(10),
     // backgroundColor: colors.white,
     borderTopWidth: moderateScale(1),
     borderTopColor: "#E3EAF4",
-    paddingHorizontal : moderateScale(4)
+    paddingHorizontal : moderateScale(10)
   },
 
   uploadIcon: {
