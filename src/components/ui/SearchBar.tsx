@@ -1,7 +1,8 @@
 import React from "react";
-import { StyleSheet, TextInput, View, Text } from "react-native";
-import { colors } from "../../theme/colors";
+import { StyleSheet, Text, TextInput, View } from "react-native";
 import { moderateScale, scale } from "react-native-size-matters";
+import { radius } from "../../theme/radius";
+import { TextStyles } from "../../theme/typography";
 
 type Props = {
   placeholder: string;
@@ -22,21 +23,19 @@ export default function SearchBar({ placeholder }: Props) {
 
 const styles = StyleSheet.create({
   wrap: {
-    height: moderateScale(54),
-    borderRadius: moderateScale(18),
-    backgroundColor: "#EEF3FB",
+    height: moderateScale(44),
+    borderRadius : radius.md,
+    backgroundColor: "#edf2fa",
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: moderateScale(16),
+    paddingHorizontal: moderateScale(12),
   },
   icon: {
-    fontSize: scale(20),
+    fontSize: scale(28),
     color: "#90A1B8",
-    marginRight: moderateScale(10),
+    marginRight: moderateScale(6),
   },
   input: {
-    flex: 1,
-    color: colors.text,
-    fontSize: scale(16),
+    fontSize: TextStyles.caption,
   },
 });

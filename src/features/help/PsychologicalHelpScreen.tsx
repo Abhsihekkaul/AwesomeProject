@@ -5,8 +5,9 @@ import { colors } from "../../theme/colors";
 import SearchBar from "../../components/ui/SearchBar";
 import CategoryChip from "../../components/ui/CategoryChip";
 import UserAvatar from "../../components/ui/UserAvatar";
-import { scale } from "react-native-size-matters";
+import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
+import { TextStyles } from "../../theme/typography";
 
 const doctors = [
   {
@@ -57,15 +58,9 @@ export default function PsychologicalHelpScreen() {
   return (
     <ScreenWrapper>
     <ScrollView showsVerticalScrollIndicator={false}>
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>Psycological Help</Text>
-        <Pressable onPress={() => navigation.navigate("RequestGroup")} style={styles.requestBtn}>
-          <Text style={styles.requestText}>＋ Become a Doctor ?</Text>
-        </Pressable>
-      </View>
+      <Text style={styles.title}>Psycological Help</Text>
       <Text style={styles.sub}>Verified professionals who understand chronic illness</Text>
-
-      <SearchBar placeholder="Search by name or specialty..." />
+      <SearchBar  placeholder="Search by name or specialty..." />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 14 }}>
         <View style={styles.filters}>
@@ -82,8 +77,8 @@ export default function PsychologicalHelpScreen() {
           onPress={() => navigation.navigate("ConsultantProfile", { name: d.name })}
           style={styles.card}
         >
-          <UserAvatar initials={d.initials} size={72} bg={d.bg} color={d.color} />
-          <View style={{ flex: 1, marginLeft: 14 }}>
+          <UserAvatar initials={d.initials} size={moderateScale(42)} bg={d.bg} color={d.color} />
+          <View style={styles.CardText}>
             <View style={styles.rowBetween}>
               <View>
                 <Text style={styles.name}>{d.name} ✓</Text>
@@ -97,13 +92,6 @@ export default function PsychologicalHelpScreen() {
                 <View key={t} style={styles.tag}><Text style={styles.tagText}>{t}</Text></View>
               ))}
             </View>
-
-            <View style={styles.bottomRow}>
-              <Text style={styles.next}>🕒 {d.next}</Text>
-              <Text style={styles.session}>Video</Text>
-              <Text style={styles.session}>Audio</Text>
-              <Text style={styles.arrow}>›</Text>
-            </View>
           </View>
         </Pressable>
       ))}
@@ -113,16 +101,25 @@ export default function PsychologicalHelpScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
-  title: { fontSize: scale(24), fontWeight: "800", color: colors.text },
-  requestBtn: {
-    backgroundColor: "#EAF1FF",
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  title: {
+    fontSize: TextStyles.title,
+    fontWeight: "600",
+    color: colors.text
   },
-  sub: { fontSize: scale(18), color: "#6F87A6", marginTop: 8, marginBottom: 16, lineHeight: 26 },
-  filters: { flexDirection: "row" },
+  sub: {
+    fontSize: TextStyles.caption,
+    opacity : 0.4,
+  },
+
+  // searchBar: {
+  //   marginVertical : moderateVerticalScale(6) 
+  // },
+  
+  filters: {
+    flexDirection: "row",
+    gap : moderateScale(4),
+  },
+  
   card: {
     flexDirection: "column",
     backgroundColor: colors.white,
@@ -131,17 +128,70 @@ const styles = StyleSheet.create({
     borderColor: "#E3EAF4",
     padding: 16,
     marginTop: 14,
-    alignItems: "center",
   },
-  rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  name: { fontSize: 22, fontWeight: "800", color: colors.text },
-  role: { fontSize: scale(17), color: "#6F87A6", marginTop: 4 },
-  rating: { color: "#E67E22", fontSize: scale(16), fontWeight: "800" },
-  tagsRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 10 },
-  tag: { backgroundColor: "#EEE7FF", borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, marginRight: 8, marginBottom: 8 },
-  tagText: { color: "#7453C8", fontWeight: "700", fontSize: 13 },
-  bottomRow: { flexDirection: "row", alignItems: "center", marginTop: 6 },
-  next: { color: "#4FA57B", fontSize: scale(15), fontWeight: "700" },
-  session: { backgroundColor: "#EAF1FF", color: "#4E79C7", fontWeight: "700", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, marginLeft: 8, overflow: "hidden" },
-  arrow: { marginLeft: "auto", color: "#8A9CB5", fontSize: 26 },
+
+  CardText: {
+    flex: 1,
+    marginLeft: 14 
+  },
+  rowBetween: {
+    flexDirection: "row",
+  },
+  name: {
+    fontSize: TextStyles.body,
+    fontWeight: "600",
+  },
+  role: {
+    fontSize: TextStyles.stepCounts,
+    opacity : 0.4,
+    marginTop: 4
+  },
+  rating: {
+    color: "#E67E22",
+    fontSize: scale(16),
+    fontWeight: "800",
+  },
+  tagsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 10,
+  },
+  tag: {
+    backgroundColor: "#EEE7FF",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  tagText: {
+    color: "#7453C8",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  bottomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+  },
+  next: {
+    color: "#4FA57B",
+    fontSize: scale(15),
+    fontWeight: "700",
+  },
+  session: {
+    backgroundColor: "#EAF1FF",
+    color: "#4E79C7",
+    fontWeight: "700",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginLeft: 8,
+    overflow: "hidden",
+  },
+  arrow: {
+    marginLeft: "auto",
+    color: "#8A9CB5",
+    fontSize: 26,
+  },
 });

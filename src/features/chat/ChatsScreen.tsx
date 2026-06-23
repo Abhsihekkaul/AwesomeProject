@@ -38,7 +38,6 @@ export default function ChatsScreen() {
     <ScrollView showsVerticalScrollIndicator={false}>
       <Text style={styles.title}>Chats</Text>
       <Text style={styles.sub}>Private conversations with community members</Text>
-
       {chats.map((c) => (
         <Pressable key={c.name} onPress={() => navigation.navigate("ChatRoom")} style={styles.card}>
           <UserAvatar initials={c.initials} size={52} bg="#E9EEF8" color="#4E79C7" />
@@ -66,8 +65,7 @@ const styles = StyleSheet.create({
 
   sub: {
     fontSize: TextStyles.caption,
-    color: "#6F87A6",
-    marginTop: moderateVerticalScale(6) 
+    opacity: 0.4,
   },
 
   card: {

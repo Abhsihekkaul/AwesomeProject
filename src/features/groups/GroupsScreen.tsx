@@ -154,7 +154,12 @@ export default function GroupsScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: moderateVerticalScale(16),
+  },
   title: { fontSize: scale(24), fontWeight: "800", color: colors.text },
   requestBtn: {
     backgroundColor: "#EAF1FF",

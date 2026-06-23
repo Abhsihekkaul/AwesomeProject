@@ -2,11 +2,10 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 
-// import HealthJourneyScreen from "../features/profileSetup/steps/HealthJourneyScreen";
-// import PrivacySafetyScreen from "../features/profileSetup/PrivacySafetyScreen";
-// import ProfileNameScreen from "../features/profileSetup/ProfileNameScreen";
+import HealthJourneyScreen from "../features/profileSetup/HealthJourneyScreen";
+import PrivacySafetyScreen from "../features/profileSetup/PrivacySafetyScreen";
+import ProfileNameScreen from "../features/profileSetup/ProfileNameScreen";
 import OnboardingScreen from "../features/onboarding/OnboardingScreen";
-import ProfileSetupScreen from "../features/profileSetup/ProfileSetupScreen";
 
 import ChatRoomScreen from "../features/chat/ChatRoomScreen";
 import BookingScreen from "../features/consultants/BookingScreen";
@@ -25,9 +24,9 @@ import SettingsScreen from "../features/profile/SettingsScreen";
 export type RootStackParamList = {
   Onboarding: undefined;
   Auth: undefined;
-  ProfileSetupScreen : undefined;
-  // HealthJourney: undefined;
-  // PrivacySafety: undefined;
+  ProfileSetup : undefined;
+  HealthJourney: undefined;
+  PrivacySafety: undefined;
   MainTabs: undefined;
 
   RequestGroup: undefined;
@@ -51,11 +50,11 @@ export default function AppNavigator() {
         <Stack.Screen name="Auth" component={AuthScreen} />
         {/* <Stack.Screen name="Auth" component={SignInScreen} />
         <Stack.Screen name="SignUp" component={SignUpScreen} /> */}
-        {/* <Stack.Screen name="ProfileSetup" component={ProfileNameScreen} />
+        <Stack.Screen name="ProfileSetup" component={ProfileNameScreen} />
         <Stack.Screen name="HealthJourney" component={HealthJourneyScreen} />
-        <Stack.Screen name="PrivacySafety" component={PrivacySafetyScreen} /> */}
+        <Stack.Screen name="PrivacySafety" component={PrivacySafetyScreen} />
         {/* <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen}/> */}
-        <Stack.Screen name="ProfileSetupScreen" component={ProfileSetupScreen}/>
+        {/* <Stack.Screen name="ProfileSetupScreen" component={ProfileSetupScreen}/> */}
         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
 
         <Stack.Screen name="RequestGroup" component={RequestGroupScreen} />

@@ -18,6 +18,7 @@ import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import imagePath from "../../constant/imagePath";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
+import BackButton from "../../components/ui/BackButton";
 
 type MessageProps = {
   mine?: boolean;
@@ -57,10 +58,7 @@ export default function ChatRoomScreen() {
         keyboardVerticalOffset={0}
       >
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()}>
-            <Image source={imagePath.LeftIcon} style={styles.backButton} />
-          </Pressable>
-
+          <BackButton />
           <View style={styles.headerCenter}>
             <Text style={styles.name}>Alex K.</Text>
             <Text style={styles.status}>● Online · Fibromyalgia</Text>
@@ -168,13 +166,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E3EAF4",
     paddingBottom : moderateVerticalScale(4),
   },  
-
-  backButton : {
-    height: moderateVerticalScale(16),
-    width: moderateVerticalScale(16),
-    marginRight: moderateScale(16),
-  },
-
+  
   headerCenter: {
     flex: 1,
   },

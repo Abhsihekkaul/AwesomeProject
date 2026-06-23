@@ -17,6 +17,7 @@ import { SecondaryButton } from "../../components/ui/SecondaryButton";
 import imagePath from "../../constant/imagePath";
 import { colors } from "../../theme/colors";
 import { TextStyles } from "../../theme/typography";
+import ProfileNameScreen from "../profileSetup/ProfileNameScreen";
 
 type AuthTab = "signin" | "signup";
 
@@ -125,7 +126,7 @@ const AuthScreen = ({ navigation }: any) => {
 
               <PrimaryButton
                 title="Create My Account"
-                onPress={handleSignUpSubmit}
+                  onPress={() => navigation.navigate("ProfileSetup")}
               />
             </>
           )}
