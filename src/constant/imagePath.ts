@@ -21,6 +21,12 @@ const imagePath = {
     ReportIcon: require("../assets/icons/report.png"),
     UploadIcon: require("../assets/icons/upload.png"),
     StarIcon: require("../assets/icons/star.png"),
+    VideoIcon: require("../assets/icons/Video.png"),
+    ClockIcon: require("../assets/icons/clock.png"),
+    PhoneIcon: require("../assets/icons/phone.png"),
+    LanguageIcon: require("../assets/icons/language.png"),
+    MoneyIcon: require("../assets/icons/money.png"),
+    
 } as const;
 
 export default imagePath

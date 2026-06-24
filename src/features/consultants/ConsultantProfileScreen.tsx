@@ -1,5 +1,5 @@
-import React from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../theme/colors";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
@@ -7,8 +7,9 @@ import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
 import BackButton from "../../components/ui/BackButton";
+import imagePath from "../../constant/imagePath";
 
-const reviews = [
+const initialReviews = [
   {
     initials: "MH",
     name: "M. H.",
@@ -32,15 +33,59 @@ const reviews = [
   },
 ];
 
+const availableDates = [
+  { label: "Mon\n10", available: false },
+  { label: "Tue\n11", available: true },
+  { label: "Wed\n12", available: true },
+  { label: "Thu\n13", available: false },
+  { label: "Fri\n14", available: true },
+  { label: "Sat\n15", available: true },
+];
+
+const availableTimes = [
+  { label: "9:00 AM", available: false },
+  { label: "10:00 AM", available: false },
+  { label: "11:00 AM", available: true },
+  { label: "1:00 PM", available: true },
+  { label: "2:00 PM", available: false },
+  { label: "3:00 PM", available: true },
+  { label: "4:00 PM", available: true },
+  { label: "5:30 PM", available: true },
+];
+
 export default function ConsultantProfileScreen() {
   const navigation = useNavigation<any>();
 
+  // State for Date and Time Selection
+  const [selectedDate, setSelectedDate] = useState("Tue\n11");
+  const [selectedTime, setSelectedTime] = useState("3:00 PM");
+  const [selectedSessionType, setSelectedSessionType] = useState("Video");
+
+  // State for Reviews
+  const [reviews, setReviews] = useState(initialReviews);
+  const [isWritingReview, setIsWritingReview] = useState(false);
+  const [newReviewText, setNewReviewText] = useState("");
+
+  const handleReviewSubmit = () => {
+    if (newReviewText.trim() === "") return;
+
+    const newReview = {
+      initials: "ME", // Represents the logged-in user
+      name: "Me",
+      date: "Just now",
+      text: newReviewText,
+      stars: "★★★★★", // Hardcoded for mockup purposes
+    };
+
+    setReviews([newReview, ...reviews]);
+    setNewReviewText("");
+    setIsWritingReview(false);
+  };
+
   return (
     <ScreenWrapper>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-      >
-        
+      <ScrollView showsVerticalScrollIndicator={false}>
+
         <View style={styles.header}>
           <BackButton />
           <Text style={styles.headerTitle}>Consultant Profile</Text>
@@ -79,50 +124,107 @@ export default function ConsultantProfileScreen() {
 
         <View style={styles.infoGrid}>
           <View style={styles.infoBox}>
-            <Text style={styles.infoIcon}>🌐</Text>
+            <Image style={styles.icons} source={imagePath.LanguageIcon} />
             <Text style={styles.infoText}>English,{`\n`}Mandarin</Text>
           </View>
           <View style={styles.infoBox}>
-            <Text style={styles.infoIcon}>🕒</Text>
+            <Image style={styles.icons} source={imagePath.ClockIcon} />
             <Text style={[styles.infoText, { color: "#4FA57B" }]}>Today, 3:00{`\n`}PM</Text>
           </View>
           <View style={styles.infoBox}>
-            <Text style={styles.infoIcon}>💲</Text>
+            <Image style={styles.icons} source={imagePath.MoneyIcon} />
             <Text style={styles.infoText}>$80–{`\n`}120/session</Text>
           </View>
         </View>
 
         <Text style={styles.blockTitle}>Session Type</Text>
+
         <View style={styles.sessionRow}>
-          <View style={[styles.sessionCard, styles.sessionActive]}>
-            <Text style={styles.sessionIcon}>🎥</Text>
-            <Text style={[styles.sessionLabel, styles.sessionActiveText]}>Video</Text>
-          </View>
-          <View style={styles.sessionCard}>
-            <Text style={styles.sessionIcon}>🎙</Text>
-            <Text style={styles.sessionLabel}>Audio</Text>
-          </View>
-          <View style={styles.sessionCard}>
-            <Text style={styles.sessionIcon}>💬</Text>
-            <Text style={styles.sessionLabel}>Chat</Text>
-          </View>
+          {[
+            {
+              label: "Video",
+              icon: imagePath.VideoIcon,
+            },
+            {
+              label: "Audio",
+              icon: imagePath.PhoneIcon,
+            },
+            {
+              label: "Chat",
+              icon: imagePath.ChatIcon,
+            },
+          ].map((item) => {
+            const isActive = selectedSessionType === item.label;
+
+            return (
+              <Pressable
+                key={item.label}
+                style={[styles.sessionCard, isActive && styles.sessionActive]}
+                onPress={() => setSelectedSessionType(item.label)}
+              >
+                <Image
+                  source={item.icon}
+                  resizeMode="contain"
+                  style={[
+                    styles.sessionIcon,
+                    isActive && styles.sessionIconActive,
+                  ]}
+                />
+
+                <Text
+                  style={[
+                    styles.sessionLabel,
+                    isActive && styles.sessionActiveText,
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
         <Text style={styles.blockTitle}>Pick a Date</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dateScroll}>
-          {["Today\n10", "Tue\n11", "Wed\n12", "Thu\n13", "Fri\n14"].map((d, i) => (
-            <View key={d} style={[styles.dateBox, i === 0 && styles.dateActive]}>
-              <Text style={[styles.dateText, i === 0 && styles.dateActiveText]}>{d}</Text>
-            </View>
+          {availableDates.map((d) => (
+            <Pressable
+              key={d.label}
+              style={[
+                styles.dateBox,
+                selectedDate === d.label && styles.dateActive,
+                !d.available && styles.dateDisabled
+              ]}
+              disabled={!d.available}
+              onPress={() => setSelectedDate(d.label)}
+            >
+              <Text style={[
+                styles.dateText,
+                selectedDate === d.label && styles.dateActiveText,
+                !d.available && styles.dateDisabledText
+              ]}>{d.label}</Text>
+            </Pressable>
           ))}
         </ScrollView>
 
         <Text style={styles.blockTitle}>Available Times</Text>
         <View style={styles.timeGrid}>
-          {["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:30 PM"].map((t, i) => (
-            <View key={t} style={[styles.timeBox, i === 5 && styles.timeActive, (i === 0 || i === 1 || i === 4) && styles.timeDisabled]}>
-              <Text style={[styles.timeText, i === 5 && styles.timeActiveText, (i === 0 || i === 1 || i === 4) && styles.timeDisabledText]}>{t}</Text>
-            </View>
+          {availableTimes.map((t) => (
+            <Pressable
+              key={t.label}
+              style={[
+                styles.timeBox,
+                selectedTime === t.label && styles.timeActive,
+                !t.available && styles.timeDisabled
+              ]}
+              disabled={!t.available}
+              onPress={() => setSelectedTime(t.label)}
+            >
+              <Text style={[
+                styles.timeText,
+                selectedTime === t.label && styles.timeActiveText,
+                !t.available && styles.timeDisabledText
+              ]}>{t.label}</Text>
+            </Pressable>
           ))}
         </View>
 
@@ -130,9 +232,42 @@ export default function ConsultantProfileScreen() {
           <Text style={styles.bookText}>Book Session</Text>
         </Pressable>
 
-        <Text style={styles.blockTitle}>Reviews</Text>
-        {reviews.map((r) => (
-          <View key={r.name} style={styles.reviewCard}>
+        {/* Reviews Section Header */}
+        <View style={styles.reviewHeaderRow}>
+          <Text style={styles.blockTitleWithMargin0}>Reviews</Text>
+          <Pressable onPress={() => setIsWritingReview(!isWritingReview)}>
+            <Text style={styles.writeReviewBtnText}>
+              {isWritingReview ? "Cancel" : "+ Write a Review"}
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Write Review Form */}
+        {isWritingReview && (
+          <View style={styles.writeReviewContainer}>
+            <TextInput
+              style={styles.reviewInput}
+              placeholder="Share your experience..."
+              placeholderTextColor="#8A9CB5"
+              multiline
+              numberOfLines={4}
+              value={newReviewText}
+              onChangeText={setNewReviewText}
+              textAlignVertical="top"
+            />
+            <Pressable
+              style={[styles.submitReviewBtn, !newReviewText.trim() && styles.submitReviewBtnDisabled]}
+              onPress={()=>{console.log("Thanks For the booking ")}}
+              disabled={!newReviewText.trim()}
+            >
+              <Text style={styles.submitReviewBtnText}>Submit</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {/* Existing Reviews List */}
+        {reviews.map((r, index) => (
+          <View key={index.toString()} style={styles.reviewCard}>
             <View style={styles.reviewTop}>
               <View style={styles.reviewAvatar}>
                 <Text style={styles.reviewAvatarText}>{r.initials}</Text>
@@ -146,6 +281,8 @@ export default function ConsultantProfileScreen() {
             <Text style={styles.reviewText}>{r.text}</Text>
           </View>
         ))}
+
+        <View style={{ height: moderateVerticalScale(40) }} />
       </ScrollView>
     </ScreenWrapper>
   );
@@ -156,22 +293,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-
   headerTitle: {
     fontSize: TextStyles.heading,
     fontWeight: "600",
   },
-
   topCard: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical : moderateVerticalScale(10),
+    marginVertical: moderateVerticalScale(10),
   },
-
   avatarContainer: {
     position: "relative",
   },
-
   avatar: {
     width: moderateScale(80),
     height: moderateScale(80),
@@ -180,15 +313,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 0.2,
-    borderColor: "#b8bbc0"
+    borderColor: "#b8bbc0",
   },
-
   avatarText: {
     fontSize: scale(24),
     fontWeight: "600",
-    color: "#7453C8"
+    color: "#7453C8",
   },
-
   onlineDot: {
     width: moderateScale(16),
     height: moderateScale(16),
@@ -198,78 +329,74 @@ const styles = StyleSheet.create({
     borderColor: colors.white,
     position: "absolute",
     right: -moderateScale(4),
-    bottom: moderateScale(6)
+    bottom: moderateScale(6),
   },
-
   topCardText: {
     flex: 1,
-    marginLeft: moderateScale(14)
+    marginLeft: moderateScale(14),
   },
-
   name: {
     fontSize: TextStyles.heading,
     fontWeight: "600",
-    color: colors.text
+    color: colors.text,
   },
   role: {
     fontSize: TextStyles.caption,
     color: "#6F87A6",
-    marginTop: moderateVerticalScale(4)
+    marginTop: moderateVerticalScale(4),
   },
   rating: {
     marginTop: moderateVerticalScale(6),
     fontSize: scale(14),
     fontWeight: "700",
-    color: "#E67E22"
+    color: "#ffb779",
   },
   reviewCount: {
     color: "#8A9CB5",
     fontWeight: "400",
   },
-
   sectionCard: {
     backgroundColor: colors.white,
     borderRadius: radius.md,
     padding: moderateScale(14),
     borderWidth: 0.2,
-    borderColor: "#b8bbc0"
+    borderColor: "#b8bbc0",
   },
-
   sectionTitle: {
     fontSize: TextStyles.subtitle,
-    fontWeight: "600",
-    marginBottom: moderateVerticalScale(4)
-  }, 
-
+    fontWeight: "500",
+    marginBottom: moderateVerticalScale(4),
+  },
   paragraph: {
     fontSize: TextStyles.stepCounts,
-    lineHeight: scale(20)
+    lineHeight: scale(20),
   },
-
   blockTitle: {
-    marginTop : moderateVerticalScale(12),
+    marginTop: moderateVerticalScale(12),
+    fontSize: TextStyles.subtitle,
+    fontWeight: "500",
+    marginBottom: moderateVerticalScale(8)
+  },
+  blockTitleWithMargin0: {
     fontSize: TextStyles.subtitle,
     fontWeight: "600",
   },
-
   pillsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: moderateScale(6),
-    paddingVertical: moderateVerticalScale(6),
+    marginBottom: moderateVerticalScale(12),
   },
-
   pill: {
     backgroundColor: "#7984fb",
     borderRadius: moderateScale(20),
     paddingHorizontal: moderateScale(12),
     paddingVertical: moderateVerticalScale(5),
   },
-
   pillText: {
     color: "#ffffff",
     fontWeight: "600",
-    fontSize: TextStyles.caption
+    fontSize: TextStyles.caption,
   },
   infoGrid: {
     flexDirection: "row",
@@ -282,51 +409,54 @@ const styles = StyleSheet.create({
     paddingVertical: moderateVerticalScale(16),
     alignItems: "center",
     borderWidth: 0.2,
-    borderColor: "#b8bbc0"
+    borderColor: "#b8bbc0",
   },
-  infoIcon: {
-    fontSize: scale(20)
+  icons: {
+    height: moderateVerticalScale(23),
+    width : moderateScale(24),
   },
   infoText: {
     textAlign: "center",
     marginTop: moderateVerticalScale(6),
-    color: "#6F87A6",
-    fontWeight: "600",
-    fontSize: scale(11)
+    fontWeight: "400",
+    fontSize: TextStyles.caption,
   },
   sessionRow: {
     flexDirection: "row",
-    marginHorizontal: moderateScale(16),
-    gap: moderateScale(10)
+    gap: moderateScale(10),
   },
   sessionCard: {
     flex: 1,
     backgroundColor: colors.white,
     borderRadius: radius.md,
-    paddingVertical: moderateVerticalScale(14),
+    paddingVertical: moderateVerticalScale(8),
     alignItems: "center",
     borderWidth: 0.2,
-    borderColor: "#b8bbc0"
   },
   sessionActive: {
     backgroundColor: "#F1EBFF",
-    borderColor: "#7453C8"
+    borderColor: "#7453C8",
+    borderWidth: 1,
   },
   sessionIcon: {
-    fontSize: scale(20)
+    width: moderateScale(24),
+    height: moderateScale(24),
+  },
+
+  sessionIconActive: {
+    tintColor: "#7453C8",
   },
   sessionLabel: {
     marginTop: moderateVerticalScale(6),
     color: "#6F87A6",
     fontWeight: "600",
-    fontSize: TextStyles.caption
+    fontSize: TextStyles.caption,
   },
   sessionActiveText: {
-    color: "#7453C8"
+    color: "#7453C8",
   },
   dateScroll: {
-    paddingHorizontal: moderateScale(16),
-    gap: moderateScale(10)
+    gap: moderateScale(10),
   },
   dateBox: {
     width: moderateScale(68),
@@ -340,23 +470,29 @@ const styles = StyleSheet.create({
   },
   dateActive: {
     backgroundColor: "#7453C8",
-    borderColor: "#7453C8"
+    borderColor: "#7453C8",
+  },
+  dateDisabled: {
+    backgroundColor: "#F0F4FA",
+    opacity: 0.6,
   },
   dateText: {
     color: colors.text,
     fontWeight: "600",
     textAlign: "center",
     fontSize: TextStyles.caption,
-    lineHeight: scale(20)
+    lineHeight: scale(20),
   },
   dateActiveText: {
-    color: colors.white
+    color: colors.white,
+  },
+  dateDisabledText: {
+    color: "#A2B0C4",
   },
   timeGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: moderateScale(16),
-    gap: moderateScale(10)
+    gap: moderateScale(10),
   },
   timeBox: {
     width: "22.5%",
@@ -365,40 +501,100 @@ const styles = StyleSheet.create({
     paddingVertical: moderateVerticalScale(10),
     alignItems: "center",
     borderWidth: 0.2,
-    borderColor: "#b8bbc0"
+    borderColor: "#b8bbc0",
   },
   timeText: {
     color: colors.text,
     fontWeight: "600",
     fontSize: scale(11),
-    textAlign: "center"
+    textAlign: "center",
   },
   timeActive: {
     backgroundColor: "#7453C8",
-    borderColor: "#7453C8"
+    borderColor: "#7453C8",
   },
   timeActiveText: {
-    color: colors.white
+    color: colors.white,
   },
   timeDisabled: {
     backgroundColor: "#F0F4FA",
-    opacity: 0.6
+    opacity: 0.6,
   },
   timeDisabledText: {
-    color: "#A2B0C4"
+    color: "#A2B0C4",
+  },
+  bookBtn: {
+    marginTop: moderateVerticalScale(24),
+    backgroundColor: "#7453C8",
+    borderRadius: moderateScale(24),
+    paddingVertical: moderateVerticalScale(14),
+    alignItems: "center",
+  },
+  bookText: {
+    color: colors.white,
+    fontSize: TextStyles.body,
+    fontWeight: "600",
+  },
+
+  /* --- Review Section Styles --- */
+  reviewHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: moderateVerticalScale(24),
+    marginBottom: moderateVerticalScale(10),
+  },
+  writeReviewBtnText: {
+    color: "#7453C8",
+    fontWeight: "600",
+    fontSize: TextStyles.caption,
+  },
+  writeReviewContainer: {
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
+    padding: moderateScale(14),
+    marginBottom: moderateVerticalScale(10),
+    borderWidth: 0.2,
+    borderColor: "#b8bbc0",
+  },
+  reviewInput: {
+    height: moderateVerticalScale(80),
+    backgroundColor: "#F9FAFC",
+    borderRadius: radius.sm,
+    padding: moderateScale(12),
+    fontSize: TextStyles.caption,
+    color: colors.text,
+    borderWidth: 0.2,
+    borderColor: "#E2E8F0",
+  },
+  submitReviewBtn: {
+    backgroundColor: "#7453C8",
+    borderRadius: moderateScale(20),
+    paddingVertical: moderateVerticalScale(10),
+    alignItems: "center",
+    marginTop: moderateVerticalScale(12),
+    alignSelf: "flex-end",
+    paddingHorizontal: moderateScale(20),
+  },
+  submitReviewBtnDisabled: {
+    backgroundColor: "#A2B0C4",
+  },
+  submitReviewBtnText: {
+    color: colors.white,
+    fontWeight: "600",
+    fontSize: scale(12),
   },
   reviewCard: {
     backgroundColor: colors.white,
     borderRadius: radius.md,
-    marginHorizontal: moderateScale(16),
     marginTop: moderateVerticalScale(10),
     padding: moderateScale(14),
     borderWidth: 0.2,
-    borderColor: "#b8bbc0"
+    borderColor: "#b8bbc0",
   },
   reviewTop: {
     flexDirection: "row",
-    alignItems: "center"
+    alignItems: "center",
   },
   reviewAvatar: {
     width: moderateScale(36),
@@ -407,47 +603,32 @@ const styles = StyleSheet.create({
     backgroundColor: "#F1EBFF",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: moderateScale(10)
+    marginRight: moderateScale(10),
   },
   reviewAvatarText: {
     color: "#7453C8",
     fontWeight: "600",
-    fontSize: scale(12)
+    fontSize: scale(12),
   },
   reviewName: {
     fontSize: TextStyles.body,
     fontWeight: "600",
-    color: colors.text
+    color: colors.text,
   },
   reviewDate: {
     color: "#6F87A6",
     marginTop: moderateVerticalScale(2),
-    fontSize: scale(11)
+    fontSize: scale(11),
   },
   reviewStars: {
     color: "#E67E22",
     fontSize: scale(14),
-    fontWeight: "700"
+    fontWeight: "700",
   },
   reviewText: {
     color: colors.text,
     fontSize: TextStyles.caption,
     lineHeight: scale(20),
-    marginTop: moderateVerticalScale(10)
+    marginTop: moderateVerticalScale(10),
   },
-  bookBtn: {
-    marginHorizontal: moderateScale(16),
-    marginTop: moderateVerticalScale(24),
-    backgroundColor: "#7453C8",
-    borderRadius: moderateScale(24),
-    paddingVertical: moderateVerticalScale(14),
-    alignItems: "center"
-  },
-
-  bookText: {
-    color: colors.white,
-    fontSize: TextStyles.body,
-    fontWeight: "600"
-  },
-
 });

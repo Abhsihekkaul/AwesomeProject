@@ -8,7 +8,7 @@ import ProfileNameScreen from "../features/profileSetup/ProfileNameScreen";
 import OnboardingScreen from "../features/onboarding/OnboardingScreen";
 
 import ChatRoomScreen from "../features/chat/ChatRoomScreen";
-import BookingScreen from "../features/consultants/BookingScreen";
+// import BookingScreen from "../features/consultants/BookingScreen";
 import ConsultantProfileScreen from "../features/consultants/ConsultantProfileScreen";
 import CreatePostScreen from "../features/groups/CreatePostScreen";
 import GroupDetailsScreen from "../features/groups/GroupDetailsScreen";
@@ -60,7 +60,7 @@ export default function AppNavigator() {
         <Stack.Screen name="RequestGroup" component={RequestGroupScreen} />
         <Stack.Screen name="CreatePost" component={CreatePostScreen} />
         <Stack.Screen name="GroupDetails" component={GroupDetailsScreen} />
-        <Stack.Screen name="Booking" component={BookingScreen} />
+        {/* <Stack.Screen name="Booking" component={BookingScreen} /> */}
         <Stack.Screen name="ConsultantProfile" component={ConsultantProfileScreen} />
         <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
