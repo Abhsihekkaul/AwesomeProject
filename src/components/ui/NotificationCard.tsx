@@ -1,26 +1,45 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { moderateScale, scale } from "react-native-size-matters";
+import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
+import { colors } from "../../theme/colors";
+import { TextStyles } from "../../theme/typography";
+import { radius } from "../../theme/radius";
 
-type Props = {
+export type NotificationType = {
+  type: string;
   title: string;
-  subtitle: string;
+  message: string;
   time: string;
+  color: string;
 };
 
-export default function NotificationCard({
-  title,
-  subtitle,
-  time,
-}: Props) {
+type Props = {
+  notification: NotificationType;
+};
+
+export default function NotificationCard({ notification }: Props) {
+
+  // Dynamically assign an icon based on the category
+  const getIcon = () => {
+    switch (notification.type) {
+      case "Groups": return "👥";
+      case "Chats": return "💬";
+      case "System": return "⚙️";
+      default: return "🔔";
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.icon} />
+      {/* Icon with a slight opacity background based on its primary color */}
+      <View style={[styles.iconBox, { backgroundColor: notification.color + "15" }]}>
+        <Text style={styles.iconText}>{getIcon()}</Text>
+      </View>
 
-      <View style={{ flex: 1 }}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
-        <Text style={styles.time}>{time}</Text>
+      <View style={styles.textContainer}>
+        <Text style={styles.title}>{notification.title}</Text>
+        <Text style={styles.message}>{notification.message}</Text>
+        <Text style={styles.time}>{notification.time}</Text>
       </View>
     </View>
   );
@@ -29,29 +48,44 @@ export default function NotificationCard({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    paddingVertical: moderateScale(18),
-    borderBottomWidth: moderateScale(1),
-    borderBottomColor: "#EDF1F7",
+    padding: moderateScale(16),
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
+    borderWidth: 0.2,
+    borderColor: "#b8bbc0",
+    marginBottom: moderateVerticalScale(8),
+    marginHorizontal: moderateScale(16),
   },
-  icon: {
+  iconBox: {
     width: moderateScale(48),
     height: moderateScale(48),
     borderRadius: moderateScale(24),
-    backgroundColor: "#EEE7FF",
-    marginRight: moderateScale(12),
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: moderateScale(14),
+  },
+  iconText: {
+    fontSize: scale(20),
+  },
+  textContainer: {
+    flex: 1,
+    justifyContent: "center",
   },
   title: {
-    fontSize: scale(18),
+    fontSize: TextStyles.body,
     fontWeight: "700",
-    color: "#1F314A",
+    color: colors.text,
   },
-  subtitle: {
-    marginTop: moderateScale(4),
+  message: {
+    marginTop: moderateVerticalScale(4),
     color: "#6F87A6",
+    fontSize: TextStyles.caption,
+    lineHeight: scale(18),
   },
   time: {
-    marginTop: moderateScale(6),
-    color: "#6F87A6",
-    fontSize: scale(13),
+    marginTop: moderateVerticalScale(8),
+    color: "#A2B0C4",
+    fontSize: scale(11),
+    fontWeight: "600",
   },
 });

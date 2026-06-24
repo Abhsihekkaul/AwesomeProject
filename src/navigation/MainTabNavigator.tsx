@@ -50,7 +50,7 @@ export default function MainTabNavigator() {
 
   const onTabPress = (index: number) => {
     setActiveIndex(index);
-    pagerRef.current?.setPage(index);
+    pagerRef.current?.setPageWithoutAnimation(index);
   };
 
   return (

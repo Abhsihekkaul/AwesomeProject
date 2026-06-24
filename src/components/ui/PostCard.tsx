@@ -14,6 +14,7 @@ import imagePath from "../../constant/imagePath";
 
 interface Props {
     post: {
+        id?: string;
         author: string;
         circle: string;
         time: string;
@@ -23,9 +24,11 @@ interface Props {
         helpfulCount: number;
         commentCount: number;
     };
+    onCommentPress?: () => void;
+    onSharePress?: () => void;
 }
 
-export default function PostCard({ post }: Props) {
+export default function PostCard({ post, onCommentPress, onSharePress }: Props) {
     return (
         <View style={styles.card}>
 
@@ -69,22 +72,22 @@ export default function PostCard({ post }: Props) {
 
             {/* Actions */}
             <View style={styles.actions}>
-                <Pressable >
+                <Pressable>
                     <Image style={styles.love} source={imagePath.HeartIcon} />
                     <Text>{post.supportCount}</Text>
                 </Pressable>
 
-                <Pressable >
+                <Pressable>
                     <Image style={styles.love} source={imagePath.Help} />
                     <Text> {post.helpfulCount}</Text>
                 </Pressable>
 
-                <Pressable >
+                <Pressable onPress={onCommentPress}>
                     <Image style={styles.love} source={imagePath.ChatIcon} />
                     <Text> {post.commentCount}</Text>
                 </Pressable>
 
-                <Pressable>
+                <Pressable onPress={onSharePress}>
                     <Image style={styles.love} source={imagePath.ShareIcon} />
                     <Text> {post.commentCount}</Text>
                 </Pressable>
@@ -97,7 +100,6 @@ export default function PostCard({ post }: Props) {
         </View>
     );
 }
-
 
 const styles = StyleSheet.create({
     card: {
@@ -154,12 +156,11 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         paddingTop: moderateVerticalScale(14),
-        paddingHorizontal : moderateScale(4),
+        paddingHorizontal: moderateScale(4),
     },
-
 
     love: {
         height: moderateVerticalScale(18),
-        width : moderateScale(18)
+        width: moderateScale(18)
     }
 });
