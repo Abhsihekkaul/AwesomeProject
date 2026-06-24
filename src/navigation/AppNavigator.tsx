@@ -19,6 +19,7 @@ import AuthScreen from "../features/auth/AuthScreen";
 import NotificationsScreen from "../features/notifications/NotificationsScreen";
 import ProfileScreen from "../features/profile/ProfileScreen";
 import SettingsScreen from "../features/profile/SettingsScreen";
+import DirectoryScreen from "../components/ui/DirectoryScreen";
 
 
 export type RootStackParamList = {
@@ -38,6 +39,7 @@ export type RootStackParamList = {
   Settings: undefined;
   Notifications: undefined;
   Profile: undefined;
+  Directory: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -66,6 +68,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Directory" component={DirectoryScreen} />
         
       </Stack.Navigator>
     </NavigationContainer>

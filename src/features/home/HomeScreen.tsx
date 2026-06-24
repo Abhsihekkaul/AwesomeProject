@@ -23,9 +23,9 @@ export default function HomeScreen() {
 
     // Updated navigation routes and params
     const quickActions = [
-        { title: "Groups", Count: "5", route: "Directory", type: "Groups" },
-        { title: "Posts", Count: "7", route: "Profile" }, // Routes straight to Profile
-        { title: "Friends", Count: "100", route: "Directory", type: "Friends" },
+        { title: "Groups", Count: "23", route: "Directory", type: "Groups" },
+        { title: "Posts", Count: "2", route: "Profile" }, // Routes straight to Profile
+        { title: "Friends", Count: "28", route: "Directory", type: "Friends" },
     ];
 
     return (

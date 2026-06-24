@@ -2,118 +2,385 @@ import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View, Pressable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../theme/colors";
-import TagChip from "../../components/ui/TagChip";
 import AppToggle from "../../components/ui/AppToggle";
-import { scale } from "react-native-size-matters";
+import TagChip from "../../components/ui/TagChip"; // Assuming you still have this to display the typed tags
+import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
+import BackButton from "../../components/ui/BackButton";
+import { TextStyles } from "../../theme/typography";
+import { radius } from "../../theme/radius";
 
 export default function CreatePostScreen() {
   const navigation = useNavigation<any>();
-  const [anonymous, setAnonymous] = useState(false);
   const [warning, setWarning] = useState(false);
-  const tags = ["💙 Vent", "🌟 Win", "❓ Question", "💡 Tip", "🌙 Sleep", "💊 Meds"];
+
+  // New States for tags and groups
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [customTags, setCustomTags] = useState<string[]>([]);
+  const [currentTag, setCurrentTag] = useState("");
+
+  // Function to handle adding a typed tag
+  const handleAddTag = () => {
+    if (currentTag.trim().length > 0 && !customTags.includes(currentTag.trim())) {
+      setCustomTags([...customTags, currentTag.trim()]);
+      setCurrentTag("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setCustomTags(customTags.filter(t => t !== tagToRemove));
+  };
 
   return (
     <ScreenWrapper>
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>‹</Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+
+        {/* Header */}
+        <View style={styles.header}>
+          <BackButton />
+          <View style={styles.headerTextWrap}>
+            <Text style={styles.title}>New Post</Text>
+            <Text style={styles.sub}>
+              {selectedGroup ? `Sharing to ${selectedGroup}` : "Sharing to My Feed"}
+            </Text>
+          </View>
+          <Pressable style={styles.postBtn}>
+            <Text style={styles.postText}>Post</Text>
+          </Pressable>
+        </View>
+
+        {/* Group Selection Row (Replaced Author Row) */}
+        <Pressable style={styles.groupSelectRow}>
+          <View style={styles.groupSelectInfo}>
+            <Text style={styles.groupSelectLabel}>Posting to</Text>
+            <Text style={styles.groupSelectValue}>
+              {selectedGroup ? selectedGroup : "My Feed (No Group)"}
+            </Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
         </Pressable>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.title}>New Post</Text>
-          <Text style={styles.sub}>Sharing to Fibromyalgia Warriors</Text>
+
+        {/* Editor Container */}
+        <View style={styles.editor}>
+
+          {/* Media Toolbar (Moved Above Inputs) */}
+          <View style={styles.mediaToolbar}>
+            <Pressable style={styles.mediaBtn}>
+              <Text style={styles.mediaIcon}>🖼</Text>
+              <Text style={styles.mediaBtnText}>Image</Text>
+            </Pressable>
+            <Pressable style={styles.mediaBtn}>
+              <Text style={styles.mediaIcon}>🎥</Text>
+              <Text style={styles.mediaBtnText}>Video</Text>
+            </Pressable>
+
+            {/* Suggested addition: Attach Link */}
+            {/* <Pressable style={styles.mediaBtn}>
+              <Text style={styles.mediaIcon}>🔗</Text>
+              <Text style={styles.mediaBtnText}>Link</Text>
+            </Pressable> */}
+          </View>
+
+          <TextInput
+            placeholder="What's on your mind? Give it a title..."
+            placeholderTextColor="#919BB0"
+            style={styles.titleInput}
+          />
+          <View style={styles.line} />
+          <TextInput
+            multiline
+            placeholder="Share your experience, question, or update. This community understands..."
+            placeholderTextColor="#B0B8C8"
+            style={styles.bodyInput}
+          />
         </View>
-        <Pressable style={styles.postBtn}>
-          <Text style={styles.postText}>✈ Post</Text>
+
+        {/* Custom Tag Input Area */}
+        <Text style={styles.sectionLabel}>Add tags (optional)</Text>
+        <View style={styles.tagInputContainer}>
+          <TextInput
+            style={styles.tagInput}
+            placeholder="Type a tag and press enter..."
+            placeholderTextColor="#919BB0"
+            value={currentTag}
+            onChangeText={setCurrentTag}
+            onSubmitEditing={handleAddTag} // Adds tag when user hits return/enter
+            blurOnSubmit={false} // Keeps keyboard open to type multiple tags
+          />
+          <Pressable style={styles.addTagBtn} onPress={handleAddTag}>
+            <Text style={styles.addTagBtnText}>Add</Text>
+          </Pressable>
+        </View>
+
+        {/* Display Added Tags */}
+        {customTags.length > 0 && (
+          <View style={styles.tagsWrap}>
+            {customTags.map((t) => (
+              <Pressable key={t} onPress={() => removeTag(t)}>
+                <TagChip label={`${t}  ✕`} />
+              </Pressable>
+            ))}
+          </View>
+        )}
+
+        {/* Content Warning Toggle */}
+        <View style={styles.optionRow}>
+          <View style={styles.optionTextWrap}>
+            <Text style={styles.optTitle}>⚠ Content warning</Text>
+            <Text style={styles.optSub}>For sensitive or difficult topics</Text>
+          </View>
+          <AppToggle value={warning} onValueChange={setWarning} />
+        </View>
+
+        {/* Tag Member Action */}
+        <Pressable style={styles.optionSimple}>
+          <Text style={styles.simpleIcon}>🏷</Text>
+          <Text style={styles.simpleText}>Tag another member</Text>
         </Pressable>
-      </View>
 
-      <View style={styles.authorRow}>
-        <View style={styles.avatar}><Text style={styles.avatarText}>S</Text></View>
-        <View>
-          <Text style={styles.authorName}>Sarah</Text>
-          <Text style={styles.authorSub}>Visible to group members</Text>
+        {/* SUGGESTED ADDITIONS (Commented out for future review) */}
+        {/* <Pressable style={styles.optionSimple}>
+          <Text style={styles.simpleIcon}>📊</Text>
+          <Text style={styles.simpleText}>Create a poll</Text>
+        </Pressable>
+
+        <Pressable style={styles.optionSimple}>
+          <Text style={styles.simpleIcon}>📍</Text>
+          <Text style={styles.simpleText}>Add location</Text>
+        </Pressable> 
+        */}
+
+        {/* Notice */}
+        <View style={styles.notice}>
+          <Text style={styles.noticeText}>
+            🛡 Safe space reminder: Be kind and supportive. Do not share personal medical data publicly.
+          </Text>
         </View>
-      </View>
 
-      <View style={styles.editor}>
-        <TextInput placeholder="What's on your mind? Give it a title..." placeholderTextColor="#919BB0" style={styles.titleInput} />
-        <View style={styles.line} />
-        <TextInput
-          multiline
-          placeholder="Share your experience, question, or update. This community understands..."
-          placeholderTextColor="#B0B8C8"
-          style={styles.bodyInput}
-        />
-      </View>
-
-      <Text style={styles.sectionLabel}>Add a tag (optional)</Text>
-      <View style={styles.tagsWrap}>
-        {tags.map((t) => <TagChip key={t} label={t} />)}
-      </View>
-
-      <View style={styles.optionRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.optTitle}>👁 Post anonymously</Text>
-          <Text style={styles.optSub}>Your name won't appear</Text>
-        </View>
-        <AppToggle value={anonymous} onValueChange={setAnonymous} />
-      </View>
-
-      <View style={styles.optionRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.optTitle}>⚠ Content warning</Text>
-          <Text style={styles.optSub}>For sensitive or difficult topics</Text>
-        </View>
-        <AppToggle value={warning} onValueChange={setWarning} />
-      </View>
-
-      <Pressable style={styles.optionSimple}>
-        <Text style={styles.simpleIcon}>🖼</Text>
-        <Text style={styles.simpleText}>Attach image</Text>
-      </Pressable>
-
-      <Pressable style={styles.optionSimple}>
-        <Text style={styles.simpleIcon}>🏷</Text>
-        <Text style={styles.simpleText}>Tag another member</Text>
-      </Pressable>
-
-      <View style={styles.notice}>
-        <Text style={styles.noticeText}>
-          🛡 Safe space reminder: Be kind and supportive. Do not share personal medical data publicly.
-        </Text>
-      </View>
       </ScrollView>
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, paddingBottom: 120 },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-  back: { fontSize: 36, color: colors.text, marginRight: 8 },
-  title: { fontSize: 28, fontWeight: "800", color: colors.text },
-  sub: { color: "#6F87A6", fontSize: scale(16), marginTop: 4 },
-  postBtn: { backgroundColor: "#EAF1FF", borderRadius: 999, paddingHorizontal: 16, paddingVertical: 12 },
-  postText: { color: "#6F87A6", fontWeight: "800" },
-  authorRow: { flexDirection: "row", alignItems: "center", paddingVertical: 16, borderTopWidth: 1, borderBottomWidth: 1, borderColor: "#E3EAF4" },
-  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: "#E9E3FB", alignItems: "center", justifyContent: "center", marginRight: 12 },
-  avatarText: { color: "#7453C8", fontWeight: "800", fontSize: 18 },
-  authorName: { fontSize: 18, fontWeight: "800", color: colors.text },
-  authorSub: { color: "#6F87A6", marginTop: 3 },
-  editor: { minHeight: 360, backgroundColor: colors.white, borderRadius: 24, padding: 18, marginTop: 8, borderWidth: 1, borderColor: "#E3EAF4" },
-  titleInput: { fontSize: 24, fontWeight: "800", color: colors.text, padding: 0 },
-  line: { height: 1, backgroundColor: "#E3EAF4", marginVertical: 18 },
-  bodyInput: { minHeight: 250, fontSize: 18, lineHeight: 28, color: colors.text, textAlignVertical: "top" },
-  sectionLabel: { color: "#6F87A6", fontWeight: "800", fontSize: scale(16), marginTop: 18, marginBottom: 10 },
-  tagsWrap: { flexDirection: "row", flexWrap: "wrap" },
-  optionRow: { flexDirection: "row", alignItems: "center", paddingVertical: 14, borderTopWidth: 1, borderTopColor: "#E3EAF4" },
-  optTitle: { fontSize: 18, fontWeight: "800", color: colors.text },
-  optSub: { color: "#6F87A6", marginTop: 3 },
-  optionSimple: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
-  simpleIcon: { fontSize: scale(20), marginRight: 10 },
-  simpleText: { fontSize: 18, fontWeight: "700", color: colors.text },
-  notice: { backgroundColor: "#EAF1FF", borderRadius: 18, padding: 14, marginTop: 8 },
-  noticeText: { color: "#4E79C7", fontSize: scale(14), lineHeight: 22 },
+  // Header
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: moderateVerticalScale(8)
+  },
+  headerTextWrap: {
+    flex: 1,
+    marginLeft: moderateScale(8)
+  },
+  title: {
+    fontSize: TextStyles.heading,
+    fontWeight: "500",
+    color: colors.text
+  },
+  sub: {
+    color: "#6F87A6",
+    fontSize: TextStyles.caption,
+    fontWeight: "500",
+    marginTop: moderateVerticalScale(2)
+  },
+  postBtn: {
+    backgroundColor: "#5714ff",
+    borderRadius: radius.md,
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateVerticalScale(6),
+    shadowColor: "#7453C8",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  postText: {
+    color: colors.white,
+    fontWeight: "500",
+    fontSize: TextStyles.caption,
+  },
+
+  // Group Selection Row
+  groupSelectRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: moderateVerticalScale(12),
+    borderTopWidth: 0.2,
+    borderBottomWidth: 0.2,
+    borderColor: "#b8bbc0",
+    justifyContent: "space-between"
+  },
+  groupSelectInfo: {
+    flex: 1,
+  },
+  groupSelectLabel: {
+    color: "#6F87A6",
+    fontSize: TextStyles.caption,
+    marginBottom: moderateVerticalScale(2)
+  },
+  groupSelectValue: {
+    fontSize: TextStyles.body,
+    fontWeight: "500",
+    color: colors.text
+  },
+  chevron: {
+    fontSize: scale(24),
+    color: "#6F87A6",
+    paddingRight: moderateScale(4)
+  },
+
+  // Editor Area
+  editor: {
+    minHeight: moderateVerticalScale(280),
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
+    padding: moderateScale(16),
+    marginTop: moderateVerticalScale(16),
+    borderWidth: 0.2,
+    borderColor: "#b8bbc0"
+  },
+  // Media Toolbar inside Editor
+  mediaToolbar: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: moderateVerticalScale(16),
+    paddingBottom: moderateVerticalScale(12),
+    borderBottomWidth: 0.2,
+    borderBottomColor: "#E2E8F0",
+    gap: moderateScale(16)
+  },
+  mediaBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F9FAFC",
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateVerticalScale(6),
+    borderRadius: radius.sm,
+    borderWidth: 0.2,
+    borderColor: "#E2E8F0",
+  },
+  mediaIcon: {
+    fontSize: scale(14),
+    marginRight: moderateScale(6)
+  },
+  mediaBtnText: {
+    fontSize: TextStyles.caption,
+    fontWeight: "500",
+    color: "#4A5568"
+  },
+  titleInput: {
+    fontSize: TextStyles.body,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  line: {
+    height: 0.3,
+    backgroundColor: "#b8bbc0",
+    marginVertical: moderateVerticalScale(1)
+  },
+
+  bodyInput: {
+    minHeight: moderateVerticalScale(180),
+    fontSize: TextStyles.caption,
+    color: colors.text,
+    textAlignVertical: "top",
+  },
+
+  // Custom Tag Input
+  sectionLabel: {
+    color: colors.text,
+    fontWeight: "500",
+    fontSize: TextStyles.body,
+    marginTop: moderateVerticalScale(20),
+    marginBottom: moderateVerticalScale(10)
+  },
+  tagInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 0.2,
+    borderColor: "#b8bbc0",
+    borderRadius: radius.md,
+    paddingHorizontal: moderateScale(12),
+    backgroundColor: colors.white,
+    marginBottom: moderateVerticalScale(12)
+  },
+  tagInput: {
+    flex: 1,
+    height: moderateVerticalScale(44),
+    fontSize: TextStyles.body,
+    color: colors.text,
+  },
+  addTagBtn: {
+    backgroundColor: "#E9E3FB",
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateVerticalScale(6),
+    borderRadius: radius.sm,
+  },
+  addTagBtnText: {
+    color: "#7453C8",
+    fontWeight: "600",
+    fontSize: scale(12)
+  },
+  tagsWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: moderateScale(8),
+    marginBottom: moderateVerticalScale(10)
+  },
+
+  // Options Rows
+  optionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: moderateVerticalScale(14),
+    borderTopWidth: 0.2,
+    borderTopColor: "#b8bbc0"
+  },
+  optionTextWrap: {
+    flex: 1,
+  },
+  optTitle: {
+    fontSize: TextStyles.body,
+    fontWeight: "500",
+    color: colors.text
+  },
+  optSub: {
+    color: "#6F87A6",
+    fontSize: TextStyles.caption,
+    marginTop: moderateVerticalScale(2)
+  },
+
+  // Simple Action Buttons
+  optionSimple: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: moderateVerticalScale(12),
+    borderTopWidth: 0.2,
+    borderTopColor: "#b8bbc0"
+  },
+  simpleIcon: {
+    fontSize: scale(20),
+    marginRight: moderateScale(10)
+  },
+  simpleText: {
+    fontSize: TextStyles.body,
+    fontWeight: "500",
+    color: colors.text
+  },
+
+  // Notice Box
+  notice: {
+    backgroundColor: "#F9FAFC",
+    borderWidth: 0.2,
+    borderColor: "#b8bbc0",
+    borderRadius: radius.md,
+    padding: moderateScale(8),
+    marginTop: moderateVerticalScale(6)
+  },
+  noticeText: {
+    color: "#6F87A6",
+    fontSize: TextStyles.caption,
+    lineHeight: scale(16)
+  },
 });

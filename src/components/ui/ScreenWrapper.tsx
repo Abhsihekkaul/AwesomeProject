@@ -19,7 +19,7 @@ const ScreenWrapper = ({
   children,
   style,
   barStyle = "dark-content",
-  backgroundColor = "#F5F8FD", // Note: Change this to "#FFFFFF" if you want a pure white background overall
+  backgroundColor = "#f9fafc", // Note: Change this to "#FFFFFF" if you want a pure white background overall
 }: Props) => {
   return (
     <>
