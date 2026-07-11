@@ -1,15 +1,17 @@
 import { useNavigation } from "@react-navigation/native";
-import React, { useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useRef, useState } from "react";
+import { Image, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { moderateScale, moderateVerticalScale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import UserAvatar from "../../components/ui/UserAvatar";
 import PostCard from "../../components/ui/PostCard";
-import { colors } from "../../theme/colors";
+import SearchBar from "../../components/ui/SearchBar";
+import { useTheme } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
 import imagePath from "../../constant/imagePath";
 import { radius } from "../../theme/radius";
 import { dummyPosts } from "../../utils/dummyPost";
+import { dummyFriends, dummyGroups } from "../../components/ui/DirectoryScreen";
 
 // Import your newly created sheets here
 import CommentsSheet from "../../components/ui/CommentsSheet";
@@ -21,21 +23,60 @@ export default function HomeScreen() {
     const [selectedCommentPost, setSelectedCommentPost] = useState<any>(null);
     const [selectedSharePost, setSelectedSharePost] = useState<any>(null);
 
-    // Updated navigation routes and params
+    const { colors } = useTheme();
+    const styles = makeStyles(colors);
+
+    // Updated navigation routes and params, with social-style counts.
+    // "My Posts" shows the user's mini avatar — it represents *their* content,
+    // not the generic compose glyph.
     const quickActions = [
-        { title: "Groups", Count: "23", route: "Directory", type: "Groups" },
-        { title: "Posts", Count: "2", route: "Profile" }, // Routes straight to Profile
-        { title: "Friends", Count: "28", route: "Directory", type: "Friends" },
-    ];
+        { title: "Groups", count: dummyGroups.length, icon: imagePath.GroupIcon, route: "Directory", type: "Groups" },
+        { title: "My Posts", count: dummyPosts.slice(0, 2).length, isAvatar: true, route: "Profile" }, // Routes straight to Profile
+        { title: "Friends", count: dummyFriends.length, icon: imagePath.UserIcon, route: "Directory", type: "Friends" },
+    ] as const;
+
+    // Hidden Instagram-style gesture: swipe right anywhere on the feed to open the
+    // post composer (swipe back / left-edge gesture returns). No visible chrome.
+    // Handlers live on a wrapper View (NOT the ScrollView — its own responder logic
+    // would swallow them) and use the capture phase so a decisively horizontal drag
+    // wins before the vertical scroll claims the touch.
+    const swipeHandled = useRef(false);
+    const panResponder = useRef(
+        PanResponder.create({
+            onMoveShouldSetPanResponderCapture: (_evt, g) =>
+                g.dx > 20 && g.dx > Math.abs(g.dy) * 2,
+            onPanResponderGrant: () => {
+                swipeHandled.current = false;
+            },
+            onPanResponderMove: (_evt, g) => {
+                if (!swipeHandled.current && g.dx > 56) {
+                    swipeHandled.current = true;
+                    navigation.navigate("CreatePost");
+                }
+            },
+            onPanResponderRelease: () => {
+                swipeHandled.current = false;
+            },
+            onPanResponderTerminate: () => {
+                swipeHandled.current = false;
+            },
+        }),
+    ).current;
 
     return (
-        <ScreenWrapper>
+        <ScreenWrapper edges={["top", "left", "right"]}>
+            <View style={styles.flex} {...panResponder.panHandlers}>
             <ScrollView showsVerticalScrollIndicator={false}>
-                <View style={styles.topRow}>
-                    <UserAvatar MarginRightSide={8} initials="A" size={40} bg="#E9E3FB" color="#7453C8" />
-                    <View style={{ flex: 1, marginLeft: 8 }}>
-                        <Text style={styles.greeting}>Good afternoon,</Text>
-                        <Text style={styles.name}>Abhishek</Text>
+                <View style={styles.topBar}>
+                    <Pressable onPress={() => navigation.navigate("Profile")}>
+                        <UserAvatar initials="A" size={40} MarginRightSide={0} />
+                    </Pressable>
+
+                    <View style={styles.topBarSearch}>
+                        <SearchBar
+                            placeholder="Search people, groups, consultants..."
+                            onPress={() => navigation.navigate("Search")}
+                        />
                     </View>
 
                     <Pressable onPress={() => navigation.navigate("Notifications")}>
@@ -48,7 +89,7 @@ export default function HomeScreen() {
                         <Pressable
                             key={item.title}
                             onPress={() => {
-                                if (item.type) {
+                                if ("type" in item && item.type) {
                                     navigation.navigate(item.route, { type: item.type });
                                 } else {
                                     navigation.navigate(item.route);
@@ -56,17 +97,31 @@ export default function HomeScreen() {
                             }}
                             style={styles.quickCard}
                         >
-                            <Text style={styles.Numbers}>{item.Count}</Text>
+                            {"isAvatar" in item && item.isAvatar ? (
+                                <UserAvatar initials="A" size={moderateScale(21)} MarginRightSide={0} />
+                            ) : (
+                                <Image source={"icon" in item ? item.icon : undefined} style={styles.quickIcon} />
+                            )}
                             <Text style={[styles.quickTitle]}>{item.title}</Text>
+                            <Text style={styles.quickCount}>{item.count}</Text>
                         </Pressable>
                     ))}
                 </View>
 
-                <Pressable style={styles.QuickTips}>
-                    <Image style={styles.HeartBtn} source={imagePath.HeartIcon} />
+                <Pressable style={styles.QuickTips} onPress={() => navigation.navigate("HealthTips")}>
+                    <Image style={styles.HeartBtn} source={imagePath.HeartIcon} tintColor={colors.text}/>
                     <View style={{ flex: 1 }}>
                         <Text style={styles.TipsTitle}>Need Quick Health Tips</Text>
                         <Text style={styles.TipsSub}>100+ resources available</Text>
+                    </View>
+                    <Image style={styles.RightIcon} source={imagePath.RightIcon} />
+                </Pressable>
+
+                <Pressable style={styles.QuickTips} onPress={() => navigation.navigate("HealingDiary")}>
+                    <Text style={styles.DiaryEmoji}>📔</Text>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.TipsTitle}>Healing Diary</Text>
+                        <Text style={styles.TipsSub}>Private journal — stored only on this phone</Text>
                     </View>
                     <Image style={styles.RightIcon} source={imagePath.RightIcon} />
                 </Pressable>
@@ -79,10 +134,12 @@ export default function HomeScreen() {
                 </View>
 
                 <View style={{ marginTop: moderateVerticalScale(8) }}>
-                    {dummyPosts.map((item) => (
+                    {dummyPosts.map((item, index) => (
                         <PostCard
                             key={item.id}
                             post={item}
+                            index={index}
+                            onPress={() => navigation.navigate("PostDetails", { post: item })}
                             onCommentPress={() => setSelectedCommentPost(item)}
                             onSharePress={() => setSelectedSharePost(item)}
                         />
@@ -90,6 +147,7 @@ export default function HomeScreen() {
                 </View>
 
             </ScrollView>
+            </View>
 
             <CommentsSheet
                 visible={!!selectedCommentPost}
@@ -106,29 +164,29 @@ export default function HomeScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    topRow: {
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
+    flex: {
+        flex: 1,
+    },
+    topBar: {
         flexDirection: "row",
         alignItems: "center",
-        marginBottom: moderateVerticalScale(12)
+        gap: moderateScale(10),
+        marginBottom: moderateVerticalScale(10),
     },
-    greeting: {
-        fontSize: TextStyles.stepCounts,
-    },
-    name: {
-        color: colors.text,
-        fontSize: TextStyles.heading,
-        fontWeight: "600"
+    topBarSearch: {
+        flex: 1,
     },
     notificationIcon: {
         height: moderateVerticalScale(25),
         width: moderateScale(25),
+        tintColor: colors.text,
     },
     QuickTips: {
         flexDirection: "row",
         alignItems: "center",
-        borderColor: "black",
-        borderWidth: 0.2,
+        borderColor: colors.border,
+        borderWidth: StyleSheet.hairlineWidth,
         borderRadius: radius.md,
         padding: moderateScale(11),
         marginBottom: moderateVerticalScale(12),
@@ -138,17 +196,24 @@ const styles = StyleSheet.create({
         width: moderateScale(22),
         marginRight: moderateScale(12)
     },
+    DiaryEmoji: {
+        fontSize: moderateScale(18),
+        marginRight: moderateScale(12),
+    },
     TipsTitle: {
         fontSize: TextStyles.stepCounts,
-        fontWeight: "600"
+        fontWeight: "600",
+        color: colors.text,
     },
     TipsSub: {
         fontSize: TextStyles.caption,
         marginTop: moderateVerticalScale(2),
+        color: colors.mutedText,
     },
     RightIcon: {
         height: moderateVerticalScale(14),
         width: moderateScale(14),
+        tintColor: colors.mutedText,
     },
     quickGrid: {
         flexDirection: "row",
@@ -160,13 +225,24 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    Numbers: {
-        fontSize: TextStyles.body,
-        fontWeight: "600"
+    quickIcon: {
+        height: moderateVerticalScale(20),
+        width: moderateScale(20),
+        resizeMode: "contain",
+        tintColor: colors.text,
     },
     quickTitle: {
         marginTop: moderateVerticalScale(4),
         fontSize: TextStyles.stepCounts,
+        color: colors.mutedText,
+    },
+    // Deliberately quiet: a small tabular figure tucked under the label, not a loud stat
+    quickCount: {
+        marginTop: moderateVerticalScale(1),
+        fontSize: TextStyles.caption,
+        fontWeight: "600",
+        color: colors.text,
+        fontVariant: ["tabular-nums"],
     },
     sectionHeader: {
         flexDirection: "row",
@@ -175,10 +251,12 @@ const styles = StyleSheet.create({
         marginVertical: moderateVerticalScale(2),
     },
     sectionTitle: {
-        fontSize: TextStyles.title,
+        fontSize: TextStyles.body,
+        color: colors.text,
     },
     Post: {
         height: moderateVerticalScale(20),
         width: moderateScale(20),
+        tintColor: colors.text,
     },
 });

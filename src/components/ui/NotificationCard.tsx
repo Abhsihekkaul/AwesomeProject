@@ -1,9 +1,10 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Image } from "react-native";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
+import imagePath from "../../constant/imagePath";
 
 export type NotificationType = {
   type: string;
@@ -11,6 +12,7 @@ export type NotificationType = {
   message: string;
   time: string;
   color: string;
+  unread?: boolean;
 };
 
 type Props = {
@@ -18,22 +20,27 @@ type Props = {
 };
 
 export default function NotificationCard({ notification }: Props) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
 
   // Dynamically assign an icon based on the category
   const getIcon = () => {
     switch (notification.type) {
-      case "Groups": return "👥";
-      case "Chats": return "💬";
-      case "System": return "⚙️";
-      default: return "🔔";
+      case "Groups": return imagePath.GroupIcon;
+      case "Chats": return imagePath.ChatIcon;
+      case "System": return imagePath.ShieldIcon;
+      default: return imagePath.NotificationIcon;
     }
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, notification.unread && styles.containerUnread]}>
       {/* Icon with a slight opacity background based on its primary color */}
       <View style={[styles.iconBox, { backgroundColor: notification.color + "15" }]}>
-        <Text style={styles.iconText}>{getIcon()}</Text>
+        <Image
+          source={getIcon()}
+          style={[styles.icon, { tintColor: notification.color }]}
+        />
       </View>
 
       <View style={styles.textContainer}>
@@ -41,20 +48,21 @@ export default function NotificationCard({ notification }: Props) {
         <Text style={styles.message}>{notification.message}</Text>
         <Text style={styles.time}>{notification.time}</Text>
       </View>
+
+      {notification.unread ? <View style={styles.unreadDot} /> : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
   container: {
     flexDirection: "row",
     padding: moderateScale(16),
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
     marginBottom: moderateVerticalScale(8),
-    marginHorizontal: moderateScale(16),
   },
   iconBox: {
     width: moderateScale(48),
@@ -64,8 +72,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: moderateScale(14),
   },
-  iconText: {
-    fontSize: scale(20),
+  icon: {
+    width: 24,
+    height: 24,
+    resizeMode: "contain",
   },
   textContainer: {
     flex: 1,
@@ -78,14 +88,26 @@ const styles = StyleSheet.create({
   },
   message: {
     marginTop: moderateVerticalScale(4),
-    color: "#6F87A6",
+    color: colors.mutedText,
     fontSize: TextStyles.caption,
     lineHeight: scale(18),
   },
   time: {
     marginTop: moderateVerticalScale(8),
-    color: "#A2B0C4",
+    color: colors.mutedText,
     fontSize: scale(11),
     fontWeight: "600",
+  },
+  containerUnread: {
+    borderColor: colors.primary + "40",
+    backgroundColor: colors.lightPurple + "55",
+  },
+  unreadDot: {
+    width: moderateScale(9),
+    height: moderateScale(9),
+    borderRadius: moderateScale(5),
+    backgroundColor: colors.primary,
+    alignSelf: "center",
+    marginLeft: moderateScale(8),
   },
 });

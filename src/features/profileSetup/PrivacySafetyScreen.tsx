@@ -1,19 +1,23 @@
 import React, { useState } from "react";
-import { StyleSheet, Switch, Text, View } from "react-native";
-import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
+import { StyleSheet, Text, View } from "react-native";
+import { moderateScale, moderateVerticalScale } from "react-native-size-matters";
+import AppToggle from "../../components/ui/AppToggle";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import { SecondaryButton } from "../../components/ui/SecondaryButton";
 import { StepIndicator } from "../../components/ui/StepIndicator";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
 
 
 const PrivacySafetyScreen = ({ navigation }: any) => {
   const [publicProfile, setPublicProfile] = useState(false);
-  const [showConditions, setShowConditions] = useState(true);
+  const [_showConditions, _setShowConditions] = useState(true);
   const [anonymousPosts, setAnonymousPosts] = useState(false);
+
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
 
   const ToggleRow = ({
     title,
@@ -31,7 +35,7 @@ const PrivacySafetyScreen = ({ navigation }: any) => {
         <Text style={styles.cardTitle}>{title}</Text>
         <Text style={styles.cardSubtitle}>{subtitle}</Text>
       </View>
-      <Switch value={value} onValueChange={onValueChange} />
+      <AppToggle value={value} onValueChange={onValueChange} />
     </View>
   );
 
@@ -79,7 +83,7 @@ const PrivacySafetyScreen = ({ navigation }: any) => {
         />
 
         <PrimaryButton
-          title=" HealCircle ›"
+          title="Enter HealCircle ›"
           onPress={() =>
             navigation.reset({
               index: 0,
@@ -93,9 +97,9 @@ const PrivacySafetyScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
   step: {
-    color: "#6F87A6",
+    color: colors.mutedText,
     fontSize: TextStyles.stepCounts,
     marginTop: moderateVerticalScale(18),
   },
@@ -109,17 +113,17 @@ const styles = StyleSheet.create({
 
   subtitle: {
     fontSize: TextStyles.body,
-    color: "#6F87A6",
+    color: colors.mutedText,
     marginTop: moderateVerticalScale(8),
     marginBottom: moderateVerticalScale(18),
   },
 
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     padding: moderateScale(16),
     borderWidth: 1,
-    borderColor: "#E3EAF4",
+    borderColor: colors.border,
     marginBottom: moderateVerticalScale(12),
     flexDirection: "row",
     alignItems: "center",
@@ -139,24 +143,24 @@ const styles = StyleSheet.create({
   },
   cardSubtitle: {
     fontSize: TextStyles.stepCounts,
-    color: "#6F87A6",
+    color: colors.mutedText,
     lineHeight: 20
   },
   note: {
-    backgroundColor: "#d6f4e1",
+    backgroundColor: colors.lightGreen,
     borderRadius: radius.md,
     padding: moderateScale(16),
     marginTop: moderateVerticalScale(10),
   },
   noteTitle: {
-    color: "#4FA57B",
+    color: colors.success,
     fontSize: TextStyles.body,
     fontWeight: "600",
     marginBottom: moderateVerticalScale(6),
   },
 
   noteText: {
-    color: "#4FA57B",
+    color: colors.success,
     fontSize: TextStyles.caption,
     lineHeight: moderateScale(21)
   },

@@ -1,86 +1,210 @@
-import React from "react";
-import { ScrollView, StyleSheet, Text, TextInput, View, Pressable } from "react-native";
+import React, { useState } from "react";
+import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { colors } from "../../theme/colors";
-import PrimaryButton from "../../components/ui/PrimaryButton";
-import { scale } from "react-native-size-matters";
+import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
+import { useTheme } from "../../theme/ThemeContext";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
-
-function Field({ label, placeholder, multiline }: { label: string; placeholder: string; multiline?: boolean }) {
-  return (
-    <View style={{ marginBottom: 18 }}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        placeholder={placeholder}
-        placeholderTextColor="#A0A9BA"
-        multiline={multiline}
-        style={[styles.input, multiline && styles.textArea]}
-      />
-    </View>
-  );
-}
+import BackButton from "../../components/ui/BackButton";
+import PrimaryButton from "../../components/ui/PrimaryButton";
+import { AppInput } from "../../components/ui/AppInput";
+import { TextStyles } from "../../theme/typography";
+import { radius } from "../../theme/radius";
+import imagePath from "../../constant/imagePath";
 
 export default function RequestGroupScreen() {
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
+  const [condition, setCondition] = useState("");
+  const [description, setDescription] = useState("");
+  const [population, setPopulation] = useState("");
+  const [reason, setReason] = useState("");
+  const [references, setReferences] = useState("");
+
+  const canSubmit = condition.trim() && description.trim() && reason.trim();
+  const filledCount = [condition, description, reason].filter((v) => v.trim()).length;
+
+  const handleSubmit = () => {
+    const missing = [
+      !condition.trim() && "condition name",
+      !description.trim() && "description",
+      !reason.trim() && "why the group needs to exist",
+    ].filter(Boolean);
+
+    if (missing.length > 0) {
+      Alert.alert("A few details missing", `Please fill in the ${missing.join(", ")} field${missing.length > 1 ? "s" : ""} marked with *.`);
+      return;
+    }
+
+    Alert.alert(
+      "Request submitted ✅",
+      "Our medical team will review your request within 2–5 business days. We'll notify you once it's approved.",
+      [{ text: "Done", onPress: () => navigation.goBack() }],
+    );
+  };
 
   return (
     <ScreenWrapper>
-    <ScrollView  contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>‹</Text>
-        </Pressable>
-        <View>
-          <Text style={styles.title}>Request New Group</Text>
-          <Text style={styles.sub}>For medical review & approval</Text>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <BackButton />
+          <View style={styles.headerTextWrap}>
+            <Text style={styles.title}>Request New Group</Text>
+            <Text style={styles.sub}>For medical review & approval</Text>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.infoBox}>
-        <Text style={styles.infoText}>
-          ℹ New groups are reviewed by our medical team to ensure they serve a real need and maintain community safety. Review typically takes 2–5 business days.
+        {/* Review Info */}
+        <View style={styles.infoBox}>
+          <Image
+            source={imagePath.ShieldIcon}
+            style={[styles.infoIcon, { tintColor: colors.primary }]}
+          />
+          <Text style={styles.infoText}>
+            New groups are reviewed by our medical team to ensure they serve a
+            real need and maintain community safety. Review typically takes 2–5
+            business days.
+          </Text>
+        </View>
+
+        {/* Form */}
+        <AppInput
+          label="Condition / Disease Name *"
+          value={condition}
+          onChangeText={setCondition}
+          placeholder="e.g. Postural Orthostatic Tachycardia Syndrome"
+        />
+        <AppInput
+          label="Brief Description *"
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Describe the condition and what the group would support..."
+          multiline
+        />
+        <AppInput
+          label="Estimated Affected Population"
+          value={population}
+          onChangeText={setPopulation}
+          placeholder="e.g. ~3 million in the US; affects mostly young women..."
+        />
+        <AppInput
+          label="Why does this group need to exist? *"
+          value={reason}
+          onChangeText={setReason}
+          placeholder="Share your personal experience or why this community is needed..."
+          multiline
+        />
+        <AppInput
+          label="Medical References (optional)"
+          value={references}
+          onChangeText={setReferences}
+          placeholder="Links to medical organizations, research papers, or patient advocacy groups..."
+          multiline
+        />
+
+        {/* Reviewer Tip */}
+        <View style={styles.notice}>
+          <Image
+            source={imagePath.AlertIcon}
+            style={[styles.infoIcon, { tintColor: colors.success }]}
+          />
+          <Text style={styles.noticeText}>
+            Please be as specific as possible. The more context you provide,
+            the faster our reviewers can assess the request.
+          </Text>
+        </View>
+
+        <Text style={styles.progressHint}>
+          {canSubmit
+            ? "All required fields complete — ready to submit."
+            : `${filledCount} of 3 required fields filled`}
         </Text>
-      </View>
-
-      <Field label="Condition / Disease Name *" placeholder="e.g. Postural Orthostatic Tachycardia Syndrome" />
-      <Field label="Brief Description *" placeholder="Describe the condition and what the group would support..." multiline />
-      <Field label="Estimated Affected Population" placeholder="e.g. ~3 million in the US; affects mostly young women..." />
-      <Field label="Why does this group need to exist? *" placeholder="Share your personal experience or why this community is needed..." multiline />
-      <Field label="Medical References (optional)" placeholder="Links to medical organizations, research papers, or patient advocacy groups..." multiline />
-
-      <View style={styles.notice}>
-        <Text style={styles.noticeText}>
-          ⚠ Please be as specific as possible. The more context you provide, the faster our reviewers can assess the request.
-        </Text>
-      </View>
-
-      <View style={{ height: 18 }} />
-      <PrimaryButton title="Submit for Review" onPress={() => {}} />
+        <PrimaryButton title="Submit for Review" onPress={handleSubmit} disabled={!canSubmit} />
       </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenWrapper>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 20, paddingBottom: 40 },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-  back: { fontSize: 36, color: colors.text, marginRight: 8 },
-  title: { fontSize: 28, fontWeight: "800", color: colors.text },
-  sub: { color: "#6F87A6", fontSize: scale(16), marginTop: 4 },
-  infoBox: { backgroundColor: "#EAF1FF", borderRadius: 22, padding: 16, marginBottom: 18 },
-  infoText: { color: "#4E79C7", fontSize: scale(16), lineHeight: 24 },
-  label: { color: colors.text, fontSize: 18, fontWeight: "800", marginBottom: 10 },
-  input: {
-    minHeight: 56,
-    borderRadius: 18,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: "#E3EAF4",
-    paddingHorizontal: 16,
-    color: colors.text,
-    fontSize: scale(16),
-  },
-  textArea: { minHeight: 110, textAlignVertical: "top", paddingTop: 14 },
-  notice: { backgroundColor: "#E8F6EE", borderRadius: 18, padding: 14, marginTop: 8 },
-  noticeText: { color: "#4FA57B", fontSize: scale(14), lineHeight: 22 },
-});
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
+  StyleSheet.create({
+    flex: {
+      flex: 1,
+    },
+    container: {
+      paddingBottom: moderateVerticalScale(40),
+    },
+    progressHint: {
+      textAlign: "center",
+      color: colors.mutedText,
+      fontSize: TextStyles.caption,
+      marginBottom: moderateVerticalScale(10),
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: moderateVerticalScale(16),
+    },
+    headerTextWrap: {
+      flex: 1,
+      marginLeft: moderateScale(8),
+    },
+    title: {
+      fontSize: TextStyles.heading,
+      fontWeight: "500",
+      color: colors.text,
+    },
+    sub: {
+      color: colors.mutedText,
+      fontSize: TextStyles.caption,
+      fontWeight: "500",
+      marginTop: moderateVerticalScale(2),
+    },
+    infoBox: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      backgroundColor: colors.lightPurple,
+      borderRadius: radius.md,
+      padding: moderateScale(14),
+      marginBottom: moderateVerticalScale(20),
+      gap: moderateScale(10),
+    },
+    infoIcon: {
+      width: moderateScale(18),
+      height: moderateScale(18),
+      resizeMode: "contain",
+      marginTop: moderateVerticalScale(2),
+    },
+    infoText: {
+      flex: 1,
+      color: colors.primary,
+      fontSize: TextStyles.caption,
+      lineHeight: scale(18),
+    },
+    notice: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      backgroundColor: colors.lightGreen,
+      borderRadius: radius.md,
+      padding: moderateScale(14),
+      marginTop: moderateVerticalScale(4),
+      marginBottom: moderateVerticalScale(20),
+      gap: moderateScale(10),
+    },
+    noticeText: {
+      flex: 1,
+      color: colors.success,
+      fontSize: TextStyles.caption,
+      lineHeight: scale(18),
+    },
+  });

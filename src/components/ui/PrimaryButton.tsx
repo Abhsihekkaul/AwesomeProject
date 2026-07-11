@@ -1,7 +1,7 @@
-import React from "react";
-import { Pressable, StyleSheet, Text, ViewStyle } from "react-native";
+import React, { useRef } from "react";
+import { Animated, Pressable, StyleSheet, Text, ViewStyle } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { radius } from "../../theme/radius";
 import { moderateScale, scale } from "react-native-size-matters";
 
@@ -10,20 +10,42 @@ type Props = {
   onPress: () => void;
   style?: ViewStyle;
   disabled?: boolean;
+  size?: "full" | "compact";
 };
 
-const PrimaryButton = ({ title, onPress, style, disabled }: Props) => {
+const PrimaryButton = ({ title, onPress, style, disabled, size = "full" }: Props) => {
+  const { colors } = useTheme();
+  const scaleValue = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => {
+    Animated.spring(scaleValue, { toValue: 0.96, useNativeDriver: true, speed: 40 }).start();
+  };
+  const onPressOut = () => {
+    Animated.spring(scaleValue, { toValue: 1, useNativeDriver: true, speed: 40 }).start();
+  };
+
   return (
-    <Pressable onPress={onPress} disabled={disabled} style={style}>
-      <LinearGradient
-        colors={[colors.primary, colors.primaryDark]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={[styles.button, disabled && { opacity: 0.6 }]}
+    <Animated.View style={[style, { transform: [{ scale: scaleValue }] }]}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        disabled={disabled}
       >
-        <Text style={styles.text}>{title}</Text>
-      </LinearGradient>
-    </Pressable>
+        <LinearGradient
+          colors={[colors.primary, colors.primaryDark]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[
+            styles.button,
+            size === "compact" && styles.buttonCompact,
+            disabled && { opacity: 0.6 },
+          ]}
+        >
+          <Text style={[styles.text, size === "compact" && styles.textCompact]}>{title}</Text>
+        </LinearGradient>
+      </Pressable>
+    </Animated.View>
   );
 };
 
@@ -33,11 +55,21 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: moderateScale(20),
+  },
+  buttonCompact: {
+    height: moderateScale(40),
+    borderRadius: radius.xl,
+    alignSelf: "flex-start",
+    paddingHorizontal: moderateScale(18),
   },
   text: {
-    color: colors.white,
+    color: "#FFFFFF",
     fontSize: scale(15),
     fontWeight: "600",
   },
-}); 
-export default PrimaryButton
+  textCompact: {
+    fontSize: scale(13),
+  },
+});
+export default PrimaryButton;

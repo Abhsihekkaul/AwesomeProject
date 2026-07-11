@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -8,16 +9,16 @@ import {
   Text,
   View
 } from "react-native";
-import { moderateScale, scale } from "react-native-size-matters";
+import { moderateScale } from "react-native-size-matters";
 import { AppInput } from "../../components/ui/AppInput";
 import { AuthTabSwitch } from "../../components/ui/AuthTabSwitch";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import { SecondaryButton } from "../../components/ui/SecondaryButton";
 import imagePath from "../../constant/imagePath";
-import { colors } from "../../theme/colors";
+import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
-import ProfileNameScreen from "../profileSetup/ProfileNameScreen";
 
 type AuthTab = "signin" | "signup";
 
@@ -30,29 +31,81 @@ const AuthScreen = ({ navigation }: any) => {
   const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { signIn, signUp } = useAuth();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   const isSignIn = tab === "signin";
 
-  const handleSignInSubmit = () => {
-    // You can replace this with real auth logic later
+  const goToMainTabs = () => {
     navigation.reset({
       index: 0,
       routes: [{ name: "MainTabs" }],
-    })
+    });
   };
 
-  const handleSignUpSubmit = () => {
-    // You can replace this with real auth logic later
-    navigation.navigate("ProfileSetupScreen");
+  const handleSignInSubmit = async () => {
+    setErrorMessage(null);
+    setIsSubmitting(true);
+    try {
+      await signIn(email.trim(), password);
+      goToMainTabs();
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Could not sign in");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const handleSignUpSubmit = async () => {
+    if (password !== confirmPassword) {
+      setErrorMessage("Passwords don't match");
+      return;
+    }
+    setErrorMessage(null);
+    setIsSubmitting(true);
+    try {
+      await signUp(email.trim(), password, fullName.trim());
+      navigation.navigate("ProfileSetup");
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Could not create account");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // const handleDemoSignIn = async () => {
+  //   setErrorMessage(null);
+  //   setIsSubmitting(true);
+  //   try {
+  //     await signInDemo();
+  //     goToMainTabs();
+  //   } catch (err) {
+  //     setErrorMessage(err instanceof Error ? err.message : "Demo sign-in failed");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  const handleDemoSignIn = () => {
+    navigation.navigate("ProfileSetup");
+  }
 
   return (
     <ScreenWrapper>
       <KeyboardAvoidingView
+        style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
           contentContainerStyle={styles.container}
           showsVerticalScrollIndicator={false}
+          // Without this, the first tap on any button while the keyboard is open only
+          // dismisses the keyboard on iOS — the sign-in button felt dead there.
+          keyboardShouldPersistTaps="handled"
         >
           <Text style={styles.title}>
             {isSignIn ? "Welcome back" : "HealingSathi"}
@@ -65,6 +118,10 @@ const AuthScreen = ({ navigation }: any) => {
           </Text>
 
           <AuthTabSwitch value={tab} onChange={setTab} />
+
+          {errorMessage ? (
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          ) : null}
 
           {isSignIn ? (
             <>
@@ -90,6 +147,7 @@ const AuthScreen = ({ navigation }: any) => {
               <PrimaryButton
                 title="Sign In Securely"
                 onPress={handleSignInSubmit}
+                disabled={isSubmitting}
               />
             </>
           ) : (
@@ -126,10 +184,21 @@ const AuthScreen = ({ navigation }: any) => {
 
               <PrimaryButton
                 title="Create My Account"
-                  onPress={() => navigation.navigate("ProfileSetup")}
+                onPress={handleSignUpSubmit}
+                disabled={isSubmitting}
               />
             </>
           )}
+
+          <PrimaryButton
+            title="Try the Demo"
+            onPress={handleDemoSignIn}
+            disabled={isSubmitting}
+            size="compact"
+            style={styles.demoButton}
+          />
+
+          {isSubmitting ? <ActivityIndicator color={colors.primary} style={styles.spinner} /> : null}
 
           <View style={styles.dividerRow}>
             <View style={styles.line} />
@@ -174,7 +243,10 @@ const AuthScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
+  flex: {
+    flex: 1,
+  },
   container: {
     flexGrow: 1,
   },
@@ -188,7 +260,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: TextStyles.body,
-    color: "#6F87A6",
+    color: colors.mutedText,
     textAlign: "center",
     marginTop: moderateScale(8),
     marginBottom: moderateScale(22),
@@ -203,6 +275,19 @@ const styles = StyleSheet.create({
     fontSize: TextStyles.body,
     fontWeight: "600"
   },
+  errorText: {
+    color: colors.danger,
+    fontSize: TextStyles.body,
+    textAlign: "center",
+    marginBottom: moderateScale(12),
+  },
+  demoButton: {
+    alignSelf: "center",
+    marginTop: moderateScale(14),
+  },
+  spinner: {
+    marginTop: moderateScale(10),
+  },
   dividerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -212,10 +297,10 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: moderateScale(1),
-    backgroundColor: "#DDE5F2"
+    backgroundColor: colors.border
   },
   or: {
-    color: "#6F87A6",
+    color: colors.mutedText,
     fontSize: TextStyles.body,
   },
   
@@ -228,7 +313,7 @@ const styles = StyleSheet.create({
   },
   note: {
     marginTop: moderateScale(18),
-    backgroundColor: "#EBF1FB",
+    backgroundColor: colors.lightBlue,
     borderRadius: moderateScale(20),
     padding: moderateScale(8),
     paddingHorizontal: moderateScale(12),

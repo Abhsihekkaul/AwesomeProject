@@ -1,5 +1,6 @@
 import React from "react";
 import { Switch } from "react-native";
+import { useTheme } from "../../theme/ThemeContext";
 
 type Props = {
   value: boolean;
@@ -7,11 +8,12 @@ type Props = {
 };
 
 export default function AppToggle({ value, onValueChange }: Props) {
+  const { colors } = useTheme();
   return (
     <Switch
       value={value}
       onValueChange={onValueChange}
-      trackColor={{ false: "#DDE5F2", true: "#4E79C7" }}
+      trackColor={{ false: colors.border, true: colors.primary }}
       thumbColor="#FFFFFF"
     />
   );

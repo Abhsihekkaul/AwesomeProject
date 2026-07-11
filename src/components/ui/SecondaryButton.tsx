@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
+  Animated,
   Pressable,
   StyleSheet,
   Text,
@@ -8,7 +9,7 @@ import {
   ImageSourcePropType,
   View,
 } from "react-native";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { radius } from "../../theme/radius";
 import { moderateScale, scale } from "react-native-size-matters";
 import { TextStyles } from "../../theme/typography";
@@ -18,21 +19,48 @@ type Props = {
   icon?: ImageSourcePropType;
   onPress: () => void;
   style?: ViewStyle;
+  size?: "full" | "compact";
 };
 
-export const SecondaryButton = ({
-  title,
-  icon,
-  onPress,
-  style,
-}: Props) => {
+export const SecondaryButton = ({ title, icon, onPress, style, size = "full" }: Props) => {
+  const { colors } = useTheme();
+  const scaleValue = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => {
+    Animated.spring(scaleValue, { toValue: 0.96, useNativeDriver: true, speed: 40 }).start();
+  };
+  const onPressOut = () => {
+    Animated.spring(scaleValue, { toValue: 1, useNativeDriver: true, speed: 40 }).start();
+  };
+
   return (
-    <Pressable onPress={onPress} style={[styles.button, style]}>
-      <View style={styles.content}>
-        {icon && <Image source={icon} style={styles.icon} />}
-        {title && <Text style={styles.text}>{title}</Text>}
-      </View>
-    </Pressable>
+    <Animated.View style={[style, { transform: [{ scale: scaleValue }] }]}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        style={[
+          styles.button,
+          size === "compact" && styles.buttonCompact,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <View style={styles.content}>
+          {icon && <Image source={icon} style={styles.icon} />}
+          {title && (
+            <Text
+              style={[
+                styles.text,
+                size === "compact" && styles.textCompact,
+                { color: colors.text },
+              ]}
+            >
+              {title}
+            </Text>
+          )}
+        </View>
+      </Pressable>
+    </Animated.View>
   );
 };
 
@@ -42,10 +70,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.white,
-    borderWidth: 0.5,
-    borderColor: colors.border,
-
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  buttonCompact: {
+    height: moderateScale(40),
+    borderRadius: radius.xl,
+    alignSelf: "flex-start",
+    paddingHorizontal: moderateScale(18),
   },
   content: {
     flexDirection: "row",
@@ -59,8 +90,10 @@ const styles = StyleSheet.create({
     marginRight: moderateScale(8),
   },
   text: {
-    color: colors.text,
     fontSize: TextStyles.body,
     fontWeight: "600",
+  },
+  textCompact: {
+    fontSize: scale(13),
   },
 });

@@ -1,52 +1,62 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
-import { FlatList, Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { FlatList, Image, LayoutAnimation, Pressable, StyleSheet, Text, View } from "react-native";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
+import BackButton from "../../components/ui/BackButton";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import UserAvatar from "../../components/ui/UserAvatar";
 import PostCard from "../../components/ui/PostCard";
 import CommentsSheet from "../../components/ui/CommentsSheet";
 import ShareSheet from "../../components/ui/ShareSheet";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
 import { dummyPosts } from "../../utils/dummyPost";
+import imagePath from "../../constant/imagePath";
+import { useSavedPosts } from "../../context/SavedPostsContext";
+
+type ProfileTab = "My Posts" | "Saved";
 
 export default function ProfileScreen() {
   const navigation = useNavigation<any>();
-
-  // Toggles State
-  const [publicProfile, setPublicProfile] = useState(false);
-  const [showConditions, setShowConditions] = useState(true);
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+  const { savedPosts } = useSavedPosts();
 
   // Sheets State for PostCards
   const [selectedCommentPost, setSelectedCommentPost] = useState<any>(null);
   const [selectedSharePost, setSelectedSharePost] = useState<any>(null);
 
+  const [activeTab, setActiveTab] = useState<ProfileTab>("My Posts");
+
   // Example: Filtering dummy posts to only show the user's own posts
   // You would replace this with an actual API call to fetch user posts
   const userPosts = dummyPosts.slice(0, 2);
+  const listData = activeTab === "My Posts" ? userPosts : savedPosts;
 
-  const circles = [
-    { name: "Fibromyalgia Warriors", color: "#7453C8", bg: "#F1EBFF" },
-    { name: "Type 2 Diabetes", color: "#4E79C7", bg: "#EAF1FF" },
-    { name: "Long COVID Recovery", color: "#4FA57B", bg: "#E8F6EE" },
-  ];
+  const switchTab = (tab: ProfileTab) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setActiveTab(tab);
+  };
 
   // Everything above the posts is extracted into this ListHeaderComponent
-  const ProfileHeader = () => (
-    <View style={styles.headerContainer}>
-
-      {/* Top Bar with Settings on Right */}
+  const renderHeader = () => (
+    <View>
+      {/* Top Bar */}
       <View style={styles.topBar}>
-        <Pressable onPress={() => navigation.navigate("Settings")} style={styles.settingsBtn}>
-          <Text style={styles.settingsIcon}>⚙️</Text>
+        <View style={styles.topBarLeft}>
+          {/* Only shown when Profile is pushed on the stack (e.g. from Home) — as a tab it's a root */}
+          {navigation.canGoBack() ? <BackButton /> : null}
+          <Text style={styles.screenTitle}>Profile</Text>
+        </View>
+        <Pressable onPress={() => navigation.navigate("Settings")} style={styles.settingsBtn} hitSlop={8}>
+          <Image source={imagePath.SettingIcon} style={styles.settingsIcon} />
         </Pressable>
       </View>
 
       {/* Hero Section (Centered) */}
       <View style={styles.hero}>
-        <UserAvatar initials="A" size={100} bg="#F1EBFF" color="#7453C8" />
+        <UserAvatar initials="A" size={100} />
         <Text style={styles.name}>Abhishek</Text>
         <Text style={styles.memberSince}>Member since June 2025</Text>
 
@@ -59,72 +69,51 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* MY CIRCLES CARD */}
-      {/* <View style={styles.card}>
-        <Text style={styles.sectionLabel}>MY CIRCLES</Text>
-        {circles.map((circle, index) => (
-          <View key={circle.name} style={[styles.circleRow, index !== circles.length - 1 && styles.borderBottom]}>
-            <View style={[styles.circleIcon, { backgroundColor: circle.bg }]}>
-              <Text style={{ fontSize: scale(18) }}>👥</Text>
-            </View>
-            <Text style={styles.circleName}>{circle.name}</Text>
-            <Pressable onPress={() => navigation.navigate("GroupDetails")}>
-              <Text style={[styles.viewText, { color: circle.color }]}>View</Text>
-            </Pressable>
-          </View>
+      {/* My Posts / Saved segmented tabs */}
+      <View style={styles.tabRow}>
+        {(["My Posts", "Saved"] as const).map((tab) => (
+          <Pressable
+            key={tab}
+            onPress={() => switchTab(tab)}
+            style={[styles.tabChip, activeTab === tab && styles.tabChipActive]}
+          >
+            <Text style={[styles.tabChipText, activeTab === tab && styles.tabChipTextActive]}>
+              {tab === "Saved" ? `Saved${savedPosts.length ? ` (${savedPosts.length})` : ""}` : tab}
+            </Text>
+          </Pressable>
         ))}
-        <Pressable style={styles.browseButton} onPress={() => navigation.navigate("Groups")}>
-          <Text style={styles.browseText}>+ Browse more groups</Text>
-        </Pressable>
-      </View> */}
-
-      {/* PRIVACY CARD */}
-      {/* <View style={styles.card}>
-        <Text style={styles.sectionLabel}>PRIVACY & VISIBILITY</Text>
-
-        <View style={styles.settingRow}>
-          <View>
-            <Text style={styles.settingTitle}>Public profile</Text>
-            <Text style={styles.settingSub}>Others can view your profile</Text>
-          </View>
-          <Switch value={publicProfile} onValueChange={setPublicProfile} trackColor={{ true: "#7453C8" }} />
-        </View> */}
-
-        {/* <View style={styles.divider} />
-
-        <View style={styles.settingRow}>
-          <View>
-            <Text style={styles.settingTitle}>Show my conditions</Text>
-            <Text style={styles.settingSub}>Visible on your profile</Text>
-          </View>
-          <Switch value={showConditions} onValueChange={setShowConditions} trackColor={{ true: "#7453C8" }} />
-        </View>
-      </View> */}
-
-      {/* SECTION DIVIDER FOR POSTS */}
-      {/* <hr /> */}
-      <Text style={styles.postsSectionTitle}>Posts</Text>
+      </View>
     </View>
   );
 
   return (
-    <ScreenWrapper>
-
-      {/* FlatList replaces ScrollView */}
+    <ScreenWrapper edges={["top", "left", "right"]}>
       <FlatList
-        data={userPosts}
+        data={listData}
         keyExtractor={(item) => item.id.toString()}
-        ListHeaderComponent={ProfileHeader}
+        ListHeaderComponent={renderHeader}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <View>
-            <PostCard
-              post={item}
-              onCommentPress={() => setSelectedCommentPost(item)}
-              onSharePress={() => setSelectedSharePost(item)}
-            />
-          </View>
+        ListEmptyComponent={
+          activeTab === "Saved" ? (
+            <View style={styles.emptyWrap}>
+              <Text style={styles.emptyEmoji}>🔖</Text>
+              <Text style={styles.emptyTitle}>No saved posts yet</Text>
+              <Text style={styles.emptyText}>
+                Tap the ••• menu on any post and choose "Save Post" — it will show up here.
+              </Text>
+            </View>
+          ) : null
+        }
+        renderItem={({ item, index }) => (
+          <PostCard
+            post={item}
+            index={index}
+            compact
+            onPress={() => navigation.navigate("PostDetails", { post: item })}
+            onCommentPress={() => setSelectedCommentPost(item)}
+            onSharePress={() => setSelectedSharePost(item)}
+          />
         )}
       />
 
@@ -144,157 +133,130 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  listContent: {
-    // paddingBottom: moderateVerticalScale(40),
-  },
-  headerContainer: {
-    // paddingBottom: moderateVerticalScale(16),
-  },
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
+  StyleSheet.create({
+    listContent: {
+      paddingBottom: moderateVerticalScale(96),
+    },
 
-  // Header & Top Bar
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    // paddingHorizontal: moderateScale(16),
-    // marginTop: moderateVerticalScale(10),
-  },
-  settingsBtn: {
-    width: moderateScale(40),
-    height: moderateScale(40),
-    borderRadius: moderateScale(20),
-    backgroundColor: colors.white,
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  settingsIcon: {
-    fontSize: scale(18),
-  },
+    // Top Bar
+    topBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: moderateVerticalScale(10),
+      marginBottom: moderateVerticalScale(8),
+    },
+    screenTitle: {
+      fontSize: TextStyles.heading,
+      fontWeight: "500",
+      color: colors.text,
+    },
+    settingsBtn: {
+      width: moderateScale(40),
+      height: moderateScale(40),
+      borderRadius: moderateScale(20),
+      backgroundColor: colors.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    settingsIcon: {
+      width: moderateScale(18),
+      height: moderateScale(18),
+      resizeMode: "contain",
+      tintColor: colors.text,
+    },
 
-  // Hero Section
-  hero: {
-    alignItems: "center",
-  },
-  name: {
-    marginTop: moderateVerticalScale(16),
-    fontSize: TextStyles.heading,
-    fontWeight: "500",
-    color: colors.text,
-  },
-  memberSince: {
-    marginTop: moderateVerticalScale(4),
-    color: "#6F87A6",
-    fontSize: TextStyles.caption,
-  },
-  chipsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: moderateVerticalScale(16),
-    justifyContent: "center",
-    gap: moderateScale(8),
-  },
-  chip: {
-    backgroundColor: "#7984fb",
-    paddingHorizontal: moderateScale(12),
-    paddingVertical: moderateVerticalScale(6),
-    borderRadius: radius.md,
-  },
-  chipText: {
-    color: colors.white,
-    fontWeight: "500",
-    fontSize: TextStyles.caption,
-  },
+    // Hero Section
+    hero: {
+      alignItems: "center",
+    },
+    name: {
+      marginTop: moderateVerticalScale(16),
+      fontSize: TextStyles.heading,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    memberSince: {
+      marginTop: moderateVerticalScale(4),
+      color: colors.mutedText,
+      fontSize: TextStyles.caption,
+    },
+    chipsRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      marginTop: moderateVerticalScale(16),
+      justifyContent: "center",
+      gap: moderateScale(8),
+    },
+    chip: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: moderateScale(12),
+      paddingVertical: moderateVerticalScale(6),
+      borderRadius: radius.md,
+    },
+    chipText: {
+      color: colors.white,
+      fontWeight: "500",
+      fontSize: TextStyles.caption,
+    },
 
-  // Cards (Standardized to match other screens)
-  // card: {
-  //   backgroundColor: colors.white,
-  //   marginHorizontal: moderateScale(16),
-  //   marginTop: moderateVerticalScale(20),
-  //   borderRadius: radius.md,
-  //   padding: moderateScale(16),
-  //   borderWidth: 0.2,
-  //   borderColor: "#b8bbc0",
-  // },
-  // sectionLabel: {
-  //   fontSize: scale(12),
-  //   fontWeight: "800",
-  //   color: "#6F87A6",
-  //   marginBottom: moderateVerticalScale(12),
-  //   letterSpacing: 0.5,
-  // },
+    topBarLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
 
-  // Circle Rows
-  circleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: moderateVerticalScale(12),
-  },
-  borderBottom: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F4FA",
-  },
-  circleIcon: {
-    width: moderateScale(40),
-    height: moderateScale(40),
-    borderRadius: moderateScale(20),
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: moderateScale(12),
-  },
-  circleName: {
-    flex: 1,
-    fontSize: TextStyles.body,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  viewText: {
-    fontSize: scale(12),
-    fontWeight: "700",
-  },
-  browseButton: {
-    marginTop: moderateVerticalScale(12),
-    alignItems: "center",
-    paddingVertical: moderateVerticalScale(8),
-    backgroundColor: "#F9FAFC",
-    borderRadius: radius.sm,
-  },
-  browseText: {
-    color: "#7453C8",
-    fontSize: scale(13),
-    fontWeight: "600",
-  },
+    // My Posts / Saved tabs
+    tabRow: {
+      flexDirection: "row",
+      gap: moderateScale(8),
+      marginTop: moderateVerticalScale(20),
+      marginBottom: moderateVerticalScale(10),
+    },
+    tabChip: {
+      flex: 1,
+      paddingVertical: moderateVerticalScale(9),
+      borderRadius: radius.xl,
+      alignItems: "center",
+      backgroundColor: colors.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    tabChipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    tabChipText: {
+      color: colors.mutedText,
+      fontWeight: "600",
+      fontSize: TextStyles.stepCounts,
+    },
+    tabChipTextActive: {
+      color: colors.white,
+    },
 
-  // Privacy Settings
-  settingRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: moderateVerticalScale(6),
-  },
-  settingTitle: {
-    fontSize: TextStyles.body,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  settingSub: {
-    color: "#6F87A6",
-    fontSize: scale(11),
-    marginTop: moderateVerticalScale(2),
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#F0F4FA",
-    marginVertical: moderateVerticalScale(12),
-  },
-
-  // Posts Area
-  postsSectionTitle: {
-    borderTopWidth: 0.2,
-    fontSize: TextStyles.title,
-    fontWeight: "500",
-    marginTop: moderateVerticalScale(12),
-    marginBottom: moderateVerticalScale(8),
-  },
-});
+    // Saved empty state
+    emptyWrap: {
+      alignItems: "center",
+      marginTop: moderateVerticalScale(30),
+      paddingHorizontal: moderateScale(30),
+    },
+    emptyEmoji: {
+      fontSize: scale(34),
+      marginBottom: moderateVerticalScale(10),
+    },
+    emptyTitle: {
+      fontSize: TextStyles.body,
+      fontWeight: "600",
+      color: colors.text,
+      marginBottom: moderateVerticalScale(6),
+    },
+    emptyText: {
+      fontSize: TextStyles.caption,
+      color: colors.mutedText,
+      textAlign: "center",
+      lineHeight: scale(18),
+    },
+  });

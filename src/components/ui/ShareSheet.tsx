@@ -2,7 +2,7 @@ import React from "react";
 import { Modal, View, Text, StyleSheet, Pressable, ScrollView, Share } from "react-native";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import UserAvatar from "../../components/ui/UserAvatar";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { radius } from "../../theme/radius";
 import { TextStyles } from "../../theme/typography";
 
@@ -15,6 +15,8 @@ const recentFriends = [
 ];
 
 export default function ShareSheet({ visible, onClose, postUrl = "https://healingstream.app/p/123" }: { visible: boolean, onClose: () => void, postUrl?: string }) {
+    const { colors } = useTheme();
+    const styles = makeStyles(colors);
 
     // Triggers the native iOS/Android share overlay
     const handleExternalShare = async () => {
@@ -42,7 +44,7 @@ export default function ShareSheet({ visible, onClose, postUrl = "https://healin
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.friendsScroll}>
                         {recentFriends.map((friend, index) => (
                             <Pressable key={index} style={styles.friendNode} onPress={() => { console.log(`Sent to ${friend.name}`); onClose(); }}>
-                                <UserAvatar initials={friend.initials} size={56} bg="#F1EBFF" color="#7453C8" />
+                                <UserAvatar initials={friend.initials} size={56} bg={colors.lightPurple} color={colors.primary} />
                                 <Text style={styles.friendName}>{friend.name}</Text>
                             </Pressable>
                         ))}
@@ -62,20 +64,20 @@ export default function ShareSheet({ visible, onClose, postUrl = "https://healin
     );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
     overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
     dismissArea: { flex: 1 },
-    sheetContainer: { backgroundColor: colors.white, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, paddingBottom: moderateVerticalScale(30) },
-    dragHandle: { width: moderateScale(40), height: moderateVerticalScale(4), backgroundColor: "#D1D5DB", alignSelf: "center", borderRadius: radius.sm, marginTop: moderateVerticalScale(10) },
+    sheetContainer: { backgroundColor: colors.card, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, paddingBottom: moderateVerticalScale(30) },
+    dragHandle: { width: moderateScale(40), height: moderateVerticalScale(4), backgroundColor: colors.border, alignSelf: "center", borderRadius: radius.sm, marginTop: moderateVerticalScale(10) },
     sheetTitle: { fontSize: TextStyles.title, fontWeight: "700", marginLeft: moderateScale(20), marginTop: moderateVerticalScale(16), color: colors.text },
 
     friendsScroll: { paddingHorizontal: moderateScale(20), marginTop: moderateVerticalScale(20), gap: moderateScale(16) },
     friendNode: { alignItems: "center", width: moderateScale(64) },
     friendName: { marginTop: moderateVerticalScale(8), fontSize: scale(12), color: colors.text, fontWeight: "500", textAlign: "center" },
 
-    divider: { height: 1, backgroundColor: "#E2E8F0", marginVertical: moderateVerticalScale(24), marginHorizontal: moderateScale(20) },
+    divider: { height: 1, backgroundColor: colors.border, marginVertical: moderateVerticalScale(24), marginHorizontal: moderateScale(20) },
 
     externalShareBtn: { flexDirection: "row", alignItems: "center", paddingHorizontal: moderateScale(20), paddingBottom: moderateVerticalScale(10) },
-    iconPlaceholder: { width: moderateScale(40), height: moderateScale(40), borderRadius: moderateScale(20), backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center", marginRight: moderateScale(12) },
+    iconPlaceholder: { width: moderateScale(40), height: moderateScale(40), borderRadius: moderateScale(20), backgroundColor: colors.lightBlue, alignItems: "center", justifyContent: "center", marginRight: moderateScale(12) },
     externalShareText: { fontSize: scale(16), color: colors.text, fontWeight: "500" }
 });

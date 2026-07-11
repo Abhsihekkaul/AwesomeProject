@@ -1,10 +1,10 @@
-import React from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, TextInput, Image } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Pressable, ScrollView, Image } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import UserAvatar from "../../components/ui/UserAvatar";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
 import BackButton from "../../components/ui/BackButton";
@@ -12,35 +12,35 @@ import SearchBar from "./SearchBar";
 import imagePath from "../../constant/imagePath";
 
 // --- Dummy Data ---
-const dummyGroups = [
-    { id: "1", name: "Fibromyalgia Warriors", members: "1,284 members", initials: "FW", bg: "#EAF1FF", color: "#4E79C7" },
-    { id: "2", name: "Chronic Pain Support", members: "3,402 members", initials: "CP", bg: "#FDF2E9", color: "#E67E22" },
-    { id: "3", name: "Mindful Living", members: "890 members", initials: "ML", bg: "#EBF5F0", color: "#4FA57B" },
-    { id: "4", name: "Sleep Strategies", members: "5,112 members", initials: "SS", bg: "#F1EBFF", color: "#7453C8" },
-    { id: "5", name: "Diet & Wellness", members: "2,045 members", initials: "DW", bg: "#F9EBED", color: "#D94A56" },
-    { id: "6", name: "Anxiety Recovery Circle", members: "2,734 members", initials: "AR", bg: "#EEF7FF", color: "#3A7BD5" },
-    { id: "7", name: "Depression Support Hub", members: "4,301 members", initials: "DS", bg: "#FFF4EA", color: "#F2994A" },
-    { id: "8", name: "Migraine Fighters", members: "1,543 members", initials: "MF", bg: "#F0FFF7", color: "#27AE60" },
-    { id: "9", name: "PCOS Wellness Community", members: "6,203 members", initials: "PW", bg: "#FFF1F5", color: "#E84393" },
-    { id: "10", name: "Healthy Habits Club", members: "980 members", initials: "HH", bg: "#EEF6F8", color: "#00A8CC" },
-    { id: "11", name: "Stress Management Network", members: "2,891 members", initials: "SM", bg: "#F7F4FF", color: "#6C5CE7" },
-    { id: "12", name: "Autoimmune Warriors", members: "1,602 members", initials: "AW", bg: "#FFF5F0", color: "#FF6B35" },
-    { id: "13", name: "Cancer Survivor Circle", members: "3,712 members", initials: "CS", bg: "#F2FAF5", color: "#2DCE89" },
-    { id: "14", name: "Heart Health Journey", members: "1,245 members", initials: "HH", bg: "#FFF0F0", color: "#EB5757" },
-    { id: "15", name: "Weight Loss Together", members: "7,112 members", initials: "WT", bg: "#F0FFF4", color: "#38A169" },
-    { id: "16", name: "Yoga & Meditation", members: "5,872 members", initials: "YM", bg: "#F3EEFF", color: "#805AD5" },
-    { id: "17", name: "Diabetes Care Community", members: "2,421 members", initials: "DC", bg: "#EDF7FF", color: "#3182CE" },
-    { id: "18", name: "Arthritis Support Group", members: "1,976 members", initials: "AS", bg: "#FFF8EB", color: "#D69E2E" },
-    { id: "19", name: "Women's Health Space", members: "3,088 members", initials: "WH", bg: "#FFF0F6", color: "#D53F8C" },
-    { id: "20", name: "Mental Wellness Tribe", members: "4,955 members", initials: "MW", bg: "#F0FFF9", color: "#319795" },
-    { id: "21", name: "Thyroid Support Network", members: "2,101 members", initials: "TS", bg: "#EEF2FF", color: "#5A67D8" },
-    { id: "22", name: "Parents Care Circle", members: "1,437 members", initials: "PC", bg: "#FFF7ED", color: "#DD6B20" },
-    { id: "23", name: "Healthy Aging Community", members: "2,734 members", initials: "HA", bg: "#F7FAFC", color: "#4A5568" },
-    { id: "24", name: "Nutrition & Fitness", members: "5,483 members", initials: "NF", bg: "#F0FFF4", color: "#2F855A" },
-    { id: "25", name: "Rare Disease Warriors", members: "832 members", initials: "RD", bg: "#FAF5FF", color: "#9F7AEA" },
+export const dummyGroups = [
+    { id: "1", name: "Fibromyalgia Warriors", members: "1,284 members", initials: "FW" },
+    { id: "2", name: "Chronic Pain Support", members: "3,402 members", initials: "CP" },
+    { id: "3", name: "Mindful Living", members: "890 members", initials: "ML" },
+    { id: "4", name: "Sleep Strategies", members: "5,112 members", initials: "SS" },
+    { id: "5", name: "Diet & Wellness", members: "2,045 members", initials: "DW" },
+    { id: "6", name: "Anxiety Recovery Circle", members: "2,734 members", initials: "AR" },
+    { id: "7", name: "Depression Support Hub", members: "4,301 members", initials: "DS" },
+    { id: "8", name: "Migraine Fighters", members: "1,543 members", initials: "MF" },
+    { id: "9", name: "PCOS Wellness Community", members: "6,203 members", initials: "PW" },
+    { id: "10", name: "Healthy Habits Club", members: "980 members", initials: "HH" },
+    { id: "11", name: "Stress Management Network", members: "2,891 members", initials: "SM" },
+    { id: "12", name: "Autoimmune Warriors", members: "1,602 members", initials: "AW" },
+    { id: "13", name: "Cancer Survivor Circle", members: "3,712 members", initials: "CS" },
+    { id: "14", name: "Heart Health Journey", members: "1,245 members", initials: "HH" },
+    { id: "15", name: "Weight Loss Together", members: "7,112 members", initials: "WT" },
+    { id: "16", name: "Yoga & Meditation", members: "5,872 members", initials: "YM" },
+    { id: "17", name: "Diabetes Care Community", members: "2,421 members", initials: "DC" },
+    { id: "18", name: "Arthritis Support Group", members: "1,976 members", initials: "AS" },
+    { id: "19", name: "Women's Health Space", members: "3,088 members", initials: "WH" },
+    { id: "20", name: "Mental Wellness Tribe", members: "4,955 members", initials: "MW" },
+    { id: "21", name: "Thyroid Support Network", members: "2,101 members", initials: "TS" },
+    { id: "22", name: "Parents Care Circle", members: "1,437 members", initials: "PC" },
+    { id: "23", name: "Healthy Aging Community", members: "2,734 members", initials: "HA" },
+    { id: "24", name: "Nutrition & Fitness", members: "5,483 members", initials: "NF" },
+    { id: "25", name: "Rare Disease Warriors", members: "832 members", initials: "RD" },
 ];
 
-const dummyFriends = [
+export const dummyFriends = [
     { id: "1", name: "Shivani Rawat", status: "Online", initials: "SR" },
     { id: "2", name: "Arun Sharma", status: "Last active 2h ago", initials: "AS" },
     { id: "3", name: "Priya Sharma", status: "Online", initials: "PS" },
@@ -71,12 +71,26 @@ const dummyFriends = [
 export default function DirectoryScreen() {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
+    const { colors } = useTheme();
+    const styles = makeStyles(colors);
 
     // Extract 'type' from route params, default to "Groups" if undefined
     const directoryType: "Groups" | "Friends" = route.params?.type || "Groups";
 
-    // Conditionally select data
-    const data = directoryType === "Groups" ? dummyGroups : dummyFriends;
+    const [query, setQuery] = useState("");
+
+    // Conditionally select data, filtered by the search query
+    const allData = directoryType === "Groups" ? dummyGroups : dummyFriends;
+    const q = query.trim().toLowerCase();
+    const data = q ? allData.filter((item: any) => item.name.toLowerCase().includes(q)) : allData;
+
+    // Theme-aware avatar tints, cycled by list position
+    const avatarTints = [
+        { bg: colors.lightBlue, fg: colors.info },
+        { bg: colors.lightOrange, fg: colors.warning },
+        { bg: colors.lightGreen, fg: colors.success },
+        { bg: colors.lightPurple, fg: colors.primary },
+    ];
 
     return (
         <ScreenWrapper>
@@ -84,10 +98,17 @@ export default function DirectoryScreen() {
                 <BackButton />
                 <Text style={styles.headerTitle}>My {directoryType}</Text>
             </View>
-            <SearchBar placeholder="search a friend..." />
-            
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {data.map((item: any) => (
+            <SearchBar
+                placeholder={directoryType === "Groups" ? "Search groups..." : "Search friends..."}
+                value={query}
+                onChangeText={setQuery}
+            />
+
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                {data.length === 0 ? (
+                    <Text style={styles.emptyText}>No {directoryType.toLowerCase()} match "{query.trim()}".</Text>
+                ) : null}
+                {data.map((item: any, i: number) => (
                     <Pressable
                         key={item.id}
                         style={styles.card}
@@ -96,15 +117,15 @@ export default function DirectoryScreen() {
                                 navigation.navigate("GroupDetails", { name: item.name });
                             } else {
                                 // Navigate to private chat or profile
-                                navigation.navigate("ChatRoom", { name: item.name });
+                                navigation.navigate("ChatRoom", { name: item.name, initials: item.initials });
                             }
                         }}
                     >
                         {directoryType === "Groups" ? (
                             // Group Item UI
                             <>
-                                <View style={[styles.avatarBox, { backgroundColor: item.bg }]}>
-                                    <Text style={[styles.avatarText, { color: item.color }]}>{item.initials}</Text>
+                                <View style={[styles.avatarBox, { backgroundColor: avatarTints[i % avatarTints.length].bg }]}>
+                                    <Text style={[styles.avatarText, { color: avatarTints[i % avatarTints.length].fg }]}>{item.initials}</Text>
                                 </View>
                                 <View style={styles.infoBox}>
                                     <Text style={styles.itemName}>{item.name}</Text>
@@ -117,14 +138,14 @@ export default function DirectoryScreen() {
                         ) : (
                             // Friend Item UI
                             <>
-                                <UserAvatar initials={item.initials} size={48} bg="#F1EBFF" color="#7453C8" />
+                                <UserAvatar initials={item.initials} size={48} bg={colors.lightPurple} color={colors.primary} />
                                 <View style={styles.infoBox}>
                                     <Text style={styles.itemName}>{item.name}</Text>
                                     <Text style={[styles.itemSub, item.status === "Online" && styles.onlineText]}>
                                         {item.status}
                                     </Text>
                                 </View>
-                                <Image source={imagePath.ChatIcon} style={styles.Chat} />
+                                <Image source={imagePath.ChatIcon} style={[styles.Chat, { tintColor: colors.primary }]} />
                             </>
                         )}
                     </Pressable>
@@ -134,7 +155,7 @@ export default function DirectoryScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
     header: {
         flexDirection: "row",
         alignItems: "center",
@@ -143,16 +164,17 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: TextStyles.heading,
         fontWeight: "600",
+        color: colors.text,
     },
     card: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: colors.white,
+        backgroundColor: colors.card,
         padding: moderateScale(12),
         marginTop: moderateVerticalScale(8),
         borderRadius: radius.md,
-        borderWidth: 0.2,
-        borderColor: "#b8bbc0",
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.border,
     },
     avatarBox: {
         width: moderateScale(48),
@@ -176,15 +198,15 @@ const styles = StyleSheet.create({
     },
     itemSub: {
         fontSize: TextStyles.caption,
-        color: "#6F87A6",
+        color: colors.mutedText,
         marginTop: moderateVerticalScale(2),
     },
     onlineText: {
-        color: "#4FA57B",
+        color: colors.success,
         fontWeight: "500",
     },
     actionBtn: {
-        backgroundColor: "#F3F4F6",
+        backgroundColor: colors.lightBlue,
         paddingHorizontal: moderateScale(16),
         paddingVertical: moderateVerticalScale(6),
         borderRadius: radius.xl,
@@ -196,9 +218,13 @@ const styles = StyleSheet.create({
     },
     Chat: {
         width: moderateScale(22),
-        height: moderateScale(22)
+        height: moderateScale(22),
+        resizeMode: "contain",
     },
-    messageIcon: {
+    emptyText: {
+        textAlign: "center",
+        color: colors.mutedText,
         fontSize: TextStyles.body,
-    }
+        marginTop: moderateVerticalScale(24),
+    },
 });

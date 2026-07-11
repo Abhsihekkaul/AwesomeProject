@@ -1,9 +1,9 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import UserAvatar from "../../components/ui/UserAvatar";
-import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
+import { moderateScale, moderateVerticalScale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
@@ -32,15 +32,21 @@ const chats = [
 
 export default function ChatsScreen() {
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
 
   return (
-    <ScreenWrapper>
-    <ScrollView showsVerticalScrollIndicator={false}>
+    <ScreenWrapper edges={["top", "left", "right"]}>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
       <Text style={styles.title}>Chats</Text>
       <Text style={styles.sub}>Private conversations with community members</Text>
       {chats.map((c) => (
-        <Pressable key={c.name} onPress={() => navigation.navigate("ChatRoom")} style={styles.card}>
-          <UserAvatar initials={c.initials} size={52} bg="#E9EEF8" color="#4E79C7" />
+        <Pressable
+          key={c.name}
+          onPress={() => navigation.navigate("ChatRoom", { name: c.name, initials: c.initials })}
+          style={styles.card}
+        >
+          <UserAvatar initials={c.initials} size={52} />
           <View style={{ flex: 1, marginLeft: 12 }}>
             <View style={styles.row}>
               <Text style={styles.name}>{c.name}</Text>
@@ -48,7 +54,7 @@ export default function ChatsScreen() {
             </View>
             <Text style={styles.last} numberOfLines={1}>{c.last}</Text>
           </View>
-          {c.unread > 0 ? <View style={styles.badge}><Text style={styles.badgeText}>{c.unread}</Text></View> : null}
+          {c.unread > 0 ? <View style={styles.unreadDot} /> : null}
         </Pressable>
       ))}
       </ScrollView>
@@ -56,25 +62,31 @@ export default function ChatsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
+  StyleSheet.create({
+
+  listContent: {
+    paddingBottom: moderateVerticalScale(96),
+  },
 
   title: {
     fontSize: TextStyles.title,
     fontWeight: "600",
+    color: colors.text,
   },
 
   sub: {
     fontSize: TextStyles.caption,
-    opacity: 0.4,
+    color: colors.mutedText,
   },
 
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
     padding: moderateScale(10),
     marginVertical: moderateVerticalScale(4)
   },
@@ -88,32 +100,25 @@ const styles = StyleSheet.create({
   name: {
     fontSize: TextStyles.body,
     fontWeight: "600",
+    color: colors.text,
   },
 
   time: {
-    color: "#6F87A6",
+    color: colors.mutedText,
     fontSize: TextStyles.caption,
   },
 
   last: {
     marginTop: moderateVerticalScale(2),
     fontSize: TextStyles.caption,
-    opacity : 0.5,
+    color: colors.mutedText,
   },
 
-  badge: {
-    width: moderateScale(20),
-    height: moderateVerticalScale(20),
-    borderRadius: "100%",
-    backgroundColor: "#6070e4",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-
-  badgeText: {
-    color: colors.white,
-    fontSize: TextStyles.caption,
-    fontWeight: "600"
+  unreadDot: {
+    width: moderateScale(10),
+    height: moderateScale(10),
+    borderRadius: moderateScale(5),
+    backgroundColor: colors.primary,
   },
 
 });

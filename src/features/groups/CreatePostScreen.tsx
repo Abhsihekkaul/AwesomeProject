@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, View, Pressable } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View, Pressable, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { colors } from "../../theme/colors";
+import UserAvatar from "../../components/ui/UserAvatar";
+import { useTheme } from "../../theme/ThemeContext";
+import PrimaryButton from "../../components/ui/PrimaryButton";
 import AppToggle from "../../components/ui/AppToggle";
 import TagChip from "../../components/ui/TagChip"; // Assuming you still have this to display the typed tags
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
@@ -9,15 +11,34 @@ import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import BackButton from "../../components/ui/BackButton";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
+import imagePath from "../../constant/imagePath";
 
 export default function CreatePostScreen() {
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   const [warning, setWarning] = useState(false);
 
+  const [postTitle, setPostTitle] = useState("");
+  const [postBody, setPostBody] = useState("");
+
   // New States for tags and groups
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [selectedGroup, _setSelectedGroup] = useState<string | null>(null);
   const [customTags, setCustomTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState("");
+
+  const canPost = postTitle.trim().length > 0 && postBody.trim().length > 0;
+
+  const handlePost = () => {
+    if (!canPost) {
+      Alert.alert("Almost there", "Give your post a title and share a few words before posting.");
+      return;
+    }
+    Alert.alert("Posted 🎉", "Your post is now live in the Healing Stream.", [
+      { text: "Done", onPress: () => navigation.goBack() },
+    ]);
+  };
 
   // Function to handle adding a typed tag
   const handleAddTag = () => {
@@ -33,7 +54,11 @@ export default function CreatePostScreen() {
 
   return (
     <ScreenWrapper>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
         {/* Header */}
         <View style={styles.header}>
@@ -44,20 +69,22 @@ export default function CreatePostScreen() {
               {selectedGroup ? `Sharing to ${selectedGroup}` : "Sharing to My Feed"}
             </Text>
           </View>
-          <Pressable style={styles.postBtn}>
-            <Text style={styles.postText}>Post</Text>
-          </Pressable>
+          <PrimaryButton title="Post" onPress={handlePost} size="compact" disabled={!canPost} />
         </View>
 
-        {/* Group Selection Row (Replaced Author Row) */}
+        {/* Author + destination row */}
         <Pressable style={styles.groupSelectRow}>
+          <UserAvatar initials="A" size={40} />
           <View style={styles.groupSelectInfo}>
-            <Text style={styles.groupSelectLabel}>Posting to</Text>
-            <Text style={styles.groupSelectValue}>
-              {selectedGroup ? selectedGroup : "My Feed (No Group)"}
+            <Text style={styles.groupSelectValue}>Abhishek</Text>
+            <Text style={styles.groupSelectLabel}>
+              Posting to {selectedGroup ? selectedGroup : "My Feed"} ›
             </Text>
           </View>
-          <Text style={styles.chevron}>›</Text>
+          <Image
+            source={imagePath.RightIcon}
+            style={styles.chevronIcon}
+          />
         </Pressable>
 
         {/* Editor Container */}
@@ -66,11 +93,11 @@ export default function CreatePostScreen() {
           {/* Media Toolbar (Moved Above Inputs) */}
           <View style={styles.mediaToolbar}>
             <Pressable style={styles.mediaBtn}>
-              <Text style={styles.mediaIcon}>🖼</Text>
+              <Image source={imagePath.UploadIcon} style={styles.mediaIcon} />
               <Text style={styles.mediaBtnText}>Image</Text>
             </Pressable>
             <Pressable style={styles.mediaBtn}>
-              <Text style={styles.mediaIcon}>🎥</Text>
+              <Image source={imagePath.VideoIcon} style={styles.mediaIcon} />
               <Text style={styles.mediaBtnText}>Video</Text>
             </Pressable>
 
@@ -83,15 +110,19 @@ export default function CreatePostScreen() {
 
           <TextInput
             placeholder="What's on your mind? Give it a title..."
-            placeholderTextColor="#919BB0"
+            placeholderTextColor={colors.mutedText}
             style={styles.titleInput}
+            value={postTitle}
+            onChangeText={setPostTitle}
           />
           <View style={styles.line} />
           <TextInput
             multiline
             placeholder="Share your experience, question, or update. This community understands..."
-            placeholderTextColor="#B0B8C8"
+            placeholderTextColor={colors.mutedText}
             style={styles.bodyInput}
+            value={postBody}
+            onChangeText={setPostBody}
           />
         </View>
 
@@ -101,11 +132,11 @@ export default function CreatePostScreen() {
           <TextInput
             style={styles.tagInput}
             placeholder="Type a tag and press enter..."
-            placeholderTextColor="#919BB0"
+            placeholderTextColor={colors.mutedText}
             value={currentTag}
             onChangeText={setCurrentTag}
             onSubmitEditing={handleAddTag} // Adds tag when user hits return/enter
-            blurOnSubmit={false} // Keeps keyboard open to type multiple tags
+            submitBehavior="submit" // Keeps keyboard open to type multiple tags
           />
           <Pressable style={styles.addTagBtn} onPress={handleAddTag}>
             <Text style={styles.addTagBtnText}>Add</Text>
@@ -126,7 +157,10 @@ export default function CreatePostScreen() {
         {/* Content Warning Toggle */}
         <View style={styles.optionRow}>
           <View style={styles.optionTextWrap}>
-            <Text style={styles.optTitle}>⚠ Content warning</Text>
+            <View style={styles.optTitleRow}>
+              <Image source={imagePath.AlertIcon} style={{ width: 16, height: 16, marginRight: 6, tintColor: colors.mutedText }} />
+              <Text style={styles.optTitle}>Content warning</Text>
+            </View>
             <Text style={styles.optSub}>For sensitive or difficult topics</Text>
           </View>
           <AppToggle value={warning} onValueChange={setWarning} />
@@ -134,7 +168,7 @@ export default function CreatePostScreen() {
 
         {/* Tag Member Action */}
         <Pressable style={styles.optionSimple}>
-          <Text style={styles.simpleIcon}>🏷</Text>
+          <Image source={imagePath.UserIcon} style={styles.simpleIcon} />
           <Text style={styles.simpleText}>Tag another member</Text>
         </Pressable>
 
@@ -147,7 +181,7 @@ export default function CreatePostScreen() {
         <Pressable style={styles.optionSimple}>
           <Text style={styles.simpleIcon}>📍</Text>
           <Text style={styles.simpleText}>Add location</Text>
-        </Pressable> 
+        </Pressable>
         */}
 
         {/* Notice */}
@@ -158,11 +192,15 @@ export default function CreatePostScreen() {
         </View>
 
       </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenWrapper>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
+  flex: {
+    flex: 1,
+  },
   // Header
   header: {
     flexDirection: "row",
@@ -179,26 +217,10 @@ const styles = StyleSheet.create({
     color: colors.text
   },
   sub: {
-    color: "#6F87A6",
+    color: colors.mutedText,
     fontSize: TextStyles.caption,
     fontWeight: "500",
     marginTop: moderateVerticalScale(2)
-  },
-  postBtn: {
-    backgroundColor: "#5714ff",
-    borderRadius: radius.md,
-    paddingHorizontal: moderateScale(12),
-    paddingVertical: moderateVerticalScale(6),
-    shadowColor: "#7453C8",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  postText: {
-    color: colors.white,
-    fontWeight: "500",
-    fontSize: TextStyles.caption,
   },
 
   // Group Selection Row
@@ -206,16 +228,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: moderateVerticalScale(12),
-    borderTopWidth: 0.2,
-    borderBottomWidth: 0.2,
-    borderColor: "#b8bbc0",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
     justifyContent: "space-between"
   },
   groupSelectInfo: {
     flex: 1,
   },
   groupSelectLabel: {
-    color: "#6F87A6",
+    color: colors.mutedText,
     fontSize: TextStyles.caption,
     marginBottom: moderateVerticalScale(2)
   },
@@ -224,21 +246,23 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: colors.text
   },
-  chevron: {
-    fontSize: scale(24),
-    color: "#6F87A6",
-    paddingRight: moderateScale(4)
+  chevronIcon: {
+    width: moderateScale(14),
+    height: moderateScale(14),
+    resizeMode: "contain",
+    tintColor: colors.mutedText,
+    marginRight: moderateScale(4),
   },
 
   // Editor Area
   editor: {
     minHeight: moderateVerticalScale(280),
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     padding: moderateScale(16),
     marginTop: moderateVerticalScale(16),
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0"
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border
   },
   // Media Toolbar inside Editor
   mediaToolbar: {
@@ -246,37 +270,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: moderateVerticalScale(16),
     paddingBottom: moderateVerticalScale(12),
-    borderBottomWidth: 0.2,
-    borderBottomColor: "#E2E8F0",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
     gap: moderateScale(16)
   },
   mediaBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F9FAFC",
-    paddingHorizontal: moderateScale(10),
+    backgroundColor: colors.lightPurple,
+    paddingHorizontal: moderateScale(12),
     paddingVertical: moderateVerticalScale(6),
-    borderRadius: radius.sm,
-    borderWidth: 0.2,
-    borderColor: "#E2E8F0",
+    borderRadius: radius.xl,
   },
   mediaIcon: {
-    fontSize: scale(14),
+    width: moderateScale(16),
+    height: moderateScale(16),
+    resizeMode: "contain",
+    tintColor: colors.primary,
     marginRight: moderateScale(6)
   },
   mediaBtnText: {
     fontSize: TextStyles.caption,
-    fontWeight: "500",
-    color: "#4A5568"
+    fontWeight: "600",
+    color: colors.primary,
   },
   titleInput: {
-    fontSize: TextStyles.body,
+    fontSize: TextStyles.subtitle,
     fontWeight: "600",
     color: colors.text,
+    paddingVertical: moderateVerticalScale(6),
   },
   line: {
     height: 0.3,
-    backgroundColor: "#b8bbc0",
+    backgroundColor: colors.border,
     marginVertical: moderateVerticalScale(1)
   },
 
@@ -298,11 +324,11 @@ const styles = StyleSheet.create({
   tagInputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
     borderRadius: radius.md,
     paddingHorizontal: moderateScale(12),
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     marginBottom: moderateVerticalScale(12)
   },
   tagInput: {
@@ -312,13 +338,13 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   addTagBtn: {
-    backgroundColor: "#E9E3FB",
+    backgroundColor: colors.lightPurple,
     paddingHorizontal: moderateScale(12),
     paddingVertical: moderateVerticalScale(6),
     borderRadius: radius.sm,
   },
   addTagBtnText: {
-    color: "#7453C8",
+    color: colors.primary,
     fontWeight: "600",
     fontSize: scale(12)
   },
@@ -334,11 +360,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: moderateVerticalScale(14),
-    borderTopWidth: 0.2,
-    borderTopColor: "#b8bbc0"
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border
   },
   optionTextWrap: {
     flex: 1,
+  },
+  optTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   optTitle: {
     fontSize: TextStyles.body,
@@ -346,7 +376,7 @@ const styles = StyleSheet.create({
     color: colors.text
   },
   optSub: {
-    color: "#6F87A6",
+    color: colors.mutedText,
     fontSize: TextStyles.caption,
     marginTop: moderateVerticalScale(2)
   },
@@ -356,12 +386,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: moderateVerticalScale(12),
-    borderTopWidth: 0.2,
-    borderTopColor: "#b8bbc0"
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border
   },
   simpleIcon: {
-    fontSize: scale(20),
-    marginRight: moderateScale(10)
+    width: moderateScale(18),
+    height: moderateScale(18),
+    resizeMode: "contain",
+    tintColor: colors.mutedText,
+    marginRight: moderateScale(10),
   },
   simpleText: {
     fontSize: TextStyles.body,
@@ -371,15 +404,15 @@ const styles = StyleSheet.create({
 
   // Notice Box
   notice: {
-    backgroundColor: "#F9FAFC",
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
+    backgroundColor: colors.background,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
     borderRadius: radius.md,
     padding: moderateScale(8),
     marginTop: moderateVerticalScale(6)
   },
   noticeText: {
-    color: "#6F87A6",
+    color: colors.mutedText,
     fontSize: TextStyles.caption,
     lineHeight: scale(16)
   },

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { FlatList, StyleSheet, Text, View, Pressable } from "react-native";
+import { FlatList, LayoutAnimation, StyleSheet, Text, View, Pressable } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import PostCard from "../../components/ui/PostCard";
@@ -43,9 +43,21 @@ const dummyAbout = [
 export default function GroupDetailsScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const groupName = route.params?.name ?? "Fibromyalgia Warriors";
 
   const [tab, setTab] = useState<"Posts" | "Members" | "HealthTips" | "About">("Posts");
+
+  // Sathi (friend) requests to fellow members — local until backend-wired
+  const [requested, setRequested] = useState<Record<string, boolean>>({});
+  const toggleRequest = (id: string) =>
+    setRequested((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const switchTab = (next: typeof tab) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setTab(next);
+  };
 
   // Sheet States
   const [selectedCommentPost, setSelectedCommentPost] = useState<any>(null);
@@ -77,7 +89,7 @@ export default function GroupDetailsScreen() {
       {/* Tabs */}
       <View style={styles.tabRow}>
         {(["Posts", "Members", "HealthTips", "About"] as const).map((item) => (
-          <Pressable key={item} onPress={() => setTab(item)} style={styles.tabItem}>
+          <Pressable key={item} onPress={() => switchTab(item)} style={styles.tabItem}>
             <Text style={[styles.tabText, tab === item && styles.tabActive]}>{item}</Text>
             {tab === item ? <View style={styles.underline} /> : null}
           </Pressable>
@@ -106,7 +118,7 @@ export default function GroupDetailsScreen() {
         keyExtractor={(item: any) => item.id.toString()}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }: { item: any }) => {
+        renderItem={({ item, index }: { item: any; index: number }) => {
 
           // Render POSTS Tab
           if (tab === "Posts") {
@@ -114,6 +126,8 @@ export default function GroupDetailsScreen() {
               <View>
                 <PostCard
                   post={item}
+                  index={index}
+                  onPress={() => navigation.navigate("PostDetails", { post: item })}
                   onCommentPress={() => setSelectedCommentPost(item)}
                   onSharePress={() => setSelectedSharePost(item)}
                 />
@@ -125,11 +139,20 @@ export default function GroupDetailsScreen() {
           if (tab === "Members") {
             return (
               <View style={styles.memberCard}>
-                <UserAvatar initials={item.initials} size={40} bg="#E9E3FB" color="#7453C8" />
+                <UserAvatar initials={item.initials} size={40} />
                 <View style={styles.memberInfo}>
                   <Text style={styles.memberName}>{item.name}</Text>
                   <Text style={styles.memberRole}>{item.role}</Text>
                 </View>
+                <Pressable
+                  onPress={() => toggleRequest(item.id)}
+                  style={[styles.addSathiBtn, requested[item.id] && styles.addSathiBtnDone]}
+                  hitSlop={6}
+                >
+                  <Text style={[styles.addSathiText, requested[item.id] && styles.addSathiTextDone]}>
+                    {requested[item.id] ? "Requested ✓" : "+ Add Sathi"}
+                  </Text>
+                </Pressable>
               </View>
             );
           }
@@ -165,7 +188,7 @@ export default function GroupDetailsScreen() {
       {/* Floating Action Button */}
       {tab === "Posts" && (
         <Pressable style={styles.postFab} onPress={() => navigation.navigate("CreatePost")}>
-          <Text style={styles.postFabText}>＋ Post</Text>
+          <Text style={styles.postFabText}>+ Post</Text>
         </Pressable>
       )}
 
@@ -183,179 +206,200 @@ export default function GroupDetailsScreen() {
   );
 }
 
-// STYLES ARE 100% UNTOUCHED
-const styles = StyleSheet.create({
-  listContent: {
-    paddingTop: moderateVerticalScale(10),
-  },
-  // Top Bar
-  topRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  backBtn: {
-    paddingRight: moderateScale(10),
-  },
-  backIcon: {
-    fontSize: scale(32),
-    color: "#7453C8",
-    lineHeight: scale(34),
-  },
-  title: {
-    flex: 1,
-    fontSize: TextStyles.heading,
-    fontWeight: "500",
-    color: colors.text,
-    marginRight: moderateScale(10),
-  },
-  joinedPill: {
-    backgroundColor: "#F1EBFF",
-    borderRadius: radius.xl,
-    paddingHorizontal: moderateScale(12),
-    paddingVertical: moderateVerticalScale(6),
-  },
-  joinedText: {
-    color: "#7453C8",
-    fontWeight: "700",
-    fontSize: scale(12),
-  },
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
+  StyleSheet.create({
+    listContent: {
+      paddingTop: moderateVerticalScale(10),
+    },
+    // Top Bar
+    topRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    backBtn: {
+      paddingRight: moderateScale(10),
+    },
+    backIcon: {
+      fontSize: scale(32),
+      color: colors.primary,
+      lineHeight: scale(34),
+    },
+    title: {
+      flex: 1,
+      fontSize: TextStyles.heading,
+      fontWeight: "500",
+      color: colors.text,
+      marginRight: moderateScale(10),
+    },
+    joinedPill: {
+      backgroundColor: colors.lightPurple,
+      borderRadius: radius.xl,
+      paddingHorizontal: moderateScale(12),
+      paddingVertical: moderateVerticalScale(6),
+    },
+    joinedText: {
+      color: colors.primary,
+      fontWeight: "700",
+      fontSize: scale(12),
+    },
 
-  // Meta & Description
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: moderateScale(16),
-    marginTop: moderateVerticalScale(8),
-  },
-  metaText: {
-    marginLeft: moderateScale(10),
-    fontWeight: "500",
-    fontSize: TextStyles.caption,
-  },
-  dot: {
-    width: moderateScale(4),
-    height: moderateScale(4),
-    borderRadius: moderateScale(2),
-    backgroundColor: "#7453C8",
-    marginHorizontal: moderateScale(8),
-  },
-  desc: {
-    color: colors.text,
-    fontSize: TextStyles.body,
-    lineHeight: scale(22),
-    paddingHorizontal: moderateScale(16),
-    marginTop: moderateVerticalScale(12),
-  },
-  moderatorBox: {
-    marginHorizontal: moderateScale(16),
-    padding: moderateScale(10),
-  },
-  moderatorText: {
-    color: "#6F87A6",
-    fontSize: TextStyles.caption,
-    fontWeight: "500",
-  },
-  // Tabs
-  tabRow: {
-    display: "flex",
-    flexDirection: "row",
-    marginTop: moderateVerticalScale(2),
-    borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
-    paddingHorizontal: moderateScale(16),
-  },
-  tabItem: {
-    marginRight: moderateScale(24),
-    paddingBottom: moderateVerticalScale(10),
-    position: "relative",
-  },
-  tabText: {
-    color: "#6F87A6",
-    fontSize: TextStyles.body,
-    fontWeight: "500",
-  },
-  tabActive: {
-    color: "#7453C8",
-  },
-  underline: {
-    position: "absolute",
-    bottom: -1,
-    left: 0,
-    right: 0,
-    height: moderateVerticalScale(3),
-    backgroundColor: "#7453C8",
-    borderRadius: radius.md,
-  },
+    // Meta & Description
+    metaRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: moderateScale(16),
+      marginTop: moderateVerticalScale(8),
+    },
+    metaText: {
+      marginLeft: moderateScale(10),
+      fontWeight: "500",
+      fontSize: TextStyles.caption,
+      color: colors.mutedText,
+    },
+    dot: {
+      width: moderateScale(4),
+      height: moderateScale(4),
+      borderRadius: moderateScale(2),
+      backgroundColor: colors.primary,
+      marginHorizontal: moderateScale(8),
+    },
+    desc: {
+      color: colors.text,
+      fontSize: TextStyles.body,
+      lineHeight: scale(22),
+      paddingHorizontal: moderateScale(16),
+      marginTop: moderateVerticalScale(12),
+    },
+    moderatorBox: {
+      marginHorizontal: moderateScale(16),
+      padding: moderateScale(10),
+    },
+    moderatorText: {
+      color: colors.mutedText,
+      fontSize: TextStyles.caption,
+      fontWeight: "500",
+    },
+    // Tabs
+    tabRow: {
+      display: "flex",
+      flexDirection: "row",
+      marginTop: moderateVerticalScale(2),
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      paddingHorizontal: moderateScale(16),
+    },
+    tabItem: {
+      marginRight: moderateScale(24),
+      paddingBottom: moderateVerticalScale(10),
+      position: "relative",
+    },
+    tabText: {
+      color: colors.mutedText,
+      fontSize: TextStyles.body,
+      fontWeight: "500",
+    },
+    tabActive: {
+      color: colors.primary,
+    },
+    underline: {
+      position: "absolute",
+      bottom: -1,
+      left: 0,
+      right: 0,
+      height: moderateVerticalScale(3),
+      backgroundColor: colors.primary,
+      borderRadius: radius.md,
+    },
 
-  // List Item Wrappers
-  memberCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: moderateVerticalScale(10),
-    borderBottomWidth: 0.2,
-    borderBottomColor: "#a3a0a0",
-  },
+    // List Item Wrappers
+    memberCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: moderateVerticalScale(10),
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
 
-  memberInfo: {
-    marginLeft: moderateScale(8),
-  },
+    memberInfo: {
+      flex: 1,
+      marginLeft: moderateScale(8),
+    },
 
-  memberName: {
-    fontSize: TextStyles.body,
-    fontWeight: "500",
-  },
+    addSathiBtn: {
+      backgroundColor: colors.primary,
+      borderRadius: radius.xl,
+      paddingHorizontal: moderateScale(12),
+      paddingVertical: moderateVerticalScale(6),
+    },
+    addSathiBtnDone: {
+      backgroundColor: colors.lightPurple,
+    },
+    addSathiText: {
+      fontSize: TextStyles.caption,
+      color: colors.white,
+      fontWeight: "600",
+    },
+    addSathiTextDone: {
+      color: colors.primary,
+    },
 
-  memberRole: {
-    fontSize: TextStyles.caption,
-    color: "#6F87A6",
-    marginTop: moderateVerticalScale(2),
-  },
+    memberName: {
+      fontSize: TextStyles.body,
+      fontWeight: "500",
+      color: colors.text,
+    },
 
-  resourceCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: moderateVerticalScale(12),
-    padding: moderateScale(14),
-    backgroundColor: colors.white,
-    borderRadius: radius.md,
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
-  },
-  resourceIcon: {
-    fontSize: scale(24),
-  },
-  resourceInfo: {
-    marginLeft: moderateScale(12),
-  },
-  resourceTitle: {
-    fontSize: TextStyles.body,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  resourceType: {
-    fontSize: TextStyles.caption,
-    color: "#6F87A6",
-    marginTop: moderateVerticalScale(4),
-  },
+    memberRole: {
+      fontSize: TextStyles.caption,
+      color: colors.mutedText,
+      marginTop: moderateVerticalScale(2),
+    },
 
-  // Floating Action Button
-  postFab: {
-    position: "absolute",
-    right: moderateScale(20),
-    bottom: moderateVerticalScale(30),
-    backgroundColor: "#5714ff",
-    borderRadius: radius.md,
-    paddingHorizontal: moderateScale(14),
-    paddingVertical: moderateVerticalScale(10),
-    shadowColor: "#7453C8",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  postFabText: {
-    color: colors.white,
-    fontSize: TextStyles.caption,
-    fontWeight: "500",
-  },
-});
+    resourceCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: moderateVerticalScale(12),
+      padding: moderateScale(14),
+      backgroundColor: colors.card,
+      borderRadius: radius.md,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    resourceIcon: {
+      fontSize: scale(24),
+    },
+    resourceInfo: {
+      marginLeft: moderateScale(12),
+    },
+    resourceTitle: {
+      fontSize: TextStyles.body,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    resourceType: {
+      fontSize: TextStyles.caption,
+      color: colors.mutedText,
+      marginTop: moderateVerticalScale(4),
+    },
+
+    // Floating Action Button
+    postFab: {
+      position: "absolute",
+      right: moderateScale(20),
+      bottom: moderateVerticalScale(30),
+      backgroundColor: colors.primary,
+      borderRadius: radius.md,
+      paddingHorizontal: moderateScale(14),
+      paddingVertical: moderateVerticalScale(10),
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.5,
+      shadowRadius: 8,
+      elevation: 5,
+    },
+    postFabText: {
+      color: colors.white,
+      fontSize: TextStyles.caption,
+      fontWeight: "500",
+    },
+  });

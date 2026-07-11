@@ -8,12 +8,12 @@ import {
   TextInput,
   Image,
 } from "react-native";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import  PrimaryButton from "../../components/ui/PrimaryButton";
 import { SecondaryButton } from "../../components/ui/SecondaryButton";
 import { StepIndicator } from "../../components/ui/StepIndicator";
 import { conditions } from "../../data/conditions";
-import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
+import { moderateScale, moderateVerticalScale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
@@ -21,6 +21,10 @@ import imagePath from "../../constant/imagePath";
 
 const HealthJourneyScreen = ({ navigation }: any) => {
   const [selected, setSelected] = useState<string[]>(["Fibromyalgia"]);
+  const [query, setQuery] = useState("");
+
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
 
   const toggle = (item: string) => {
     setSelected((prev) =>
@@ -28,7 +32,11 @@ const HealthJourneyScreen = ({ navigation }: any) => {
     );
   };
 
-  return ( 
+  const visibleConditions = query.trim()
+    ? conditions.filter((c) => c.toLowerCase().includes(query.trim().toLowerCase()))
+    : conditions;
+
+  return (
     <ScreenWrapper>
         <StepIndicator total={3} current={1} />
         <Text style={styles.step}>Step 2 of 3</Text>
@@ -39,7 +47,13 @@ const HealthJourneyScreen = ({ navigation }: any) => {
 
         <View style={styles.searchBox}>
         <Image style={styles.searchIcon} source={imagePath.SearchIcon} />
-          <TextInput placeholder="Search conditions..." placeholderTextColor="#90A1B8" style={styles.searchInput} />
+          <TextInput
+            placeholder="Search conditions..."
+            placeholderTextColor={colors.mutedText}
+            style={styles.searchInput}
+            value={query}
+            onChangeText={setQuery}
+          />
         </View>
 
         <View style={styles.chipWrap}>
@@ -51,10 +65,14 @@ const HealthJourneyScreen = ({ navigation }: any) => {
         </View>
 
         <FlatList
-          data={conditions}
+          data={visibleConditions}
           keyExtractor={(item) => item}
           showsVerticalScrollIndicator={false}
           style={styles.list}
+          keyboardShouldPersistTaps="handled"
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No conditions match "{query.trim()}".</Text>
+          }
           renderItem={({ item }) => {
             const active = selected.includes(item);
             return (
@@ -76,13 +94,13 @@ const HealthJourneyScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
   step: {
-    color: "#6F87A6",
+    color: colors.mutedText,
     fontSize: TextStyles.stepCounts,
     marginTop: moderateVerticalScale(18),
   },
-  
+
   title: {
     fontSize: TextStyles.title,
     fontWeight: "600",
@@ -92,14 +110,14 @@ const styles = StyleSheet.create({
 
   subtitle: {
     fontSize: TextStyles.body,
-    color: "#6F87A6",
+    color: colors.mutedText,
     marginTop: moderateVerticalScale(8),
     marginBottom: moderateVerticalScale(18),
   },
 
   searchBox: {
     height: moderateVerticalScale(52),
-    backgroundColor: "#EEF3FB",
+    backgroundColor: colors.lightBlue,
     borderRadius: radius.md,
     flexDirection: "row",
     alignItems: "center",
@@ -107,7 +125,7 @@ const styles = StyleSheet.create({
   },
 
   searchIcon: {
-    color: "#90A1B8",
+    color: colors.mutedText,
     height: moderateVerticalScale(20),
     width : moderateScale(21),
     marginRight: moderateScale(8)
@@ -144,7 +162,7 @@ const styles = StyleSheet.create({
   row: {
     height: 64,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5ECF6",
+    borderBottomColor: colors.border,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -160,7 +178,7 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     borderWidth: 2,
-    borderColor: "#C9D8EE",
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -178,6 +196,12 @@ const styles = StyleSheet.create({
     marginTop: moderateVerticalScale(12),
   },
   bottomBtn: { flex: 1 },
+  emptyText: {
+    textAlign: "center",
+    color: colors.mutedText,
+    fontSize: TextStyles.body,
+    marginTop: moderateVerticalScale(24),
+  },
 });
 
 

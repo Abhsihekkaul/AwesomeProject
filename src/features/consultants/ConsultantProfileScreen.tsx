@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
 import BackButton from "../../components/ui/BackButton";
 import imagePath from "../../constant/imagePath";
+import UserAvatar from "../../components/ui/UserAvatar";
+import PrimaryButton from "../../components/ui/PrimaryButton";
 
 const initialReviews = [
   {
@@ -55,6 +57,8 @@ const availableTimes = [
 
 export default function ConsultantProfileScreen() {
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
 
   // State for Date and Time Selection
   const [selectedDate, setSelectedDate] = useState("Tue\n11");
@@ -93,9 +97,7 @@ export default function ConsultantProfileScreen() {
 
         <View style={styles.topCard}>
           <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>SC</Text>
-            </View>
+            <UserAvatar initials="SC" size={80} />
             <View style={styles.onlineDot} />
           </View>
 
@@ -129,7 +131,7 @@ export default function ConsultantProfileScreen() {
           </View>
           <View style={styles.infoBox}>
             <Image style={styles.icons} source={imagePath.ClockIcon} />
-            <Text style={[styles.infoText, { color: "#4FA57B" }]}>Today, 3:00{`\n`}PM</Text>
+            <Text style={[styles.infoText, { color: colors.success }]}>Today, 3:00{`\n`}PM</Text>
           </View>
           <View style={styles.infoBox}>
             <Image style={styles.icons} source={imagePath.MoneyIcon} />
@@ -228,9 +230,19 @@ export default function ConsultantProfileScreen() {
           ))}
         </View>
 
-        <Pressable style={styles.bookBtn} onPress={() => navigation.navigate("Booking")}>
-          <Text style={styles.bookText}>Book Session</Text>
-        </Pressable>
+        <PrimaryButton
+          title="Book Session"
+          onPress={() =>
+            navigation.navigate("Booking", {
+              consultant: "Dr. Sarah Chen",
+              role: "Clinical Psychologist",
+              sessionType: selectedSessionType,
+              date: selectedDate,
+              time: selectedTime,
+            })
+          }
+          style={styles.bookBtn}
+        />
 
         {/* Reviews Section Header */}
         <View style={styles.reviewHeaderRow}>
@@ -248,7 +260,7 @@ export default function ConsultantProfileScreen() {
             <TextInput
               style={styles.reviewInput}
               placeholder="Share your experience..."
-              placeholderTextColor="#8A9CB5"
+              placeholderTextColor={colors.mutedText}
               multiline
               numberOfLines={4}
               value={newReviewText}
@@ -257,7 +269,7 @@ export default function ConsultantProfileScreen() {
             />
             <Pressable
               style={[styles.submitReviewBtn, !newReviewText.trim() && styles.submitReviewBtnDisabled]}
-              onPress={()=>{console.log("Thanks For the booking ")}}
+              onPress={handleReviewSubmit}
               disabled={!newReviewText.trim()}
             >
               <Text style={styles.submitReviewBtnText}>Submit</Text>
@@ -269,9 +281,7 @@ export default function ConsultantProfileScreen() {
         {reviews.map((r, index) => (
           <View key={index.toString()} style={styles.reviewCard}>
             <View style={styles.reviewTop}>
-              <View style={styles.reviewAvatar}>
-                <Text style={styles.reviewAvatarText}>{r.initials}</Text>
-              </View>
+              <UserAvatar initials={r.initials} size={36} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.reviewName}>{r.name}</Text>
                 <Text style={styles.reviewDate}>{r.date}</Text>
@@ -288,7 +298,8 @@ export default function ConsultantProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
+  StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -296,6 +307,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: TextStyles.heading,
     fontWeight: "600",
+    color: colors.text,
   },
   topCard: {
     flexDirection: "row",
@@ -305,26 +317,11 @@ const styles = StyleSheet.create({
   avatarContainer: {
     position: "relative",
   },
-  avatar: {
-    width: moderateScale(80),
-    height: moderateScale(80),
-    borderRadius: radius.md,
-    backgroundColor: "#F1EBFF",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
-  },
-  avatarText: {
-    fontSize: scale(24),
-    fontWeight: "600",
-    color: "#7453C8",
-  },
   onlineDot: {
     width: moderateScale(16),
     height: moderateScale(16),
     borderRadius: moderateScale(8),
-    backgroundColor: "#4FA57B",
+    backgroundColor: colors.success,
     borderWidth: 2,
     borderColor: colors.white,
     position: "absolute",
@@ -342,44 +339,48 @@ const styles = StyleSheet.create({
   },
   role: {
     fontSize: TextStyles.caption,
-    color: "#6F87A6",
+    color: colors.mutedText,
     marginTop: moderateVerticalScale(4),
   },
   rating: {
     marginTop: moderateVerticalScale(6),
     fontSize: scale(14),
     fontWeight: "700",
-    color: "#ffb779",
+    color: colors.warning,
   },
   reviewCount: {
-    color: "#8A9CB5",
+    color: colors.mutedText,
     fontWeight: "400",
   },
   sectionCard: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     padding: moderateScale(14),
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   sectionTitle: {
     fontSize: TextStyles.subtitle,
     fontWeight: "500",
+    color: colors.text,
     marginBottom: moderateVerticalScale(4),
   },
   paragraph: {
     fontSize: TextStyles.stepCounts,
     lineHeight: scale(20),
+    color: colors.mutedText,
   },
   blockTitle: {
     marginTop: moderateVerticalScale(12),
     fontSize: TextStyles.subtitle,
     fontWeight: "500",
+    color: colors.text,
     marginBottom: moderateVerticalScale(8)
   },
   blockTitleWithMargin0: {
     fontSize: TextStyles.subtitle,
     fontWeight: "600",
+    color: colors.text,
   },
   pillsRow: {
     flexDirection: "row",
@@ -388,13 +389,13 @@ const styles = StyleSheet.create({
     marginBottom: moderateVerticalScale(12),
   },
   pill: {
-    backgroundColor: "#7984fb",
+    backgroundColor: colors.primary,
     borderRadius: moderateScale(20),
     paddingHorizontal: moderateScale(12),
     paddingVertical: moderateVerticalScale(5),
   },
   pillText: {
-    color: "#ffffff",
+    color: colors.white,
     fontWeight: "600",
     fontSize: TextStyles.caption,
   },
@@ -404,22 +405,25 @@ const styles = StyleSheet.create({
   },
   infoBox: {
     width: "31%",
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     paddingVertical: moderateVerticalScale(16),
     alignItems: "center",
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   icons: {
     height: moderateVerticalScale(23),
     width : moderateScale(24),
+    tintColor: colors.text,
+    resizeMode: "contain",
   },
   infoText: {
     textAlign: "center",
     marginTop: moderateVerticalScale(6),
     fontWeight: "400",
     fontSize: TextStyles.caption,
+    color: colors.text,
   },
   sessionRow: {
     flexDirection: "row",
@@ -427,33 +431,35 @@ const styles = StyleSheet.create({
   },
   sessionCard: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     paddingVertical: moderateVerticalScale(8),
     alignItems: "center",
-    borderWidth: 0.2,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   sessionActive: {
-    backgroundColor: "#F1EBFF",
-    borderColor: "#7453C8",
+    backgroundColor: colors.lightPurple,
+    borderColor: colors.primary,
     borderWidth: 1,
   },
   sessionIcon: {
     width: moderateScale(24),
     height: moderateScale(24),
+    tintColor: colors.mutedText,
   },
 
   sessionIconActive: {
-    tintColor: "#7453C8",
+    tintColor: colors.primary,
   },
   sessionLabel: {
     marginTop: moderateVerticalScale(6),
-    color: "#6F87A6",
+    color: colors.mutedText,
     fontWeight: "600",
     fontSize: TextStyles.caption,
   },
   sessionActiveText: {
-    color: "#7453C8",
+    color: colors.primary,
   },
   dateScroll: {
     gap: moderateScale(10),
@@ -462,18 +468,18 @@ const styles = StyleSheet.create({
     width: moderateScale(68),
     height: moderateVerticalScale(76),
     borderRadius: radius.md,
-    backgroundColor: colors.white,
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
+    backgroundColor: colors.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
   },
   dateActive: {
-    backgroundColor: "#7453C8",
-    borderColor: "#7453C8",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   dateDisabled: {
-    backgroundColor: "#F0F4FA",
+    backgroundColor: colors.lightBlue,
     opacity: 0.6,
   },
   dateText: {
@@ -487,7 +493,7 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   dateDisabledText: {
-    color: "#A2B0C4",
+    color: colors.mutedText,
   },
   timeGrid: {
     flexDirection: "row",
@@ -496,12 +502,12 @@ const styles = StyleSheet.create({
   },
   timeBox: {
     width: "22.5%",
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: moderateScale(20),
     paddingVertical: moderateVerticalScale(10),
     alignItems: "center",
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   timeText: {
     color: colors.text,
@@ -510,30 +516,21 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   timeActive: {
-    backgroundColor: "#7453C8",
-    borderColor: "#7453C8",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   timeActiveText: {
     color: colors.white,
   },
   timeDisabled: {
-    backgroundColor: "#F0F4FA",
+    backgroundColor: colors.lightBlue,
     opacity: 0.6,
   },
   timeDisabledText: {
-    color: "#A2B0C4",
+    color: colors.mutedText,
   },
   bookBtn: {
     marginTop: moderateVerticalScale(24),
-    backgroundColor: "#7453C8",
-    borderRadius: moderateScale(24),
-    paddingVertical: moderateVerticalScale(14),
-    alignItems: "center",
-  },
-  bookText: {
-    color: colors.white,
-    fontSize: TextStyles.body,
-    fontWeight: "600",
   },
 
   /* --- Review Section Styles --- */
@@ -545,30 +542,30 @@ const styles = StyleSheet.create({
     marginBottom: moderateVerticalScale(10),
   },
   writeReviewBtnText: {
-    color: "#7453C8",
+    color: colors.primary,
     fontWeight: "600",
     fontSize: TextStyles.caption,
   },
   writeReviewContainer: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     padding: moderateScale(14),
     marginBottom: moderateVerticalScale(10),
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   reviewInput: {
     height: moderateVerticalScale(80),
-    backgroundColor: "#F9FAFC",
+    backgroundColor: colors.background,
     borderRadius: radius.sm,
     padding: moderateScale(12),
     fontSize: TextStyles.caption,
     color: colors.text,
-    borderWidth: 0.2,
-    borderColor: "#E2E8F0",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   submitReviewBtn: {
-    backgroundColor: "#7453C8",
+    backgroundColor: colors.primary,
     borderRadius: moderateScale(20),
     paddingVertical: moderateVerticalScale(10),
     alignItems: "center",
@@ -577,7 +574,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(20),
   },
   submitReviewBtnDisabled: {
-    backgroundColor: "#A2B0C4",
+    backgroundColor: colors.mutedText,
   },
   submitReviewBtnText: {
     color: colors.white,
@@ -585,30 +582,16 @@ const styles = StyleSheet.create({
     fontSize: scale(12),
   },
   reviewCard: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     marginTop: moderateVerticalScale(10),
     padding: moderateScale(14),
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   reviewTop: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  reviewAvatar: {
-    width: moderateScale(36),
-    height: moderateScale(36),
-    borderRadius: moderateScale(18),
-    backgroundColor: "#F1EBFF",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: moderateScale(10),
-  },
-  reviewAvatarText: {
-    color: "#7453C8",
-    fontWeight: "600",
-    fontSize: scale(12),
   },
   reviewName: {
     fontSize: TextStyles.body,
@@ -616,12 +599,12 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   reviewDate: {
-    color: "#6F87A6",
+    color: colors.mutedText,
     marginTop: moderateVerticalScale(2),
     fontSize: scale(11),
   },
   reviewStars: {
-    color: "#E67E22",
+    color: colors.warning,
     fontSize: scale(14),
     fontWeight: "700",
   },

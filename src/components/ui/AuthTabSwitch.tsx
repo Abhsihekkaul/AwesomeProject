@@ -1,8 +1,8 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { radius } from "../../theme/radius";
-import { moderateScale, scale } from "react-native-size-matters";
+import { moderateScale } from "react-native-size-matters";
 import { TextStyles } from "../../theme/typography";
 
 type Props = {
@@ -11,6 +11,8 @@ type Props = {
 };
 
 export const AuthTabSwitch = ({ value, onChange }: Props) => {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   return (
     <View style={styles.wrap}>
       <Pressable
@@ -34,10 +36,10 @@ export const AuthTabSwitch = ({ value, onChange }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
   wrap: {
     flexDirection: "row",
-    backgroundColor: "#EEF3FB",
+    backgroundColor: colors.lightBlue,
     borderRadius: radius.pill,
     padding: moderateScale(4),
     marginBottom: moderateScale(24),
@@ -50,14 +52,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   activeTab: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowRadius: moderateScale(12),
     elevation: 2,
   },
   text: {
-    color: "#7E93B5",
+    color: colors.mutedText,
     fontSize: TextStyles.body,
     fontWeight: "600",
   },

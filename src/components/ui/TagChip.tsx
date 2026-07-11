@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { moderateScale, scale } from "react-native-size-matters";
 
 type Props = {
@@ -10,6 +10,8 @@ type Props = {
 };
 
 export default function TagChip({ label, active, onPress }: Props) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   return (
     <Pressable onPress={onPress} style={[styles.chip, active && styles.active]}>
       <Text style={[styles.text, active && styles.activeText]}>{label}</Text>
@@ -17,12 +19,12 @@ export default function TagChip({ label, active, onPress }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
   chip: {
     height: moderateScale(36),
     paddingHorizontal: moderateScale(14),
     borderRadius: moderateScale(999),
-    backgroundColor: "#EEF3FB",
+    backgroundColor: colors.lightBlue,
     justifyContent: "center",
     alignItems: "center",
   },

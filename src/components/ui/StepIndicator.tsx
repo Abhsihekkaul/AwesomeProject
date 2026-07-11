@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { moderateScale } from "react-native-size-matters";
 
 type Props = {
@@ -9,6 +9,8 @@ type Props = {
 };
 
 export const StepIndicator = ({ total, current }: Props) => {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   return (
     <View style={styles.row}>
       {Array.from({ length: total }).map((_, index) => (
@@ -24,7 +26,7 @@ export const StepIndicator = ({ total, current }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "center",
@@ -40,6 +42,6 @@ const styles = StyleSheet.create({
   },
   inactive: {
     width: moderateScale(8),
-    backgroundColor: "#DDE5F2",
+    backgroundColor: colors.border,
   },
 });

@@ -26,7 +26,9 @@ const imagePath = {
     PhoneIcon: require("../assets/icons/phone.png"),
     LanguageIcon: require("../assets/icons/language.png"),
     MoneyIcon: require("../assets/icons/money.png"),
-    
+    InfinityMark: require("../assets/icons/infinity-mark.png"),
+    MoreIcon: require("../assets/icons/more.png"),
+    SettingIcon: require("../assets/icons/setting.png"),
 } as const;
 
 export default imagePath

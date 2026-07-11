@@ -1,8 +1,8 @@
 import React from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { radius } from "../../theme/radius";
-import { moderateScale, scale } from "react-native-size-matters";
+import { moderateScale } from "react-native-size-matters";
 import { TextStyles } from "../../theme/typography";
 
 type Props = {
@@ -12,6 +12,7 @@ type Props = {
   placeholder?: string;
   secureTextEntry?: boolean;
   rightElement?: React.ReactNode;
+  multiline?: boolean;
 };
 
 export const AppInput = ({
@@ -21,18 +22,22 @@ export const AppInput = ({
   placeholder,
   secureTextEntry,
   rightElement,
+  multiline,
 }: Props) => {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <View style={styles.inputWrap}>
+      <View style={[styles.inputWrap, multiline && styles.inputWrapMultiline]}>
         <TextInput
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="#9AAAC2"
+          placeholderTextColor={colors.mutedText}
           secureTextEntry={secureTextEntry}
-          style={styles.input}
+          multiline={multiline}
+          style={[styles.input, multiline && styles.inputMultiline]}
         />
         {rightElement ? <View style={styles.right}>{rightElement}</View> : null}
       </View>
@@ -40,7 +45,7 @@ export const AppInput = ({
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
   container: {
     marginBottom: moderateScale(16),
   },
@@ -58,10 +63,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: moderateScale(18),
   },
+  inputWrapMultiline: {
+    minHeight: moderateScale(110),
+    alignItems: "flex-start",
+    paddingVertical: moderateScale(14),
+  },
   input: {
     flex: 1,
     color: colors.text,
     fontSize: TextStyles.body,
+  },
+  inputMultiline: {
+    textAlignVertical: "top",
+    alignSelf: "stretch",
   },
   right: {
     marginLeft: moderateScale(10),

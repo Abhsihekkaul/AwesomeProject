@@ -1,104 +1,269 @@
-// import React from "react";
-// import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
-// import { useNavigation } from "@react-navigation/native";
-// import { colors } from "../../theme/colors";
-// import PrimaryButton from "../../components/ui/PrimaryButton";
-// import { scale } from "react-native-size-matters";
-// import ScreenWrapper from "../../components/ui/ScreenWrapper";
+import React, { useState } from "react";
+import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
+import ScreenWrapper from "../../components/ui/ScreenWrapper";
+import BackButton from "../../components/ui/BackButton";
+import PrimaryButton from "../../components/ui/PrimaryButton";
+import UserAvatar from "../../components/ui/UserAvatar";
+import { useTheme } from "../../theme/ThemeContext";
+import { TextStyles } from "../../theme/typography";
+import { radius } from "../../theme/radius";
+import imagePath from "../../constant/imagePath";
 
-// export default function BookingScreen() {
-//   const navigation = useNavigation<any>();
+export default function BookingScreen() {
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
 
-//   const dates = ["Today\n10", "Tue\n11", "Wed\n12", "Thu\n13", "Fri\n14"];
-//   const times = ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:30 PM"];
+  const consultant: string = route.params?.consultant ?? "Dr. Sarah Chen";
+  const role: string = route.params?.role ?? "Clinical Psychologist";
+  const sessionType: string = route.params?.sessionType ?? "Video";
+  const date: string = (route.params?.date ?? "Tue 11").replace("\n", " ");
+  const time: string = route.params?.time ?? "3:00 PM";
 
-//   return (
-//     <ScreenWrapper>
-//     <ScrollView style={styles.safe} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
-//       <View style={styles.header}>
-//         <Pressable onPress={() => navigation.goBack()}><Text style={styles.back}>‹</Text></Pressable>
-//         <Text style={styles.title}>Book Session</Text>
-//       </View>
+  const [note, setNote] = useState("");
 
-//       <View style={styles.sessionRow}>
-//         <View style={[styles.sessionBox, styles.sessionActive]}><Text style={styles.sessionTextActive}>🎥{`\n`}Video</Text></View>
-//         <View style={styles.sessionBox}><Text style={styles.sessionText}>🎙{`\n`}Audio</Text></View>
-//         <View style={styles.sessionBox}><Text style={styles.sessionText}>💬{`\n`}Chat</Text></View>
-//       </View>
+  const initials = consultant
+    .replace("Dr. ", "")
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
-//       <Text style={styles.blockTitle}>Pick a Date</Text>
-//       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-//         {dates.map((d, i) => (
-//           <View key={d} style={[styles.dateBox, i === 0 && styles.dateActive]}>
-//             <Text style={[styles.dateText, i === 0 && styles.dateActiveText]}>{d}</Text>
-//           </View>
-//         ))}
-//       </ScrollView>
+  const summaryRows = [
+    { icon: imagePath.VideoIcon, label: "Session", value: `${sessionType} session` },
+    { icon: imagePath.ClockIcon, label: "When", value: `${date} · ${time}` },
+    { icon: imagePath.MoneyIcon, label: "Fee", value: "$80–120 / session" },
+  ];
 
-//       <Text style={styles.blockTitle}>Available Times</Text>
-//       <View style={styles.timesWrap}>
-//         {times.map((t, i) => (
-//           <View key={t} style={[styles.timeBox, i === 5 && styles.timeActive, (i === 0 || i === 1 || i === 4) && styles.timeDisabled]}>
-//             <Text style={[styles.timeText, i === 5 && styles.timeActiveText, (i === 0 || i === 1 || i === 4) && styles.timeDisabledText]}>{t}</Text>
-//           </View>
-//         ))}
-//       </View>
+  const confirmBooking = () => {
+    Alert.alert(
+      "Booking confirmed 🎉",
+      `Your ${sessionType.toLowerCase()} session with ${consultant} is set for ${date} at ${time}.`,
+      [{ text: "Done", onPress: () => navigation.popToTop() }],
+    );
+  };
 
-//       <Text style={styles.blockTitle}>Reviews</Text>
+  return (
+    <ScreenWrapper>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <BackButton />
+          <View style={styles.headerTextWrap}>
+            <Text style={styles.title}>Confirm Booking</Text>
+            <Text style={styles.sub}>Review the details before you book</Text>
+          </View>
+        </View>
 
-//       {[
-//         ["M. H.", "May 2025", "Dr. Chen helped me understand my health anxiety in ways no one else had.", "★★★★★"],
-//         ["T. K.", "Apr 2025", "The best therapist I have had for my fibro journey.", "★★★★★"],
-//         ["R. S.", "Mar 2025", "Very professional and caring. Highly recommend.", "★★★★☆"],
-//       ].map(([name, date, text, stars]) => (
-//         <View key={name} style={styles.reviewCard}>
-//           <View style={styles.reviewTop}>
-//             <View style={styles.reviewAvatar}><Text style={styles.reviewAvatarText}>{name.split(" ").map((p) => p[0]).join("")}</Text></View>
-//             <View style={{ flex: 1 }}>
-//               <Text style={styles.reviewName}>{name}</Text>
-//               <Text style={styles.reviewDate}>{date}</Text>
-//             </View>
-//             <Text style={styles.reviewStars}>{stars}</Text>
-//           </View>
-//           <Text style={styles.reviewText}>{text}</Text>
-//         </View>
-//       ))}
+        {/* Consultant card */}
+        <View style={styles.consultantCard}>
+          <UserAvatar initials={initials} size={56} />
+          <View style={styles.consultantInfo}>
+            <Text style={styles.consultantName}>{consultant}</Text>
+            <Text style={styles.consultantRole}>{role}</Text>
+          </View>
+          <View style={styles.verifiedPill}>
+            <Image source={imagePath.ShieldIcon} style={styles.verifiedIcon} />
+            <Text style={styles.verifiedText}>Verified</Text>
+          </View>
+        </View>
 
-//       <View style={{ height: 18 }} />
-//       <PrimaryButton title="Confirm Booking" onPress={() => {}} />
-//       </ScrollView>
-//       </ScreenWrapper>
-//   );
-// }
+        {/* Summary */}
+        <View style={styles.summaryCard}>
+          {summaryRows.map((row, i) => (
+            <View key={row.label} style={[styles.summaryRow, i > 0 && styles.summaryRowBorder]}>
+              <View style={styles.summaryIconWrap}>
+                <Image source={row.icon} style={styles.summaryIcon} />
+              </View>
+              <Text style={styles.summaryLabel}>{row.label}</Text>
+              <Text style={styles.summaryValue}>{row.value}</Text>
+            </View>
+          ))}
+        </View>
 
-// const styles = StyleSheet.create({
-//   safe: { flex: 1, backgroundColor: colors.background },
-//   header: { flexDirection: "row", alignItems: "center", padding: 20, paddingBottom: 8 },
-//   back: { fontSize: 36, color: colors.text, marginRight: 12 },
-//   title: { fontSize: 28, fontWeight: "800", color: colors.text },
-//   sessionRow: { flexDirection: "row", marginHorizontal: 20, marginTop: 6 },
-//   sessionBox: { flex: 1, backgroundColor: colors.white, borderWidth: 1, borderColor: "#E3EAF4", borderRadius: 22, paddingVertical: 18, alignItems: "center", marginRight: 10 },
-//   sessionActive: { backgroundColor: "#EEE7FF", borderColor: "#8A66D2" },
-//   sessionText: { color: "#6F87A6", fontWeight: "800", textAlign: "center", lineHeight: 22 },
-//   sessionTextActive: { color: "#7453C8", fontWeight: "800", textAlign: "center", lineHeight: 22 },
-//   blockTitle: { marginHorizontal: 20, marginTop: 18, marginBottom: 10, fontSize: 22, fontWeight: "800", color: colors.text },
-//   dateBox: { width: 76, height: 84, borderRadius: 22, backgroundColor: colors.white, borderWidth: 1, borderColor: "#E3EAF4", alignItems: "center", justifyContent: "center", marginLeft: 20 },
-//   dateActive: { backgroundColor: "#7453C8", borderColor: "#7453C8" },
-//   dateText: { color: colors.text, fontWeight: "800", textAlign: "center", fontSize: 18, lineHeight: 24 },
-//   dateActiveText: { color: colors.white },
-//   timesWrap: { flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 20 },
-//   timeBox: { width: "23%", marginRight: "2%", backgroundColor: colors.white, borderRadius: 999, paddingVertical: 12, alignItems: "center", marginBottom: 12, borderWidth: 1, borderColor: "#DCE5F3" },
-//   timeText: { color: colors.text, fontWeight: "800", fontSize: scale(14), textAlign: "center" },
-//   timeActive: { backgroundColor: "#7453C8", borderColor: "#7453C8" },
-//   timeActiveText: { color: colors.white },
-//   timeDisabled: { backgroundColor: "#F0F4FA", opacity: 0.8 },
-//   timeDisabledText: { color: "#A2B0C4" },
-//   reviewCard: { backgroundColor: colors.white, borderRadius: 22, marginHorizontal: 20, marginTop: 12, padding: 16, borderWidth: 1, borderColor: "#E3EAF4" },
-//   reviewTop: { flexDirection: "row", alignItems: "center" },
-//   reviewAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#EEE7FF", alignItems: "center", justifyContent: "center", marginRight: 10 },
-//   reviewAvatarText: { color: "#7453C8", fontWeight: "800" },
-//   reviewName: { fontSize: 18, fontWeight: "800", color: colors.text },
-//   reviewDate: { color: "#6F87A6", marginTop: 2 },
-//   reviewStars: { color: "#E67E22", fontSize: scale(16), fontWeight: "800" },
-//   reviewText: { color: colors.text, fontSize: scale(16), lineHeight: 24, marginTop: 12 },
-// });
+        {/* Note to consultant */}
+        <Text style={styles.blockTitle}>Anything to share beforehand? (optional)</Text>
+        <TextInput
+          style={styles.noteInput}
+          placeholder="Share context, symptoms, or what you'd like to focus on..."
+          placeholderTextColor={colors.mutedText}
+          value={note}
+          onChangeText={setNote}
+          multiline
+          textAlignVertical="top"
+        />
+
+        {/* Reassurance */}
+        <View style={styles.notice}>
+          <Image source={imagePath.ShieldIcon} style={[styles.noticeIcon, { tintColor: colors.success }]} />
+          <Text style={styles.noticeText}>
+            Free cancellation up to 24 hours before your session. Everything you share stays
+            between you and your consultant.
+          </Text>
+        </View>
+
+        <PrimaryButton title="Confirm Booking" onPress={confirmBooking} style={styles.confirmBtn} />
+      </ScrollView>
+    </ScreenWrapper>
+  );
+}
+
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
+  StyleSheet.create({
+    container: {
+      paddingBottom: moderateVerticalScale(40),
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: moderateVerticalScale(16),
+    },
+    headerTextWrap: {
+      flex: 1,
+    },
+    title: {
+      fontSize: TextStyles.heading,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    sub: {
+      color: colors.mutedText,
+      fontSize: TextStyles.caption,
+      marginTop: moderateVerticalScale(2),
+    },
+
+    consultantCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.card,
+      borderRadius: radius.md,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      padding: moderateScale(14),
+    },
+    consultantInfo: {
+      flex: 1,
+      marginLeft: moderateScale(4),
+    },
+    consultantName: {
+      fontSize: TextStyles.body,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    consultantRole: {
+      fontSize: TextStyles.caption,
+      color: colors.mutedText,
+      marginTop: moderateVerticalScale(2),
+    },
+    verifiedPill: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.lightGreen,
+      borderRadius: radius.pill,
+      paddingHorizontal: moderateScale(10),
+      paddingVertical: moderateVerticalScale(4),
+      gap: moderateScale(4),
+    },
+    verifiedIcon: {
+      width: moderateScale(11),
+      height: moderateScale(11),
+      resizeMode: "contain",
+      tintColor: colors.success,
+    },
+    verifiedText: {
+      color: colors.success,
+      fontSize: TextStyles.caption,
+      fontWeight: "600",
+    },
+
+    summaryCard: {
+      backgroundColor: colors.card,
+      borderRadius: radius.md,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      paddingHorizontal: moderateScale(14),
+      marginTop: moderateVerticalScale(12),
+    },
+    summaryRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: moderateVerticalScale(13),
+    },
+    summaryRowBorder: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+    },
+    summaryIconWrap: {
+      width: moderateScale(34),
+      height: moderateScale(34),
+      borderRadius: moderateScale(17),
+      backgroundColor: colors.lightPurple,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: moderateScale(12),
+    },
+    summaryIcon: {
+      width: moderateScale(16),
+      height: moderateScale(16),
+      resizeMode: "contain",
+      tintColor: colors.primary,
+    },
+    summaryLabel: {
+      flex: 1,
+      fontSize: TextStyles.stepCounts,
+      color: colors.mutedText,
+    },
+    summaryValue: {
+      fontSize: TextStyles.stepCounts,
+      fontWeight: "600",
+      color: colors.text,
+    },
+
+    blockTitle: {
+      marginTop: moderateVerticalScale(20),
+      marginBottom: moderateVerticalScale(10),
+      fontSize: TextStyles.body,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    noteInput: {
+      minHeight: moderateVerticalScale(90),
+      backgroundColor: colors.card,
+      borderRadius: radius.md,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      padding: moderateScale(12),
+      fontSize: TextStyles.stepCounts,
+      color: colors.text,
+    },
+
+    notice: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      backgroundColor: colors.lightGreen,
+      borderRadius: radius.md,
+      padding: moderateScale(14),
+      marginTop: moderateVerticalScale(16),
+      gap: moderateScale(10),
+    },
+    noticeIcon: {
+      width: moderateScale(18),
+      height: moderateScale(18),
+      resizeMode: "contain",
+      marginTop: moderateVerticalScale(2),
+    },
+    noticeText: {
+      flex: 1,
+      color: colors.success,
+      fontSize: TextStyles.caption,
+      lineHeight: scale(18),
+    },
+
+    confirmBtn: {
+      marginTop: moderateVerticalScale(20),
+    },
+  });

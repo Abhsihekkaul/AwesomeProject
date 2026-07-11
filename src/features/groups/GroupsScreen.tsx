@@ -1,57 +1,69 @@
-import React from "react";
-import { StyleSheet, Text, View, Pressable, Image, FlatList, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState } from "react";
+import { StyleSheet, Text, View, Pressable, FlatList, TouchableOpacity, ScrollView, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import SearchBar from "../../components/ui/SearchBar";
 import CategoryChip from "../../components/ui/CategoryChip";
+import PrimaryButton from "../../components/ui/PrimaryButton";
+import { SecondaryButton } from "../../components/ui/SecondaryButton";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
 import imagePath from "../../constant/imagePath";
 
-// Enhanced dummy data with background colors for banner fallbacks
-const groups = [
+// Banner tints reference theme tokens so cards adapt to dark mode
+type BannerTint = "lightBlue" | "lightPurple" | "lightGreen" | "lightOrange";
+
+const groups: {
+  title: string;
+  members: string;
+  tag: string;
+  tint: BannerTint;
+  joined: boolean;
+}[] = [
   {
     title: "Fibromyalgia Warriors",
     members: "1,284 members",
-    posts: "47 posts today",
     tag: "Chronic Pain",
-    bg: "#EAF1FF",
-    accent: "#4E79C7",
+    tint: "lightBlue",
     joined: true,
   },
   {
     title: "Type 2 Diabetes",
     members: "3,421 members",
-    posts: "112 posts today",
     tag: "Metabolic",
-    bg: "#F1EBFF",
-    accent: "#7453C8",
+    tint: "lightPurple",
     joined: true,
   },
   {
     title: "Long COVID Recovery",
     members: "892 members",
-    posts: "34 posts today",
     tag: "Post-Viral",
-    bg: "#E8F6EE",
-    accent: "#4FA57B",
+    tint: "lightGreen",
     joined: true,
   },
   {
     title: "Multiple Sclerosis",
     members: "678 members",
-    posts: "19 posts today",
     tag: "Neurology",
-    bg: "#FDF2E9",
-    accent: "#E67E22",
+    tint: "lightOrange",
     joined: false,
   },
 ];
 
 export default function GroupsScreen() {
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
+  const [joinedMap, setJoinedMap] = useState<Record<string, boolean>>(
+    Object.fromEntries(groups.map((g) => [g.title, g.joined])),
+  );
+
+  const toggleJoin = (title: string) => {
+    setJoinedMap((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
 
   // Everything above the list goes into the Header Component
   const renderHeader = () => (
@@ -59,7 +71,7 @@ export default function GroupsScreen() {
       <View style={styles.headerRow}>
         <Text style={styles.title}>Support Groups</Text>
         <Pressable onPress={() => navigation.navigate("RequestGroup")} style={styles.requestBtn}>
-          <Text style={styles.requestText}>＋ Request</Text>
+          <Text style={styles.requestText}>+ Request</Text>
         </Pressable>
       </View>
 
@@ -77,7 +89,7 @@ export default function GroupsScreen() {
   );
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper edges={["top", "left", "right"]}>
       <FlatList
         data={groups}
         keyExtractor={(item) => item.title}
@@ -91,42 +103,37 @@ export default function GroupsScreen() {
             style={styles.card}
           >
             {/* Banner Section */}
-            <View style={[styles.banner, { backgroundColor: g.bg }]}>
-              {/* If you have actual images, you would conditionally render them here.
-                  For now, we use a clean colored banner with a community icon.
-               */}
-              <Text style={styles.bannerIcon}>👥</Text>
+            <View style={[styles.banner, { backgroundColor: colors[g.tint] }]}>
+              <Image
+                source={imagePath.GroupIcon}
+                style={styles.bannerIcon}
+              />
             </View>
 
             {/* Content Section */}
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>{g.title}</Text>
 
-              <Text style={styles.metaText}>
-                {g.members}  •  {g.posts}
-              </Text>
+              <Text style={styles.metaText}>{g.members}</Text>
 
               <View style={styles.cardFooter}>
                 <View style={styles.tagPill}>
                   <Text style={styles.tagText}>{g.tag}</Text>
                 </View>
 
-                <TouchableOpacity
-                  onPress={() => console.log(`Toggled join for ${g.title}`)}
-                  style={[
-                    styles.joinBtn,
-                    g.joined ? styles.joinedBtnActive : { backgroundColor: g.accent, borderColor: g.accent },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.joinBtnText,
-                      g.joined ? { color: "#6F87A6" } : { color: colors.white },
-                    ]}
-                  >
-                    {g.joined ? "Joined ✓" : "Join"}
-                  </Text>
-                </TouchableOpacity>
+                {joinedMap[g.title] ? (
+                  <SecondaryButton
+                    title="Joined ✓"
+                    onPress={() => toggleJoin(g.title)}
+                    size="compact"
+                  />
+                ) : (
+                  <PrimaryButton
+                    title="Join"
+                    onPress={() => toggleJoin(g.title)}
+                    size="compact"
+                  />
+                )}
               </View>
             </View>
           </TouchableOpacity>
@@ -136,9 +143,9 @@ export default function GroupsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
   listContent: {
-    paddingBottom: moderateVerticalScale(40),
+    paddingBottom: moderateVerticalScale(96),
   },
   headerContainer: {
     paddingBottom: moderateVerticalScale(8),
@@ -157,13 +164,13 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   requestBtn: {
-    backgroundColor: "#F1EBFF",
+    backgroundColor: colors.lightPurple,
     borderRadius: radius.xl,
     paddingHorizontal: moderateScale(14),
     paddingVertical: moderateVerticalScale(8),
   },
   requestText: {
-    color: "#7453C8",
+    color: colors.primary,
     fontWeight: "700",
     fontSize: scale(12),
   },
@@ -180,10 +187,10 @@ const styles = StyleSheet.create({
 
   // Card Styling
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
     marginBottom: moderateVerticalScale(16),
     overflow: "hidden", // Ensures the banner image rounds to the card edges
   },
@@ -194,8 +201,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   bannerIcon: {
-    fontSize: scale(36),
-    opacity: 0.8,
+    width: moderateScale(36),
+    height: moderateScale(36),
+    resizeMode: "contain",
+    tintColor: colors.primary,
   },
   cardContent: {
     padding: moderateScale(14),
@@ -207,7 +216,7 @@ const styles = StyleSheet.create({
     marginBottom: moderateVerticalScale(4),
   },
   metaText: {
-    color: "#6F87A6",
+    color: colors.mutedText,
     fontSize: TextStyles.caption,
     fontWeight: "500",
   },
@@ -220,32 +229,16 @@ const styles = StyleSheet.create({
     marginTop: moderateVerticalScale(16),
   },
   tagPill: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.lightBlue,
     paddingHorizontal: moderateScale(12),
     paddingVertical: moderateVerticalScale(6),
     borderRadius: radius.sm,
   },
   tagText: {
-    color: "#475569",
+    color: colors.mutedText,
     fontWeight: "600",
     fontSize: scale(11),
     textTransform: "uppercase",
     letterSpacing: 0.5,
-  },
-  joinBtn: {
-    paddingHorizontal: moderateScale(20),
-    paddingVertical: moderateVerticalScale(8),
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  joinedBtnActive: {
-    backgroundColor: "transparent",
-    borderColor: "#b8bbc0",
-  },
-  joinBtnText: {
-    fontSize: scale(12),
-    fontWeight: "700",
   },
 });

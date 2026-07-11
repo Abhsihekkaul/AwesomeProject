@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, View, Pressable, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import SearchBar from "../../components/ui/SearchBar";
 import CategoryChip from "../../components/ui/CategoryChip";
 import UserAvatar from "../../components/ui/UserAvatar";
@@ -19,8 +19,6 @@ const doctors = [
     rating: "4.9 (127)",
     tags: ["Chronic Illness Adaptation", "Health Anxiety"],
     next: "Today, 3:00 PM",
-    bg: "#F1EBFF",
-    color: "#7453C8",
   },
   {
     initials: "MW",
@@ -29,8 +27,6 @@ const doctors = [
     rating: "4.8 (98)",
     tags: ["Mood Disorders", "Trauma & PTSD"],
     next: "Tomorrow, 10:00 AM",
-    bg: "#EAF1FF",
-    color: "#4E79C7",
   },
   {
     initials: "PP",
@@ -39,8 +35,6 @@ const doctors = [
     rating: "4.95 (203)",
     tags: ["Grief & Loss", "Chronic Pain"],
     next: "Wed, Jun 12",
-    bg: "#E8F6EE",
-    color: "#4FA57B",
   },
   {
     initials: "AK",
@@ -49,8 +43,6 @@ const doctors = [
     rating: "4.7 (64)",
     tags: ["Insomnia", "Stress Management"],
     next: "Thu, 4:00 PM",
-    bg: "#FFF4E8",
-    color: "#E67E22",
   },
   // --- New Entries Below ---
   {
@@ -60,8 +52,6 @@ const doctors = [
     rating: "4.85 (142)",
     tags: ["Caregiver Burnout", "Family Therapy"],
     next: "Tomorrow, 1:00 PM",
-    bg: "#E8FAFF",
-    color: "#2C8C9E", // Teal theme
   },
   {
     initials: "DO",
@@ -70,8 +60,6 @@ const doctors = [
     rating: "4.9 (88)",
     tags: ["Medication Management", "ADHD"],
     next: "Fri, 9:00 AM",
-    bg: "#FFE8E8",
-    color: "#C85353", // Muted red/pink theme
   },
   {
     initials: "JL",
@@ -80,8 +68,6 @@ const doctors = [
     rating: "4.75 (115)",
     tags: ["Brain Fog", "CBT"],
     next: "Today, 5:30 PM",
-    bg: "#FFF9E6",
-    color: "#B38600", // Warm gold theme
   },
   {
     initials: "FA",
@@ -90,8 +76,6 @@ const doctors = [
     rating: "4.95 (210)",
     tags: ["Mindfulness", "Somatic Experiencing"],
     next: "Mon, Jun 17",
-    bg: "#EBEFFF",
-    color: "#3F51B5", // Indigo theme
   },
   {
     initials: "RV",
@@ -100,8 +84,6 @@ const doctors = [
     rating: "4.8 (76)",
     tags: ["Fibromyalgia", "ACT"],
     next: "Tue, Jun 18",
-    bg: "#F2F0F5",
-    color: "#6B5B95", // Deep mauve theme
   },
   {
     initials: "SO",
@@ -110,24 +92,43 @@ const doctors = [
     rating: "4.9 (150)",
     tags: ["Medical Trauma", "Depression"],
     next: "Tomorrow, 11:30 AM",
-    bg: "#FFF0F5",
-    color: "#D87093", // Pale violet red theme
   }
 ];
 
 export default function PsychologicalHelpScreen() {
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const visibleDoctors = q
+    ? doctors.filter(
+        (d) =>
+          d.name.toLowerCase().includes(q) ||
+          d.role.toLowerCase().includes(q) ||
+          d.tags.some((t) => t.toLowerCase().includes(q)),
+      )
+    : doctors;
+
+  // Theme-aware avatar tints, cycled by list position
+  const avatarTints = [
+    { bg: colors.lightPurple, fg: colors.primary },
+    { bg: colors.lightBlue, fg: colors.info },
+    { bg: colors.lightGreen, fg: colors.success },
+    { bg: colors.lightOrange, fg: colors.warning },
+  ];
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper edges={["top", "left", "right"]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.headerContainer}>
           <Text style={styles.title}>Psychological Help</Text>
-          <Text style={styles.BecomeDoctor}>Want to be doctor ?</Text>
+          <Text style={styles.BecomeDoctor}>Join as a consultant →</Text>
           <Text style={styles.sub}>Verified professionals who understand chronic illness</Text>
         </View>
 
-        <SearchBar placeholder="Find new Doctors ..." />
+        <SearchBar placeholder="Search doctors, specialties..." value={query} onChangeText={setQuery} />
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
           <View style={styles.filters}>
@@ -138,7 +139,10 @@ export default function PsychologicalHelpScreen() {
         </ScrollView>
 
         <View style={styles.listContainer}>
-          {doctors.map((d) => (
+          {visibleDoctors.length === 0 ? (
+            <Text style={styles.emptyText}>No doctors match "{query.trim()}".</Text>
+          ) : null}
+          {visibleDoctors.map((d, i) => (
             <Pressable
               key={d.name}
               onPress={() => navigation.navigate("ConsultantProfile", { name: d.name })}
@@ -147,14 +151,17 @@ export default function PsychologicalHelpScreen() {
               <UserAvatar
                 initials={d.initials}
                 size={moderateScale(46)}
-                bg={d.bg}
-                color={d.color}
+                bg={avatarTints[i % avatarTints.length].bg}
+                color={avatarTints[i % avatarTints.length].fg}
               />
 
               <View style={styles.CardText}>
                 <View style={styles.rowBetween}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.name}>{d.name} ✓</Text>
+                    <View style={styles.nameRow}>
+                      <Text style={styles.name}>{d.name}</Text>
+                      <Image source={imagePath.ShieldIcon} style={styles.verifiedIcon} />
+                    </View>
                     <Text style={styles.role}>{d.role}</Text>
                   </View>
                   <View style={styles.RatingSetting}>
@@ -179,7 +186,8 @@ export default function PsychologicalHelpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
+  StyleSheet.create({
   headerContainer: {
     marginBottom: moderateVerticalScale(12),
   },
@@ -191,13 +199,13 @@ const styles = StyleSheet.create({
   },
   BecomeDoctor: {
     fontSize: TextStyles.stepCounts,
-    color: "#5d76be",
+    color: colors.primary,
     fontWeight : "800"
   },
 
   sub: {
     fontSize: TextStyles.caption,
-    opacity: 0.5,
+    color: colors.mutedText,
     marginTop: moderateVerticalScale(2),
   },
   
@@ -212,16 +220,23 @@ const styles = StyleSheet.create({
   },
 
   listContainer: {
-    paddingBottom: moderateVerticalScale(20),
+    paddingBottom: moderateVerticalScale(96),
+  },
+
+  emptyText: {
+    textAlign: "center",
+    color: colors.mutedText,
+    fontSize: TextStyles.body,
+    marginTop: moderateVerticalScale(24),
   },
 
   card: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
-    borderWidth: 0.2,
-    borderColor: "#b8bbc0",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
     padding: moderateScale(12),
     marginTop: moderateVerticalScale(10),
   },
@@ -243,10 +258,22 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
 
- 
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: moderateScale(6),
+  },
+
+  verifiedIcon: {
+    width: moderateScale(12),
+    height: moderateScale(12),
+    resizeMode: "contain",
+    tintColor: colors.success,
+  },
+
   role: {
     fontSize: TextStyles.caption,
-    opacity: 0.5,
+    color: colors.mutedText,
     marginTop: moderateVerticalScale(2),
   },
 
@@ -258,10 +285,12 @@ const styles = StyleSheet.create({
   Star: {
     height: moderateVerticalScale(16),
     width: moderateScale(16),
+    tintColor: colors.warning,
+    resizeMode: "contain",
   },
   rating: {
     marginLeft : moderateScale(4),
-    color: "#93b0f4",
+    color: colors.warning,
     fontSize: TextStyles.caption,
     fontWeight: "600",
   },
@@ -272,13 +301,13 @@ const styles = StyleSheet.create({
     gap: moderateScale(6),
   },
   tag: {
-    backgroundColor: "#7984fb",
+    backgroundColor: colors.primary,
     borderRadius: moderateScale(12),
     paddingHorizontal: moderateScale(10),
     paddingVertical: moderateVerticalScale(4),
   },
   tagText: {
-    color: "#ffffff",
+    color: colors.white,
     fontWeight: "600",
     fontSize: moderateScale(12),
   },
@@ -288,13 +317,13 @@ const styles = StyleSheet.create({
     marginTop: moderateVerticalScale(6),
   },
   next: {
-    color: "#4FA57B",
+    color: colors.success,
     fontSize: scale(13),
     fontWeight: "600",
   },
   session: {
-    backgroundColor: "#EAF1FF",
-    color: "#4E79C7",
+    backgroundColor: colors.lightBlue,
+    color: colors.primary,
     fontWeight: "600",
     borderRadius: moderateScale(12),
     paddingHorizontal: moderateScale(10),

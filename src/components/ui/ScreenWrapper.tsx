@@ -7,32 +7,34 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { moderateScale } from "react-native-size-matters";
+import { useTheme } from "../../theme/ThemeContext";
 
 type Props = {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   barStyle?: "light-content" | "dark-content";
   backgroundColor?: string;
+  /** Tab screens pass edges without "bottom" — the floating tab bar already owns that zone. */
+  edges?: ("top" | "left" | "right" | "bottom")[];
 };
 
-const ScreenWrapper = ({
-  children,
-  style,
-  barStyle = "dark-content",
-  backgroundColor = "#f9fafc", // Note: Change this to "#FFFFFF" if you want a pure white background overall
-}: Props) => {
+const ScreenWrapper = ({ children, style, barStyle, backgroundColor, edges }: Props) => {
+  const { colors, resolvedScheme } = useTheme();
+  const resolvedBg = backgroundColor ?? colors.background;
+  const resolvedBarStyle = barStyle ?? (resolvedScheme === "dark" ? "light-content" : "dark-content");
+
   return (
     <>
       <StatusBar
-        barStyle={barStyle}
-        backgroundColor={backgroundColor}
+        barStyle={resolvedBarStyle}
+        backgroundColor={resolvedBg}
       />
 
       <SafeAreaView
-        edges={['top', 'left', 'right', 'bottom']} // <--- ADD THIS LINE
+        edges={edges ?? ['top', 'left', 'right', 'bottom']}
         style={[
           styles.container,
-          { backgroundColor },
+          { backgroundColor: resolvedBg },
           style,
         ]}
       >

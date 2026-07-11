@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Dimensions,
   Image,
   Pressable,
   StyleSheet,
@@ -12,15 +11,17 @@ import PrimaryButton from "../../components/ui/PrimaryButton";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import { StepIndicator } from "../../components/ui/StepIndicator";
 import imagePath from "../../constant/imagePath";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { radius } from "../../theme/radius";
 import { onboardingSlides } from "./data";
-import { Typography, TextStyles } from "../../theme/typography";
+import { TextStyles } from "../../theme/typography";
 
-const { width } = Dimensions.get("window");
 const OnboardingScreen = ({ navigation }: any) => {
   const [index, setIndex] = useState(0);
   const slide = onboardingSlides[index];
+
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
 
   const next = () => {
     if (index < onboardingSlides.length - 1) setIndex((p) => p + 1);
@@ -35,7 +36,7 @@ const OnboardingScreen = ({ navigation }: any) => {
         </Pressable>
 
         <View style={styles.iconBox}>
-          <View style={[styles.iconCircle, slide.accent === "blue" && { backgroundColor: "#E9F0FF" }]} />
+          <View style={[styles.iconCircle, slide.accent === "blue" && { backgroundColor: colors.lightBlue }]} />
             <Image
               source={
                 slide.icon === "users"
@@ -63,7 +64,7 @@ const OnboardingScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "space-between",
@@ -73,7 +74,7 @@ const styles = StyleSheet.create({
     paddingRight : moderateScale(8),
   },
   skipText: {
-    color: "#6F87A6",
+    color: colors.mutedText,
     fontSize: scale(14),
     fontWeight: "600",
   },
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
     width: moderateScale(220),
     height: moderateScale(220),
     borderRadius: radius.lg,
-    backgroundColor: "#d9e6ff",
+    backgroundColor: colors.lightBlue,
     alignItems: "center",
     justifyContent: "center",
     marginTop: moderateScale(40),
@@ -90,6 +91,7 @@ const styles = StyleSheet.create({
   iconImage: {
     width: moderateScale(90),
     height: moderateScale(90),
+    tintColor: colors.primary,
   },
   iconCircle: {
     position: "absolute",
@@ -110,7 +112,7 @@ const styles = StyleSheet.create({
   },
   desc: {
     fontSize: TextStyles.body,
-    color: "#6F87A6",
+    color: colors.mutedText,
     lineHeight: moderateScale(24),
     textAlign : "center",
   },
