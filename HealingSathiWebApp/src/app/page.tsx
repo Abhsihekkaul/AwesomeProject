@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import BrandMark from "@/components/ui/BrandMark";
 
 /** Front door: signed in (or in demo mode) → the feed; otherwise → login. */
 export default function Home() {
@@ -16,7 +17,7 @@ export default function Home() {
 
   return (
     <div className="flex h-screen items-center justify-center">
-      <span className="text-2xl font-bold text-primary">HealingSathi</span>
+      <BrandMark className="animate-pulse" />
     </div>
   );
 }

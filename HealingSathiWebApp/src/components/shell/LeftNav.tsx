@@ -3,20 +3,22 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
-// The app's 5 tabs + the screens it tucks behind Home quick actions.
-const MAIN_ITEMS = [
-  { href: "/feed", label: "Home", icon: "🏠" },
-  { href: "/groups", label: "Groups", icon: "👥" },
-  { href: "/chats", label: "Chats", icon: "💬" },
-  { href: "/help", label: "Help", icon: "🩺" },
-  { href: "/profile", label: "Profile", icon: "🧑" },
+// The app's 5 tabs (same icon assets as its tab bar) + the screens it tucks
+// behind Home quick actions.
+const MAIN_ITEMS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/feed", label: "Home", icon: "home" },
+  { href: "/groups", label: "Groups", icon: "people" },
+  { href: "/chats", label: "Chats", icon: "chat" },
+  { href: "/help", label: "Help", icon: "staff" },
+  { href: "/profile", label: "Profile", icon: "user2" },
 ];
 
-const MORE_ITEMS = [
-  { href: "/diary", label: "Healing Diary", icon: "📔" },
-  { href: "/tips", label: "Health Tips", icon: "💡" },
-  { href: "/settings", label: "Settings", icon: "⚙️" },
+const MORE_ITEMS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/diary", label: "Healing Diary", icon: "post" },
+  { href: "/tips", label: "Health Tips", icon: "star" },
+  { href: "/settings", label: "Settings", icon: "setting" },
 ];
 
 const NavLink = ({
@@ -28,20 +30,18 @@ const NavLink = ({
 }: {
   href: string;
   label: string;
-  icon: string;
+  icon: IconName;
   active: boolean;
   badge?: number;
 }) => (
   <Link
     href={href}
     className={cn(
-      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-step font-medium transition-colors",
       active ? "bg-light-purple text-primary" : "text-ink hover:bg-light-blue",
     )}
   >
-    <span className="text-lg leading-none" aria-hidden>
-      {icon}
-    </span>
+    <Icon name={icon} size={20} className={active ? "text-primary" : "text-muted"} />
     <span className="flex-1">{label}</span>
     {badge && badge > 0 ? (
       <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold text-white">

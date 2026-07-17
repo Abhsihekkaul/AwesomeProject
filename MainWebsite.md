@@ -340,7 +340,7 @@ _Same convention as `pendingTask.md`: `[x]` done · `[~]` in progress · `[ ]` p
 Every build session updates this section (and only this section), so the doc above
 stays the stable blueprint while this is the heartbeat._
 
-**Status: W1 ~90% done (2026-07-17). Production build passes (18 routes). NEXT SESSION: run `npm run dev` + sign in against the local backend to finish the DoD check, then W2.**
+**Status: W1 DONE + W2 DONE (2026-07-17). Build green (20 routes), lint 0 errors. NEXT: W3 — chat & notifications (two-pane /chats, unread badges, browser notifications).**
 
 ### W1 — Foundation + Auth
 - [x] Scaffold `HealingSathiWebApp/` (Next.js 16 + TS + Tailwind v4; folder renamed from npm's lowercase requirement), tokens + light/dark (`@custom-variant dark`, next-themes class mode)
@@ -349,16 +349,26 @@ stays the stable blueprint while this is the heartbeat._
 - [x] Login / Signup / Email-code / Forgot-password pages (Google button explains until web client id exists)
 - [x] App shell: TopBar (search→/search, bells, avatar menu w/ theme switch + sign out) + LeftNav (5 tabs + Diary/Tips/Settings, badge slot ready) + RightRail (honest W4 placeholders); stub pages for every nav destination
 - [x] `npm run build` green: 18 routes, typecheck clean
-- [ ] DoD check remaining: live sign-in against running backend on localhost + both themes eyeballed
+- [x] DoD check: backend `db:connected`, login page renders, real sign-in round-trip from the web origin verified (token issued)
 - [ ] Backend env: web origins in `CORS_ORIGIN` (dev allows all — prod-only task)
 - NOTE: scaffold's `AGENTS.md` warns Next 16 has breaking changes — read `node_modules/next/dist/docs/` before unfamiliar APIs
 
-### W2 — Feed & posts
-- [ ] `/feed`: PostCard, carousel, reactions, save, honest empty state
-- [ ] Composer modal: drag-drop ≤10 photos (canvas compression), destination chips, content warning
-- [ ] `/post/[id]`: full thread (replies, comment likes, delete cascade), real share URL
-- [ ] Edit/Delete own posts (`/post/[id]/edit`)
-- [ ] DoD check: post from web w/ photos → visible on the phone
+### W1.5 — Design-consistency pass (user-requested mid-W2)
+- [x] Brand lockup (`BrandMark`: gradient heart tile + gradient wordmark) replaces the plain-text splash; used on boot + auth screens
+- [x] "Black & white mode": three-way ThemeToggle (light/dark/system) visible on the AUTH screens too, not just behind the avatar menu
+- [x] `ConnectionArt` SVG — people bonded by arcs w/ hearts — at 8% opacity behind the login/signup card; card is translucent (bg-card/90 + blur) so it whispers through; theme-aware (currentColor)
+- [x] App's COMPLETE typography adopted: TextStyles scale as `text-caption/step/body/subtitle/heading/title/hero` utilities + system font stack (the same faces the RN app renders)
+- [x] App's ACTUAL icon assets: all 40 PNGs copied to `public/icons/`, tinted via CSS mask = RN `tintColor` (`Icon` component, inherits currentColor); emoji removed from LeftNav/TopBar
+
+### W2 — Feed & posts — DONE
+- [x] `/feed`: PostCard (identical layout/behavior to the app: optimistic reactions reconciled by authoritative counts, ⋯ menu w/ Edit/Delete on own posts), skeleton loading, demo banner, honest empty state w/ "Find people"
+- [x] `ImageCarousel`: hover arrows + dots + n/N counter; 20s feed polling + refetch-on-focus (`useLiveData` = useLiveOrDemo's web twin, same demo contract)
+- [x] Composer modal: file picker AND drag-drop, ≤10 photos, canvas compression to the app's exact policy (≤1280px JPEG data-URI), destination chips (My Feed + joined groups), content warning, char counter
+- [x] `/post/[id]`: real shareable URL; full `CommentThread` (replies at any depth, ♥ support, delete-own w/ cascade warning, indent cap + collapse, "Replying to" banner) via the app's ported useComments hook
+- [x] `/post/[id]/edit` (own posts; photos/destination fixed, same as the app)
+- [x] Share: native `navigator.share` sheet, else copy-link ("Link copied ✓") — REAL post URLs
+- [x] Build green (20 routes) · ESLint 0 errors
+- [ ] DoD cross-device check (user): post from web w/ photos → see it on the phone
 
 ### W3 — Chat & notifications
 - [ ] Two-pane `/chats` + thread: photos, shared-post cards, Enter-to-send

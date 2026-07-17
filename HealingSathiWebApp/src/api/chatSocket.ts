@@ -10,7 +10,7 @@ export type IncomingMessage = {
     text: string;
     image?: string | null;
     /** Shared post as a full card shape (see backend shapePost), or null. */
-    sharedPost?: any;
+    sharedPost?: unknown;
     time: string;
   };
 };

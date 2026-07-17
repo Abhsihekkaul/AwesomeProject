@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import UserAvatar from "@/components/ui/UserAvatar";
+import Icon from "@/components/ui/Icon";
 import { useAuth } from "@/context/AuthContext";
 
 /**
@@ -41,17 +42,17 @@ export default function TopBar() {
         <nav className="flex items-center gap-2">
           <Link
             href="/chats"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-light-blue text-base hover:bg-light-purple"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-light-blue text-primary hover:bg-light-purple"
             aria-label="Chats"
           >
-            💬
+            <Icon name="chat" size={17} />
           </Link>
           <Link
             href="/notifications"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-light-blue text-base hover:bg-light-purple"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-light-blue text-primary hover:bg-light-purple"
             aria-label="Notifications"
           >
-            🔔
+            <Icon name="notification" size={17} />
           </Link>
 
           <div className="relative">
