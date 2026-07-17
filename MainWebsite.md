@@ -340,16 +340,18 @@ _Same convention as `pendingTask.md`: `[x]` done · `[~]` in progress · `[ ]` p
 Every build session updates this section (and only this section), so the doc above
 stays the stable blueprint while this is the heartbeat._
 
-**Status: NOT STARTED — awaiting go-ahead.**
+**Status: W1 ~90% done (2026-07-17). Production build passes (18 routes). NEXT SESSION: run `npm run dev` + sign in against the local backend to finish the DoD check, then W2.**
 
 ### W1 — Foundation + Auth
-- [ ] Scaffold `HealingSathiWebApp/` (Next.js + TS + Tailwind v4), tokens + light/dark theme
-- [ ] Port `src/api/*` (http interceptor, authApi, resourcesApi, tokenStorage→localStorage, sockets)
-- [ ] AuthProvider + route guard + demo-mode contract
-- [ ] Login / Signup / Email-code / Forgot-password pages (+ Google button, lazy until web client id exists)
-- [ ] App shell: top bar (search, bells, avatar) + left nav + right rail, responsive skeleton
-- [ ] Backend env: web origins added to `CORS_ORIGIN`
-- [ ] DoD check: real sign-in on localhost, shell in both themes
+- [x] Scaffold `HealingSathiWebApp/` (Next.js 16 + TS + Tailwind v4; folder renamed from npm's lowercase requirement), tokens + light/dark (`@custom-variant dark`, next-themes class mode)
+- [x] Port `src/api/*` — http.ts/authApi/resourcesApi/appSocket/chatSocket copied VERBATIM from the app (zero RN imports); web `config.ts` (NEXT_PUBLIC_API_HOST, default localhost:4000) + `tokenStorage` (localStorage, same async interface)
+- [x] AuthProvider (port + `isDemo` flag in localStorage) + route guard in `(main)/layout.tsx` + demo-mode contract
+- [x] Login / Signup / Email-code / Forgot-password pages (Google button explains until web client id exists)
+- [x] App shell: TopBar (search→/search, bells, avatar menu w/ theme switch + sign out) + LeftNav (5 tabs + Diary/Tips/Settings, badge slot ready) + RightRail (honest W4 placeholders); stub pages for every nav destination
+- [x] `npm run build` green: 18 routes, typecheck clean
+- [ ] DoD check remaining: live sign-in against running backend on localhost + both themes eyeballed
+- [ ] Backend env: web origins in `CORS_ORIGIN` (dev allows all — prod-only task)
+- NOTE: scaffold's `AGENTS.md` warns Next 16 has breaking changes — read `node_modules/next/dist/docs/` before unfamiliar APIs
 
 ### W2 — Feed & posts
 - [ ] `/feed`: PostCard, carousel, reactions, save, honest empty state

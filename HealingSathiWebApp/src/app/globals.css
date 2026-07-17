@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+/* Dark mode is class-driven (next-themes stamps .dark on <html>), not media-query
+   driven, so the user's three-way System/Light/Dark setting works like the app's. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* HealingSathi design tokens — copied verbatim from the RN app's
+   src/theme/colors.ts (light + dark palettes). If the app's palette changes,
+   mirror it here or the two products drift apart visually. */
+:root {
+  --primary: #7453c8;
+  --primary-dark: #5a3da0;
+  --page: #f5f8fd;
+  --card: #ffffff;
+  --ink: #1f334d;
+  --muted: #6f87a6;
+  --line: #dde5f2;
+  --light-blue: #eff4fc;
+  --light-purple: #eee7ff;
+  --light-green: #e8f6ee;
+  --light-orange: #fdf2e9;
+  --success: #4fa57b;
+  --danger: #e36a6a;
+  --info: #4e79c7;
+  --warning: #e67e22;
+}
+
+.dark {
+  --primary: #9a82e0;
+  --primary-dark: #7453c8;
+  --page: #13141a;
+  --card: #1d1f29;
+  --ink: #eef1f8;
+  --muted: #8d9bb5;
+  --line: #2b2e3a;
+  --light-blue: #1e2430;
+  --light-purple: #2a2440;
+  --light-green: #182922;
+  --light-orange: #2c2118;
+  --success: #4fa57b;
+  --danger: #e36a6a;
+  --info: #7e9fdc;
+  --warning: #e68a4e;
+}
+
+/* Expose the tokens as Tailwind utilities: bg-page, bg-card, text-ink,
+   text-muted, border-line, bg-light-purple, text-primary, bg-danger, ... */
+@theme inline {
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-page: var(--page);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-light-blue: var(--light-blue);
+  --color-light-purple: var(--light-purple);
+  --color-light-green: var(--light-green);
+  --color-light-orange: var(--light-orange);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-warning: var(--warning);
+  --font-sans: var(--font-geist-sans);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+}
