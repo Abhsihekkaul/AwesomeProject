@@ -241,6 +241,14 @@ function ChatThread({ chat }: { chat: ChatListItem }) {
     <div className="flex h-full min-h-0 flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-line px-4 py-3">
+        {/* mobile: back to the conversation list (single-pane flow) */}
+        <Link
+          href="/chats"
+          aria-label="Back to chats"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-ink hover:bg-light-blue md:hidden"
+        >
+          <Icon name="left-arrow" size={16} />
+        </Link>
         {chat.userId ? (
           <Link href={`/user/${chat.userId}`} className="flex items-center gap-3 hover:opacity-90">
             <UserAvatar name={chat.name} size={38} />
@@ -371,7 +379,8 @@ export default function ChatsWorkspace({ activeChatId }: { activeChatId?: string
   };
 
   return (
-    <div className="mx-auto h-[calc(100vh-6.5rem)] max-w-5xl overflow-hidden rounded-2xl border border-line bg-card">
+    // dvh on mobile (browser chrome + bottom tab bar in play); vh on desktop.
+    <div className="mx-auto h-[calc(100dvh-11rem)] max-w-5xl overflow-hidden rounded-2xl border border-line bg-card lg:h-[calc(100vh-6.5rem)]">
       <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)] md:grid-cols-[300px_minmax(0,1fr)]">
         {/* List pane */}
         <div className={cn("min-h-0 flex-col overflow-hidden border-r border-line", activeChatId ? "hidden md:flex" : "flex")}>

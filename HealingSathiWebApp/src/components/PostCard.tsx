@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import UserAvatar from "@/components/ui/UserAvatar";
 import Icon from "@/components/ui/Icon";
 import ImageCarousel from "@/components/ImageCarousel";
+import ShareDialog from "@/components/ShareDialog";
 import { useAuth } from "@/context/AuthContext";
 import { resourcesApi } from "@/api/resourcesApi";
 import { apiErrorMessage } from "@/api/http";
@@ -86,7 +87,7 @@ export default function PostCard({
   const [helpfulCount, setHelpfulCount] = useState(post.helpfulCount);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleted, setDeleted] = useState(false);
-  const [shareNote, setShareNote] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     // Deliberate props→state reconcile: feed polling refreshes the post prop and
@@ -129,22 +130,11 @@ export default function PostCard({
     });
   };
 
-  const share = async () => {
+  const share = () => {
     if (onShare) return onShare(post);
-    // Real, working link — one of the web's wins over the app's placeholder URL.
-    const url = `${window.location.origin}/post/${post.id}`;
-    const text = post.title || post.content.slice(0, 80);
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "HealingSathi", text, url });
-        return;
-      } catch {
-        // Dismissed the native sheet — fall through to copy.
-      }
-    }
-    await navigator.clipboard.writeText(url);
-    setShareNote(true);
-    setTimeout(() => setShareNote(false), 2000);
+    // ShareDialog: quick-send to your people, multi-select picker, copy-link
+    // (real URLs), native share — the app's ShareSheet, web edition.
+    setShareOpen(true);
   };
 
   if (deleted) return null;
@@ -251,15 +241,10 @@ export default function PostCard({
           count={post.commentCount}
           onClick={() => router.push(`/post/${post.id}`)}
         />
-        <div className="relative">
-          <ActionButton icon="send" label="Share" onClick={share} />
-          {shareNote ? (
-            <span className="absolute -top-8 right-0 rounded-lg bg-ink px-2 py-1 text-caption font-semibold whitespace-nowrap text-card">
-              Link copied ✓
-            </span>
-          ) : null}
-        </div>
+        <ActionButton icon="send" label="Share" onClick={share} />
       </footer>
+
+      <ShareDialog post={post} open={shareOpen} onClose={() => setShareOpen(false)} />
     </article>
   );
 }

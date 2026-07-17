@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import TopBar from "@/components/shell/TopBar";
 import LeftNav from "@/components/shell/LeftNav";
 import RightRail from "@/components/shell/RightRail";
+import BottomTabs from "@/components/shell/BottomTabs";
 import ChatToast from "@/components/ChatToast";
 import { useAuth } from "@/context/AuthContext";
 
@@ -41,13 +42,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             <LeftNav />
           </div>
         </div>
-        <main className="min-h-[calc(100vh-3.5rem)] px-4 py-5">{children}</main>
+        {/* pb clears the mobile bottom tab bar; desktop doesn't have one */}
+        <main className="min-h-[calc(100vh-3.5rem)] px-4 py-5 pb-24 lg:pb-5">{children}</main>
         <div className="hidden xl:block">
           <div className="sticky top-14">
             <RightRail />
           </div>
         </div>
       </div>
+      <BottomTabs />
     </div>
   );
 }

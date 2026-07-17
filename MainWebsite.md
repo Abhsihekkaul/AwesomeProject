@@ -340,7 +340,7 @@ _Same convention as `pendingTask.md`: `[x]` done · `[~]` in progress · `[ ]` p
 Every build session updates this section (and only this section), so the doc above
 stays the stable blueprint while this is the heartbeat._
 
-**Status: W1–W4 DONE except ShareDialog (2026-07-17). Build green (23 routes), lint 0 errors. NEXT: W4's ShareDialog, then the W4.5 mobile-web pass, then W5.**
+**Status: W1–W4 AND W4.5 (mobile-web) DONE (2026-07-17). Build green (23 routes), lint 0 errors. NEXT: W5 — help/consultants, profile, settings, admin, tips, diary, calls, deploy.**
 
 ### W1 — Foundation + Auth
 - [x] Scaffold `HealingSathiWebApp/` (Next.js 16 + TS + Tailwind v4; folder renamed from npm's lowercase requirement), tokens + light/dark (`@custom-variant dark`, next-themes class mode)
@@ -389,13 +389,21 @@ stays the stable blueprint while this is the heartbeat._
 - [x] Build green (21 routes) · ESLint 0 errors · /chats + /notifications serve 200
 - [ ] DoD cross-device check (user): phone↔web live messaging, badges zero on both
 
-### W4.5 — Mobile-web compatibility pass (user-elevated from W5)
+### W4.5 — Mobile-web compatibility pass (user-elevated from W5) — DONE (code)
 _Lots of people never download the app — the phone-browser experience must be
 first-class, not an afterthought._
-- [ ] Bottom tab bar on <768px (the app's 5 tabs), single-pane chat (list ↔ thread
-      navigation), sheet-style modals for composer/share, ≥44px touch targets,
-      safe-area insets, no horizontal scroll anywhere
-- [ ] Test on a real phone browser against the LAN backend
+- [x] `BottomTabs`: the app's 5 tabs (same icon assets) fixed at the bottom on
+      <lg screens, live Chats unread badge, safe-area inset padding
+      (`viewport-fit=cover` + `env(safe-area-inset-bottom)` for notched phones);
+      content padding clears the bar
+- [x] Single-pane chat flow on phones: list ↔ thread with a back button in the
+      thread header; `100dvh`-based heights so the browser chrome never eats the
+      composer
+- [x] Sheet-style modals on phones: Composer + ShareDialog rise from the bottom
+      (rounded-top), centered dialogs on bigger screens; tab bar hidden on desktop
+- [ ] USER ACTION: test on a real phone browser against the LAN backend
+      (open http://<your-mac-ip>:3000 on the phone; NEXT_PUBLIC_API_HOST must
+      point at the Mac's IP too)
 
 ### W4 — People & groups — DONE except ShareDialog
 - [x] `/search`: debounced people search w/ live relation status (+ Add Sathi
@@ -417,7 +425,10 @@ first-class, not an afterthought._
       min-height:auto so the column outgrew the clipped card; min-h-0 applied at
       every level of the chat height chain
 - [x] Build green (23 routes) · ESLint 0 errors · all routes serve 200
-- [ ] ShareDialog (quick row + multi-select picker + copy-link) — next up
+- [x] ShareDialog: quick row (top 5 people, tap = instant "Sent ✓"), "Choose
+      people..." multi-select picker w/ search + Share (N) + failure-retry,
+      copy-link (REAL post URLs), native share sheet; bottom-sheet on phones —
+      wired into every PostCard's share button
 - [ ] DoD cross-device check (user): find→request→accept→chat loop web↔phone
 - [ ] Blocking UI (block from profile) — rolls into W5 settings
 
