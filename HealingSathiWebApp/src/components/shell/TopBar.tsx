@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import UserAvatar from "@/components/ui/UserAvatar";
 import Icon from "@/components/ui/Icon";
 import { useAuth } from "@/context/AuthContext";
+import { useChatNotifications } from "@/context/ChatNotificationsContext";
 
 /**
  * The persistent top bar: brand, global search (live in W4), chat +
@@ -15,6 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 export default function TopBar() {
   const router = useRouter();
   const { user, isDemo, signOut } = useAuth();
+  const { unreadTotal } = useChatNotifications();
   const { setTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -42,10 +44,15 @@ export default function TopBar() {
         <nav className="flex items-center gap-2">
           <Link
             href="/chats"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-light-blue text-primary hover:bg-light-purple"
+            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-light-blue text-primary hover:bg-light-purple"
             aria-label="Chats"
           >
             <Icon name="chat" size={17} />
+            {unreadTotal > 0 ? (
+              <span className="absolute -top-1 -right-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">
+                {unreadTotal > 99 ? "99+" : unreadTotal}
+              </span>
+            ) : null}
           </Link>
           <Link
             href="/notifications"

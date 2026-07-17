@@ -6,6 +6,7 @@ import PostCard, { type Post } from "@/components/PostCard";
 import Composer from "@/components/Composer";
 import UserAvatar from "@/components/ui/UserAvatar";
 import Icon from "@/components/ui/Icon";
+import { SkeletonPostCard } from "@/components/ui/Skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { useLiveData } from "@/hooks/useLiveData";
 import { resourcesApi } from "@/api/resourcesApi";
@@ -58,7 +59,7 @@ export default function FeedPage() {
       {loading ? (
         <div className="space-y-4">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-40 animate-pulse rounded-2xl border border-line bg-card" />
+            <SkeletonPostCard key={i} />
           ))}
         </div>
       ) : null}

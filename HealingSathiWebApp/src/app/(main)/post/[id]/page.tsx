@@ -3,6 +3,7 @@
 import { use } from "react";
 import PostCard, { type Post } from "@/components/PostCard";
 import CommentThread from "@/components/CommentThread";
+import { SkeletonPostCard } from "@/components/ui/Skeleton";
 import { useLiveData } from "@/hooks/useLiveData";
 import { resourcesApi } from "@/api/resourcesApi";
 import { dummyPosts } from "@/lib/dummyPosts";
@@ -29,7 +30,7 @@ export default function PostDetailsPage({ params }: { params: Promise<{ id: stri
   if (loading) {
     return (
       <div className="mx-auto max-w-xl">
-        <div className="h-56 animate-pulse rounded-2xl border border-line bg-card" />
+        <SkeletonPostCard />
       </div>
     );
   }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import Icon, { type IconName } from "@/components/ui/Icon";
+import { useChatNotifications } from "@/context/ChatNotificationsContext";
 
 // The app's 5 tabs (same icon assets as its tab bar) + the screens it tucks
 // behind Home quick actions.
@@ -52,17 +53,23 @@ const NavLink = ({
 );
 
 /**
- * Desktop left column. The Chats badge joins in W3 when the
- * ChatNotifications provider lands (same unread source as the app's tab bar).
+ * Desktop left column. The Chats badge is the same unread total the app's
+ * tab bar shows — one server-side counter drives both products.
  */
 export default function LeftNav() {
   const pathname = usePathname();
+  const { unreadTotal } = useChatNotifications();
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <nav className="flex h-full flex-col gap-1 p-3">
       {MAIN_ITEMS.map((item) => (
-        <NavLink key={item.href} {...item} active={isActive(item.href)} />
+        <NavLink
+          key={item.href}
+          {...item}
+          active={isActive(item.href)}
+          badge={item.href === "/chats" ? unreadTotal : 0}
+        />
       ))}
       <div className="my-2 h-px bg-line" />
       {MORE_ITEMS.map((item) => (

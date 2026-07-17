@@ -345,6 +345,9 @@ all screens live-wired, demo-mode contract in place.
 - [ ] Moderation Phase B: content reports → same admin review queue
 - [ ] Suggested next: comment reactions ("Support" button in threads is still visual-only),
       admin push/email alerts when something enters the review queue
+- [ ] **Shimmer loading states in the APP** (requested 17/07/26, already live on the
+      web): skeleton cards w/ light sweep on feed/chats/groups/profile while data
+      loads — mirror `HealingSathiWebApp/src/components/ui/Skeleton.tsx`
 - [ ] Commit everything to git
 - [ ] SMTP creds in `HealingSathiBackend/.env` (Phase 4 §8) and Google OAuth client ids
       (`GoogleSignInSetup.md`) remain outstanding user actions

@@ -1,5 +1,5 @@
-import ComingSoon from "@/components/ComingSoon";
+import ChatsWorkspace from "@/components/chat/ChatsWorkspace";
 
-export default function Page() {
-  return <ComingSoon title="Chats" phase="W3" />;
+export default function ChatsPage() {
+  return <ChatsWorkspace />;
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import TopBar from "@/components/shell/TopBar";
 import LeftNav from "@/components/shell/LeftNav";
 import RightRail from "@/components/shell/RightRail";
+import ChatToast from "@/components/ChatToast";
 import { useAuth } from "@/context/AuthContext";
 
 /**
@@ -32,6 +33,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen">
       <TopBar />
+      {/* message toasts render above the whole shell — any page */}
+      <ChatToast />
       <div className="mx-auto grid max-w-7xl grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_280px]">
         <div className="hidden lg:block">
           <div className="sticky top-14">

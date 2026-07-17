@@ -79,6 +79,13 @@ body {
   height: 100%;
 }
 
+/* Shimmer sweep for skeleton loading states (see components/ui/Skeleton.tsx). */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 body {
   background: var(--page);
   color: var(--ink);

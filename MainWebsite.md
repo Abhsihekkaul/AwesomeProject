@@ -340,7 +340,7 @@ _Same convention as `pendingTask.md`: `[x]` done · `[~]` in progress · `[ ]` p
 Every build session updates this section (and only this section), so the doc above
 stays the stable blueprint while this is the heartbeat._
 
-**Status: W1 DONE + W2 DONE (2026-07-17). Build green (20 routes), lint 0 errors. NEXT: W3 — chat & notifications (two-pane /chats, unread badges, browser notifications).**
+**Status: W1 + W2 + W3 DONE (2026-07-17). Build green (21 routes), lint 0 errors. NEXT: W4 — people & groups (search, profiles, sathi requests, groups, share dialog), then the W4.5 mobile-web pass.**
 
 ### W1 — Foundation + Auth
 - [x] Scaffold `HealingSathiWebApp/` (Next.js 16 + TS + Tailwind v4; folder renamed from npm's lowercase requirement), tokens + light/dark (`@custom-variant dark`, next-themes class mode)
@@ -370,12 +370,32 @@ stays the stable blueprint while this is the heartbeat._
 - [x] Build green (20 routes) · ESLint 0 errors
 - [ ] DoD cross-device check (user): post from web w/ photos → see it on the phone
 
-### W3 — Chat & notifications
-- [ ] Two-pane `/chats` + thread: photos, shared-post cards, Enter-to-send
-- [ ] Unread badges: left nav + tab title `(N)`; zero-on-open both directions
-- [ ] Toast popup + browser `Notification` when tab hidden; chat-notifications toggle
-- [ ] `/notifications` page (tabs, sathi request cards, mark all read)
-- [ ] DoD check: phone↔web live messaging with badges behaving on both
+### W3 — Chat & notifications — DONE
+- [x] Two-pane Messenger `/chats` + `/chats/[id]` (ChatsWorkspace): list w/ search +
+      unread pills + 15s poll · thread w/ socket receive + 15s fallback, photo send
+      (compressed), shared-post mini cards (tappable → the post), Enter-to-send,
+      gradient own-bubbles, auto-scroll; call buttons explain W5 honestly
+- [x] `ChatNotificationsProvider` (web port of the app's engine): unread total drives
+      LeftNav badge + TopBar bell badge + the TAB TITLE "(N) HealingSathi"; open chat
+      reports active (no self-toasts, auto-zero); account-level notifyOnMessages flag
+- [x] In-page toast (click → the chat) + browser `Notification` when the tab is
+      hidden (permission asked once; tagged per chat so repeats replace, not stack)
+- [x] `/notifications`: filter tabs (All/Requests/Groups/Chats/System), sathi request
+      cards w/ Accept/Decline, message notifications open their conversation,
+      mark-all-read syncs the badge
+- [x] **Shimmer loading everywhere** (user-requested): `Skeleton` + sweep animation —
+      post-shaped skeletons on feed/post pages, chat-row skeletons in list + thread,
+      notification skeletons. (Matching app-side shimmer tracked in pendingTask.md)
+- [x] Build green (21 routes) · ESLint 0 errors · /chats + /notifications serve 200
+- [ ] DoD cross-device check (user): phone↔web live messaging, badges zero on both
+
+### W4.5 — Mobile-web compatibility pass (user-elevated from W5)
+_Lots of people never download the app — the phone-browser experience must be
+first-class, not an afterthought._
+- [ ] Bottom tab bar on <768px (the app's 5 tabs), single-pane chat (list ↔ thread
+      navigation), sheet-style modals for composer/share, ≥44px touch targets,
+      safe-area insets, no horizontal scroll anywhere
+- [ ] Test on a real phone browser against the LAN backend
 
 ### W4 — People & groups
 - [ ] Top-bar + `/search` (people w/ relation status, groups, consultants)

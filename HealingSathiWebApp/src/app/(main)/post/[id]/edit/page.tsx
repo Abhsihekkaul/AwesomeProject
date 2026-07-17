@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
+import Skeleton from "@/components/ui/Skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { resourcesApi } from "@/api/resourcesApi";
 import { apiErrorMessage } from "@/api/http";
@@ -60,7 +61,10 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
         {!isAuthenticated ? (
           <p className="mt-3 text-step text-muted">Sign in to edit your posts.</p>
         ) : !loaded && !error ? (
-          <div className="mt-4 h-32 animate-pulse rounded-xl bg-light-blue" />
+          <div className="mt-4 space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
         ) : (
           <>
             <input
