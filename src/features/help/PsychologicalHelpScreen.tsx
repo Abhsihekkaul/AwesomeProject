@@ -10,6 +10,8 @@ import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
 import imagePath from "../../constant/imagePath";
+import { resourcesApi } from "../../api/resourcesApi";
+import { useLiveOrDemo } from "../../hooks/useLiveOrDemo";
 
 const doctors = [
   {
@@ -100,16 +102,37 @@ export default function PsychologicalHelpScreen() {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
+  // Live consultant directory when signed in; demo list when signed out.
+  const { data: allDoctors } = useLiveOrDemo(
+    async () =>
+      (await resourcesApi.getConsultants()).map((c: any) => ({
+        id: c.id,
+        initials: c.name
+          .replace("Dr. ", "")
+          .split(" ")
+          .map((p: string) => p[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase(),
+        name: c.name,
+        role: c.role,
+        rating: `${c.rating} (${c.reviewCount})`,
+        tags: c.tags ?? [],
+        next: "",
+      })),
+    doctors.map((d) => ({ ...d, id: undefined as string | undefined })),
+  );
+
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const visibleDoctors = q
-    ? doctors.filter(
-        (d) =>
+    ? allDoctors.filter(
+        (d: any) =>
           d.name.toLowerCase().includes(q) ||
           d.role.toLowerCase().includes(q) ||
-          d.tags.some((t) => t.toLowerCase().includes(q)),
+          d.tags.some((t: string) => t.toLowerCase().includes(q)),
       )
-    : doctors;
+    : allDoctors;
 
   // Theme-aware avatar tints, cycled by list position
   const avatarTints = [
@@ -124,7 +147,9 @@ export default function PsychologicalHelpScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.headerContainer}>
           <Text style={styles.title}>Psychological Help</Text>
-          <Text style={styles.BecomeDoctor}>Join as a consultant →</Text>
+          <Pressable onPress={() => navigation.navigate("BecomeConsultant")} hitSlop={6}>
+            <Text style={styles.BecomeDoctor}>Join as a consultant →</Text>
+          </Pressable>
           <Text style={styles.sub}>Verified professionals who understand chronic illness</Text>
         </View>
 
@@ -142,10 +167,10 @@ export default function PsychologicalHelpScreen() {
           {visibleDoctors.length === 0 ? (
             <Text style={styles.emptyText}>No doctors match "{query.trim()}".</Text>
           ) : null}
-          {visibleDoctors.map((d, i) => (
+          {visibleDoctors.map((d: any, i: number) => (
             <Pressable
               key={d.name}
-              onPress={() => navigation.navigate("ConsultantProfile", { name: d.name })}
+              onPress={() => navigation.navigate("ConsultantProfile", { name: d.name, consultantId: d.id })}
               style={styles.card}
             >
               <UserAvatar
@@ -171,7 +196,7 @@ export default function PsychologicalHelpScreen() {
                 </View>
 
                 <View style={styles.tagsRow}>
-                  {d.tags.map((t) => (
+                  {d.tags.map((t: string) => (
                     <View key={t} style={styles.tag}>
                       <Text style={styles.tagText}>{t}</Text>
                     </View>

@@ -16,29 +16,38 @@ import PrimaryButton from "../../components/ui/PrimaryButton";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import { SecondaryButton } from "../../components/ui/SecondaryButton";
 import imagePath from "../../constant/imagePath";
+import { GOOGLE_IOS_CLIENT_ID, GOOGLE_WEB_CLIENT_ID } from "../../api/config";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
 
 type AuthTab = "signin" | "signup";
 
+// Each tab owns its own form state — typing on Sign In must never leak into Sign Up
+// (shared fields silently carried a password across tabs before).
+const emptySignIn = { email: "", password: "" };
+const emptySignUp = { fullName: "", email: "", password: "", confirmPassword: "" };
+
 const AuthScreen = ({ navigation }: any) => {
   const [tab, setTab] = useState<AuthTab>("signin");
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const [fullName, setFullName] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [signInForm, setSignInForm] = useState(emptySignIn);
+  const [signUpForm, setSignUpForm] = useState(emptySignUp);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signInWithGoogle } = useAuth();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
   const isSignIn = tab === "signin";
+
+  // A stale error from one tab shouldn't hang over the other.
+  const switchTab = (next: AuthTab) => {
+    setErrorMessage(null);
+    setTab(next);
+  };
 
   const goToMainTabs = () => {
     navigation.reset({
@@ -51,7 +60,7 @@ const AuthScreen = ({ navigation }: any) => {
     setErrorMessage(null);
     setIsSubmitting(true);
     try {
-      await signIn(email.trim(), password);
+      await signIn(signInForm.email.trim(), signInForm.password);
       goToMainTabs();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Could not sign in");
@@ -61,14 +70,18 @@ const AuthScreen = ({ navigation }: any) => {
   };
 
   const handleSignUpSubmit = async () => {
-    if (password !== confirmPassword) {
+    if (signUpForm.password.length < 8) {
+      setErrorMessage("Password must be at least 8 characters");
+      return;
+    }
+    if (signUpForm.password !== signUpForm.confirmPassword) {
       setErrorMessage("Passwords don't match");
       return;
     }
     setErrorMessage(null);
     setIsSubmitting(true);
     try {
-      await signUp(email.trim(), password, fullName.trim());
+      await signUp(signUpForm.email.trim(), signUpForm.password, signUpForm.fullName.trim());
       navigation.navigate("ProfileSetup");
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Could not create account");
@@ -77,22 +90,46 @@ const AuthScreen = ({ navigation }: any) => {
     }
   };
 
-  // const handleDemoSignIn = async () => {
-  //   setErrorMessage(null);
-  //   setIsSubmitting(true);
-  //   try {
-  //     await signInDemo();
-  //     goToMainTabs();
-  //   } catch (err) {
-  //     setErrorMessage(err instanceof Error ? err.message : "Demo sign-in failed");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
+  // Demo contract (FinalCheckpoint.md): "Try the Demo" = signed-out browsing of the
+  // built-in dummy data — no account, no backend, straight to the main tabs.
   const handleDemoSignIn = () => {
-    navigation.navigate("ProfileSetup");
-  }
+    goToMainTabs();
+  };
+
+  /**
+   * Google sign-in: native account picker → id token → backend verify.
+   * Requires OAuth client IDs (GoogleSignInSetup.md); until they're pasted into
+   * src/api/config.ts the button explains what's missing instead of crashing.
+   * The native module is require()d lazily so the app still runs before a rebuild.
+   */
+  const handleGoogleSignIn = async () => {
+    if (!GOOGLE_WEB_CLIENT_ID) {
+      setErrorMessage("Google sign-in isn't set up yet — see GoogleSignInSetup.md");
+      return;
+    }
+    setErrorMessage(null);
+    setIsSubmitting(true);
+    try {
+      const { GoogleSignin } = require("@react-native-google-signin/google-signin");
+      GoogleSignin.configure({
+        webClientId: GOOGLE_WEB_CLIENT_ID,
+        ...(GOOGLE_IOS_CLIENT_ID ? { iosClientId: GOOGLE_IOS_CLIENT_ID } : {}),
+      });
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const result = await GoogleSignin.signIn();
+      const idToken: string | undefined = result?.data?.idToken ?? result?.idToken;
+      if (!idToken) throw new Error("Google didn't return an id token");
+      await signInWithGoogle(idToken);
+      goToMainTabs();
+    } catch (err: any) {
+      // User closing the account picker isn't an error worth showing.
+      if (err?.code !== "SIGN_IN_CANCELLED" && err?.code !== -5) {
+        setErrorMessage(err instanceof Error ? err.message : "Google sign-in failed");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <ScreenWrapper>
@@ -117,7 +154,7 @@ const AuthScreen = ({ navigation }: any) => {
               : "Start your healing journey today"}
           </Text>
 
-          <AuthTabSwitch value={tab} onChange={setTab} />
+          <AuthTabSwitch value={tab} onChange={switchTab} />
 
           {errorMessage ? (
             <Text style={styles.errorText}>{errorMessage}</Text>
@@ -127,20 +164,23 @@ const AuthScreen = ({ navigation }: any) => {
             <>
               <AppInput
                 label="Email Address"
-                value={email}
-                onChangeText={setEmail}
+                value={signInForm.email}
+                onChangeText={(email) => setSignInForm((f) => ({ ...f, email }))}
                 placeholder="your@email.com"
               />
 
               <AppInput
                 label="Password"
-                value={password}
-                onChangeText={setPassword}
+                value={signInForm.password}
+                onChangeText={(password) => setSignInForm((f) => ({ ...f, password }))}
                 placeholder="••••••••"
                 secureTextEntry
               />
 
-              <Pressable style={styles.forgot}>
+              <Pressable
+                style={styles.forgot}
+                onPress={() => navigation.navigate("ForgotPassword", { email: signInForm.email.trim() })}
+              >
                 <Text style={styles.forgotText}>Forgot password?</Text>
               </Pressable>
 
@@ -149,35 +189,43 @@ const AuthScreen = ({ navigation }: any) => {
                 onPress={handleSignInSubmit}
                 disabled={isSubmitting}
               />
+
+              <Pressable
+                style={styles.emailCodeLink}
+                onPress={() => navigation.navigate("EmailCode", { email: signInForm.email.trim() })}
+                hitSlop={6}
+              >
+                <Text style={styles.forgotText}>Or email me a sign-in code</Text>
+              </Pressable>
             </>
           ) : (
             <>
               <AppInput
                 label="Full Name"
-                value={fullName}
-                onChangeText={setFullName}
+                value={signUpForm.fullName}
+                onChangeText={(fullName) => setSignUpForm((f) => ({ ...f, fullName }))}
                 placeholder="Your name"
               />
 
               <AppInput
                 label="Email Address"
-                value={email}
-                onChangeText={setEmail}
+                value={signUpForm.email}
+                onChangeText={(email) => setSignUpForm((f) => ({ ...f, email }))}
                 placeholder="your@email.com"
               />
 
               <AppInput
                 label="Password"
-                value={password}
-                onChangeText={setPassword}
-                placeholder="••••••••"
+                value={signUpForm.password}
+                onChangeText={(password) => setSignUpForm((f) => ({ ...f, password }))}
+                placeholder="At least 8 characters"
                 secureTextEntry
               />
 
               <AppInput
                 label="Confirm Password"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
+                value={signUpForm.confirmPassword}
+                onChangeText={(confirmPassword) => setSignUpForm((f) => ({ ...f, confirmPassword }))}
                 placeholder="••••••••"
                 secureTextEntry
               />
@@ -210,7 +258,7 @@ const AuthScreen = ({ navigation }: any) => {
             <SecondaryButton
               icon={imagePath.googleIcon}
               title="Google"
-              onPress={() => { }}
+              onPress={handleGoogleSignIn}
               style={styles.socialBtn}
             />
 
@@ -282,6 +330,10 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet
     marginBottom: moderateScale(12),
   },
   demoButton: {
+    alignSelf: "center",
+    marginTop: moderateScale(14),
+  },
+  emailCodeLink: {
     alignSelf: "center",
     marginTop: moderateScale(14),
   },

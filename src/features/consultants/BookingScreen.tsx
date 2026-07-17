@@ -6,6 +6,9 @@ import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import BackButton from "../../components/ui/BackButton";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import UserAvatar from "../../components/ui/UserAvatar";
+import { useAuth } from "../../context/AuthContext";
+import { resourcesApi } from "../../api/resourcesApi";
+import { apiErrorMessage } from "../../api/http";
 import { useTheme } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
@@ -39,7 +42,20 @@ export default function BookingScreen() {
     { icon: imagePath.MoneyIcon, label: "Fee", value: "$80–120 / session" },
   ];
 
-  const confirmBooking = () => {
+  const { isAuthenticated } = useAuth();
+  const consultantId: string | undefined = route.params?.consultantId;
+
+  const confirmBooking = async () => {
+    // Signed in with a live consultant → persist the booking; demo → local confirmation.
+    if (isAuthenticated && consultantId) {
+      try {
+        await resourcesApi.createBooking({ consultantId, sessionType, date, time, note });
+      } catch (err) {
+        Alert.alert("Couldn't book", apiErrorMessage(err));
+        return;
+      }
+    }
+
     Alert.alert(
       "Booking confirmed 🎉",
       `Your ${sessionType.toLowerCase()} session with ${consultant} is set for ${date} at ${time}.`,

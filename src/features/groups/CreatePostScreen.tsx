@@ -1,11 +1,16 @@
 import React, { useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View, Pressable, Image } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { captureImageAsDataUri, pickImagesAsDataUri } from "../../utils/pickImage";
 import UserAvatar from "../../components/ui/UserAvatar";
+import { useAuth } from "../../context/AuthContext";
+import { resourcesApi } from "../../api/resourcesApi";
+import { apiErrorMessage } from "../../api/http";
+import { useLiveOrDemo } from "../../hooks/useLiveOrDemo";
 import { useTheme } from "../../theme/ThemeContext";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import AppToggle from "../../components/ui/AppToggle";
-import TagChip from "../../components/ui/TagChip"; // Assuming you still have this to display the typed tags
+import TagChip from "../../components/ui/TagChip";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import BackButton from "../../components/ui/BackButton";
@@ -13,34 +18,152 @@ import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
 import imagePath from "../../constant/imagePath";
 
+const BODY_MAX = 5000;
+// Hard cap, enforced by the backend too: a post carries at most 10 photos.
+const MAX_PHOTOS = 10;
+
+// Demo-mode destinations (signed out) — mirrors the groups demo data.
+const DEMO_GROUPS = [
+  { id: "g1", name: "Fibromyalgia Warriors", joined: true },
+  { id: "g2", name: "Type 2 Diabetes", joined: true },
+];
+
+/**
+ * Composer. A post can go to several destinations at once — the personal feed
+ * and/or any groups the author has joined — and carry one gallery image
+ * (base64 MVP until cloud media storage lands; videos say so honestly).
+ */
 export default function CreatePostScreen() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
   const [warning, setWarning] = useState(false);
-
   const [postTitle, setPostTitle] = useState("");
   const [postBody, setPostBody] = useState("");
 
-  // New States for tags and groups
-  const [selectedGroup, _setSelectedGroup] = useState<string | null>(null);
+  // Opened from a group's "+ Post" FAB → that group starts selected (and the feed
+  // doesn't), so the post lands where the user is standing.
+  const presetGroupId: string | undefined = route.params?.groupId;
+
+  // Destinations: the personal feed and/or joined groups (multi-select chips).
+  const [toFeed, setToFeed] = useState(!presetGroupId);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>(
+    presetGroupId ? [presetGroupId] : [],
+  );
+
+  // Attached photos (up to MAX_PHOTOS) as base64 data-URIs — they render as a
+  // swipeable carousel once posted.
+  const [images, setImages] = useState<string[]>([]);
+
   const [customTags, setCustomTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState("");
 
-  const canPost = postTitle.trim().length > 0 && postBody.trim().length > 0;
+  const { user, isAuthenticated } = useAuth();
+  const [isPosting, setIsPosting] = useState(false);
 
-  const handlePost = () => {
+  const { data: myGroups } = useLiveOrDemo(
+    async () => (await resourcesApi.getGroups()).filter((g: any) => g.joined),
+    DEMO_GROUPS,
+  );
+
+  const authorName = user?.name ?? "You";
+  const authorInitials = authorName
+    .split(" ")
+    .map((p: string) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const toggleGroup = (id: string) =>
+    setSelectedGroupIds((prev) =>
+      prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id],
+    );
+
+  const selectedGroupNames = myGroups
+    .filter((g: any) => selectedGroupIds.includes(g.id))
+    .map((g: any) => g.name);
+  const destinationSummary = [...(toFeed ? ["My Feed"] : []), ...selectedGroupNames];
+
+  const canPost =
+    postTitle.trim().length > 0 &&
+    postBody.trim().length > 0 &&
+    destinationSummary.length > 0 &&
+    !isPosting;
+
+  const remainingPhotoSlots = () => {
+    const remaining = MAX_PHOTOS - images.length;
+    if (remaining <= 0) {
+      Alert.alert(
+        "Photo limit reached",
+        `A post can carry at most ${MAX_PHOTOS} photos. Remove one to add another.`,
+      );
+    }
+    return remaining;
+  };
+
+  const handlePickImage = async () => {
+    const remaining = remainingPhotoSlots();
+    if (remaining <= 0) return;
+    const picked = await pickImagesAsDataUri(remaining);
+    if (picked.length) setImages((prev) => [...prev, ...picked].slice(0, MAX_PHOTOS));
+  };
+
+  // Take a photo right now and attach it — no round trip through the gallery.
+  const handleCaptureImage = async () => {
+    if (remainingPhotoSlots() <= 0) return;
+    const uri = await captureImageAsDataUri();
+    if (uri) setImages((prev) => [...prev, uri].slice(0, MAX_PHOTOS));
+  };
+
+  const removeImage = (uri: string) => setImages((prev) => prev.filter((u) => u !== uri));
+
+  const handlePickVideo = () => {
+    Alert.alert(
+      "Videos are coming soon",
+      "Video uploads arrive with cloud media storage (next on the roadmap). Photos work today!",
+    );
+  };
+
+  const handlePost = async () => {
     if (!canPost) {
-      Alert.alert("Almost there", "Give your post a title and share a few words before posting.");
+      Alert.alert(
+        "Almost there",
+        destinationSummary.length === 0
+          ? "Pick at least one place to share to — your feed or a group."
+          : "Give your post a title and share a few words before posting.",
+      );
       return;
     }
-    Alert.alert("Posted 🎉", "Your post is now live in the Healing Stream.", [
+
+    // Signed in → persist through the API; signed out (demo) → local success flow.
+    if (isAuthenticated) {
+      setIsPosting(true);
+      try {
+        await resourcesApi.createPost({
+          title: postTitle.trim(),
+          content: postBody.trim(),
+          tags: customTags,
+          contentWarning: warning,
+          toFeed,
+          groupIds: selectedGroupIds,
+          images: images.length ? images : undefined,
+        });
+      } catch (err) {
+        Alert.alert("Couldn't post", apiErrorMessage(err));
+        setIsPosting(false);
+        return;
+      }
+      setIsPosting(false);
+    }
+
+    const where = destinationSummary.join(", ");
+    Alert.alert("Posted 🎉", `Your post is now live in: ${where}.`, [
       { text: "Done", onPress: () => navigation.goBack() },
     ]);
   };
 
-  // Function to handle adding a typed tag
   const handleAddTag = () => {
     if (currentTag.trim().length > 0 && !customTags.includes(currentTag.trim())) {
       setCustomTags([...customTags, currentTag.trim()]);
@@ -65,47 +188,60 @@ export default function CreatePostScreen() {
           <BackButton />
           <View style={styles.headerTextWrap}>
             <Text style={styles.title}>New Post</Text>
-            <Text style={styles.sub}>
-              {selectedGroup ? `Sharing to ${selectedGroup}` : "Sharing to My Feed"}
+            <Text style={styles.sub} numberOfLines={1}>
+              {destinationSummary.length > 0
+                ? `Sharing to ${destinationSummary.join(" · ")}`
+                : "Choose where to share below"}
             </Text>
           </View>
           <PrimaryButton title="Post" onPress={handlePost} size="compact" disabled={!canPost} />
         </View>
 
-        {/* Author + destination row */}
-        <Pressable style={styles.groupSelectRow}>
-          <UserAvatar initials="A" size={40} />
+        {/* Author row */}
+        <View style={styles.groupSelectRow}>
+          <UserAvatar initials={authorInitials} uri={user?.avatarUrl} size={40} />
           <View style={styles.groupSelectInfo}>
-            <Text style={styles.groupSelectValue}>Abhishek</Text>
-            <Text style={styles.groupSelectLabel}>
-              Posting to {selectedGroup ? selectedGroup : "My Feed"} ›
-            </Text>
+            <Text style={styles.groupSelectValue}>{authorName}</Text>
+            <Text style={styles.groupSelectLabel}>Posting publicly to your community</Text>
           </View>
-          <Image
-            source={imagePath.RightIcon}
-            style={styles.chevronIcon}
-          />
-        </Pressable>
+        </View>
 
-        {/* Editor Container */}
+        {/* Destination chips: My Feed + every joined group (multi-select) */}
+        <Text style={styles.sectionLabel}>Share to</Text>
+        <View style={styles.destinationWrap}>
+          <TagChip label="My Feed" active={toFeed} onPress={() => setToFeed(!toFeed)} />
+          {myGroups.map((g: any) => (
+            <TagChip
+              key={g.id}
+              label={g.name}
+              active={selectedGroupIds.includes(g.id)}
+              onPress={() => toggleGroup(g.id)}
+            />
+          ))}
+        </View>
+        {myGroups.length === 0 ? (
+          <Text style={styles.destinationHint}>
+            Join groups from the Groups tab to share your post there too.
+          </Text>
+        ) : null}
+
+        {/* Editor */}
         <View style={styles.editor}>
-
-          {/* Media Toolbar (Moved Above Inputs) */}
           <View style={styles.mediaToolbar}>
-            <Pressable style={styles.mediaBtn}>
+            <Pressable style={styles.mediaBtn} onPress={handlePickImage}>
               <Image source={imagePath.UploadIcon} style={styles.mediaIcon} />
-              <Text style={styles.mediaBtnText}>Image</Text>
+              <Text style={styles.mediaBtnText}>
+                {images.length > 0 ? `Photos ${images.length}/${MAX_PHOTOS}` : "Photos"}
+              </Text>
             </Pressable>
-            <Pressable style={styles.mediaBtn}>
+            <Pressable style={styles.mediaBtn} onPress={handleCaptureImage}>
+              <Image source={imagePath.CameraIcon} style={styles.mediaIcon} />
+              <Text style={styles.mediaBtnText}>Camera</Text>
+            </Pressable>
+            <Pressable style={styles.mediaBtn} onPress={handlePickVideo}>
               <Image source={imagePath.VideoIcon} style={styles.mediaIcon} />
               <Text style={styles.mediaBtnText}>Video</Text>
             </Pressable>
-
-            {/* Suggested addition: Attach Link */}
-            {/* <Pressable style={styles.mediaBtn}>
-              <Text style={styles.mediaIcon}>🔗</Text>
-              <Text style={styles.mediaBtnText}>Link</Text>
-            </Pressable> */}
           </View>
 
           <TextInput
@@ -114,6 +250,7 @@ export default function CreatePostScreen() {
             style={styles.titleInput}
             value={postTitle}
             onChangeText={setPostTitle}
+            maxLength={200}
           />
           <View style={styles.line} />
           <TextInput
@@ -123,10 +260,34 @@ export default function CreatePostScreen() {
             style={styles.bodyInput}
             value={postBody}
             onChangeText={setPostBody}
+            maxLength={BODY_MAX}
           />
+
+          {/* Attached photos: thumbnail strip, each removable, capped at MAX_PHOTOS */}
+          {images.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.imageStrip}
+              keyboardShouldPersistTaps="handled"
+            >
+              {images.map((uri) => (
+                <View key={uri.slice(-32)} style={styles.imageThumbWrap}>
+                  <Image source={{ uri }} style={styles.imageThumb} />
+                  <Pressable style={styles.imageRemoveBtn} onPress={() => removeImage(uri)} hitSlop={8}>
+                    <Text style={styles.imageRemoveText}>✕</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </ScrollView>
+          ) : null}
+
+          <Text style={styles.charCount}>
+            {postBody.length}/{BODY_MAX}
+          </Text>
         </View>
 
-        {/* Custom Tag Input Area */}
+        {/* Tags */}
         <Text style={styles.sectionLabel}>Add tags (optional)</Text>
         <View style={styles.tagInputContainer}>
           <TextInput
@@ -135,15 +296,14 @@ export default function CreatePostScreen() {
             placeholderTextColor={colors.mutedText}
             value={currentTag}
             onChangeText={setCurrentTag}
-            onSubmitEditing={handleAddTag} // Adds tag when user hits return/enter
-            submitBehavior="submit" // Keeps keyboard open to type multiple tags
+            onSubmitEditing={handleAddTag}
+            submitBehavior="submit"
           />
           <Pressable style={styles.addTagBtn} onPress={handleAddTag}>
             <Text style={styles.addTagBtnText}>Add</Text>
           </Pressable>
         </View>
 
-        {/* Display Added Tags */}
         {customTags.length > 0 && (
           <View style={styles.tagsWrap}>
             {customTags.map((t) => (
@@ -154,35 +314,17 @@ export default function CreatePostScreen() {
           </View>
         )}
 
-        {/* Content Warning Toggle */}
+        {/* Content warning */}
         <View style={styles.optionRow}>
           <View style={styles.optionTextWrap}>
             <View style={styles.optTitleRow}>
-              <Image source={imagePath.AlertIcon} style={{ width: 16, height: 16, marginRight: 6, tintColor: colors.mutedText }} />
+              <Image source={imagePath.AlertIcon} style={styles.alertIcon} />
               <Text style={styles.optTitle}>Content warning</Text>
             </View>
             <Text style={styles.optSub}>For sensitive or difficult topics</Text>
           </View>
           <AppToggle value={warning} onValueChange={setWarning} />
         </View>
-
-        {/* Tag Member Action */}
-        <Pressable style={styles.optionSimple}>
-          <Image source={imagePath.UserIcon} style={styles.simpleIcon} />
-          <Text style={styles.simpleText}>Tag another member</Text>
-        </Pressable>
-
-        {/* SUGGESTED ADDITIONS (Commented out for future review) */}
-        {/* <Pressable style={styles.optionSimple}>
-          <Text style={styles.simpleIcon}>📊</Text>
-          <Text style={styles.simpleText}>Create a poll</Text>
-        </Pressable>
-
-        <Pressable style={styles.optionSimple}>
-          <Text style={styles.simpleIcon}>📍</Text>
-          <Text style={styles.simpleText}>Add location</Text>
-        </Pressable>
-        */}
 
         {/* Notice */}
         <View style={styles.notice}>
@@ -191,6 +333,7 @@ export default function CreatePostScreen() {
           </Text>
         </View>
 
+        <View style={{ height: moderateVerticalScale(30) }} />
       </ScrollView>
       </KeyboardAvoidingView>
     </ScreenWrapper>
@@ -223,7 +366,7 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet
     marginTop: moderateVerticalScale(2)
   },
 
-  // Group Selection Row
+  // Author row
   groupSelectRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -246,17 +389,22 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet
     fontWeight: "500",
     color: colors.text
   },
-  chevronIcon: {
-    width: moderateScale(14),
-    height: moderateScale(14),
-    resizeMode: "contain",
-    tintColor: colors.mutedText,
-    marginRight: moderateScale(4),
+
+  // Destination chips
+  destinationWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: moderateScale(8),
+  },
+  destinationHint: {
+    color: colors.mutedText,
+    fontSize: TextStyles.caption,
+    marginTop: moderateVerticalScale(8),
   },
 
-  // Editor Area
+  // Editor
   editor: {
-    minHeight: moderateVerticalScale(280),
+    minHeight: moderateVerticalScale(260),
     backgroundColor: colors.card,
     borderRadius: radius.md,
     padding: moderateScale(16),
@@ -264,7 +412,6 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border
   },
-  // Media Toolbar inside Editor
   mediaToolbar: {
     flexDirection: "row",
     alignItems: "center",
@@ -305,20 +452,54 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet
     backgroundColor: colors.border,
     marginVertical: moderateVerticalScale(1)
   },
-
   bodyInput: {
-    minHeight: moderateVerticalScale(180),
-    fontSize: TextStyles.caption,
+    minHeight: moderateVerticalScale(150),
+    fontSize: TextStyles.body,
     color: colors.text,
     textAlignVertical: "top",
   },
+  imageStrip: {
+    marginTop: moderateVerticalScale(12),
+  },
+  imageThumbWrap: {
+    marginRight: moderateScale(10),
+  },
+  imageThumb: {
+    width: moderateScale(92),
+    height: moderateScale(92),
+    borderRadius: radius.md,
+    resizeMode: "cover",
+  },
+  imageRemoveBtn: {
+    position: "absolute",
+    top: moderateScale(8),
+    right: moderateScale(8),
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderRadius: radius.xl,
+    width: moderateScale(26),
+    height: moderateScale(26),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imageRemoveText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: scale(12),
+  },
+  charCount: {
+    alignSelf: "flex-end",
+    color: colors.mutedText,
+    fontSize: TextStyles.caption,
+    marginTop: moderateVerticalScale(8),
+    fontVariant: ["tabular-nums"],
+  },
 
-  // Custom Tag Input
+  // Tags
   sectionLabel: {
     color: colors.text,
     fontWeight: "500",
     fontSize: TextStyles.body,
-    marginTop: moderateVerticalScale(20),
+    marginTop: moderateVerticalScale(16),
     marginBottom: moderateVerticalScale(10)
   },
   tagInputContainer: {
@@ -355,7 +536,7 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet
     marginBottom: moderateVerticalScale(10)
   },
 
-  // Options Rows
+  // Content warning row
   optionRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -370,6 +551,12 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet
     flexDirection: "row",
     alignItems: "center",
   },
+  alertIcon: {
+    width: moderateScale(16),
+    height: moderateScale(16),
+    marginRight: moderateScale(6),
+    tintColor: colors.mutedText,
+  },
   optTitle: {
     fontSize: TextStyles.body,
     fontWeight: "500",
@@ -381,28 +568,7 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet
     marginTop: moderateVerticalScale(2)
   },
 
-  // Simple Action Buttons
-  optionSimple: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: moderateVerticalScale(12),
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border
-  },
-  simpleIcon: {
-    width: moderateScale(18),
-    height: moderateScale(18),
-    resizeMode: "contain",
-    tintColor: colors.mutedText,
-    marginRight: moderateScale(10),
-  },
-  simpleText: {
-    fontSize: TextStyles.body,
-    fontWeight: "500",
-    color: colors.text
-  },
-
-  // Notice Box
+  // Notice
   notice: {
     backgroundColor: colors.background,
     borderWidth: StyleSheet.hairlineWidth,

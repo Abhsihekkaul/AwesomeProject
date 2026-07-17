@@ -8,6 +8,8 @@ import UserAvatar from "../../components/ui/UserAvatar";
 import { useTheme } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
+import { resourcesApi } from "../../api/resourcesApi";
+import { useLiveOrDemo } from "../../hooks/useLiveOrDemo";
 
 // ---- Dummy content (until doctors can publish from the backend) ----
 
@@ -60,8 +62,30 @@ export default function HealthTipsScreen() {
   const [query, setQuery] = useState("");
   const [condition, setCondition] = useState<Condition>("All");
 
+  // Live doctor-published tips when signed in; the demo library when signed out.
+  const { data: allTips } = useLiveOrDemo<TipPost[]>(
+    async () =>
+      (await resourcesApi.getHealthTips()).map((t: any) => ({
+        id: t.id,
+        type: t.type,
+        title: t.title,
+        summary: t.summary,
+        author: t.author,
+        initials: t.author
+          .replace("Dr. ", "")
+          .split(" ")
+          .map((p: string) => p[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase(),
+        condition: t.condition,
+        duration: t.duration,
+      })),
+    tipPosts,
+  );
+
   const visiblePosts = useMemo(() => {
-    const byCondition = condition === "All" ? tipPosts : tipPosts.filter((t) => t.condition === condition);
+    const byCondition = condition === "All" ? allTips : allTips.filter((t) => t.condition === condition);
     const q = query.trim().toLowerCase();
     if (!q) return byCondition;
     return byCondition.filter(
@@ -71,7 +95,7 @@ export default function HealthTipsScreen() {
         t.condition.toLowerCase().includes(q) ||
         t.author.toLowerCase().includes(q),
     );
-  }, [query, condition]);
+  }, [query, condition, allTips]);
 
   const cardTints = [colors.lightPurple, colors.lightBlue, colors.lightGreen, colors.lightOrange];
 

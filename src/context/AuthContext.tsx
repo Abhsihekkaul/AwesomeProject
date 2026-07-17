@@ -15,8 +15,14 @@ type AuthContextValue = {
   isBootstrapping: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
+  /** Passwordless: trades an emailed 6-digit code for a session. */
+  signInWithEmailCode: (email: string, code: string) => Promise<void>;
+  /** Trades a Google id token (from the native Google button) for a session. */
+  signInWithGoogle: (idToken: string) => Promise<void>;
   signInDemo: () => Promise<void>;
   signOut: () => Promise<void>;
+  /** Applies a freshly returned user (edit profile / change email) to the session. */
+  updateUser: (user: AuthUser) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -67,6 +73,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
+  const signInWithEmailCode = useCallback(async (email: string, code: string) => {
+    try {
+      const payload = await authApi.verifyEmailCode(email, code);
+      await tokenStorage.setTokens(payload.accessToken, payload.refreshToken);
+      setUser(payload.user);
+    } catch (err) {
+      throw new Error(apiErrorMessage(err, "Could not sign in with that code"));
+    }
+  }, []);
+
+  const signInWithGoogle = useCallback(async (idToken: string) => {
+    try {
+      const payload = await authApi.signInWithGoogle(idToken);
+      await tokenStorage.setTokens(payload.accessToken, payload.refreshToken);
+      setUser(payload.user);
+    } catch (err) {
+      throw new Error(apiErrorMessage(err, "Google sign-in failed"));
+    }
+  }, []);
+
   const signInDemo = useCallback(
     () => signIn(DEMO_CREDENTIALS.email, DEMO_CREDENTIALS.password),
     [signIn],
@@ -83,6 +109,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((next: AuthUser) => setUser(next), []);
+
   const value = useMemo(
     () => ({
       user,
@@ -90,10 +118,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isBootstrapping,
       signIn,
       signUp,
+      signInWithEmailCode,
+      signInWithGoogle,
       signInDemo,
       signOut,
+      updateUser,
     }),
-    [user, isBootstrapping, signIn, signUp, signInDemo, signOut],
+    [user, isBootstrapping, signIn, signUp, signInWithEmailCode, signInWithGoogle, signInDemo, signOut, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

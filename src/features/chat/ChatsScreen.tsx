@@ -1,12 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "../../theme/ThemeContext";
 import UserAvatar from "../../components/ui/UserAvatar";
+import SearchBar from "../../components/ui/SearchBar";
 import { moderateScale, moderateVerticalScale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
+import { resourcesApi } from "../../api/resourcesApi";
+import { useLiveOrDemo } from "../../hooks/useLiveOrDemo";
+import { timeAgo } from "../../utils/timeAgo";
 
 const chats = [
   { name: "Alex K.", last: "I've found that pacing myself helps the most...", time: "10:22 AM", unread: 2, initials: "AK" },
@@ -30,20 +34,65 @@ const chats = [
   { name: "Aman Chawla", last: "Small daily improvements add up over time.", time: "Yesterday", unread: 0, initials: "AC" },
 ];
 
+const initialsOf = (name: string) =>
+  name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
 export default function ChatsScreen() {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
+  const [query, setQuery] = useState("");
+
+  // Live conversations when signed in; the built-in demo list when signed out.
+  // 15s silent poll keeps last-message previews fresh while the tab is open.
+  const { data: allChats } = useLiveOrDemo(
+    async () =>
+      (await resourcesApi.getChats()).map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        userId: c.userId,
+        last: c.last,
+        time: timeAgo(c.time),
+        unread: c.unread ?? 0,
+        initials: initialsOf(c.name),
+      })),
+    chats.map((c) => ({ ...c, id: undefined as string | undefined })),
+    undefined,
+    15_000,
+  );
+
+  const q = query.trim().toLowerCase();
+  const visibleChats = q
+    ? allChats.filter(
+        (c: any) => c.name.toLowerCase().includes(q) || c.last.toLowerCase().includes(q),
+      )
+    : allChats;
+
   return (
     <ScreenWrapper edges={["top", "left", "right"]}>
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent} keyboardShouldPersistTaps="handled">
       <Text style={styles.title}>Chats</Text>
       <Text style={styles.sub}>Private conversations with community members</Text>
-      {chats.map((c) => (
+
+      <View style={styles.searchWrap}>
+        <SearchBar placeholder="Search chats..." value={query} onChangeText={setQuery} />
+      </View>
+
+      {visibleChats.length === 0 ? (
+        <Text style={styles.emptyText}>
+          {q ? `No chats match "${query.trim()}".` : "No conversations yet — find a Sathi and say hello."}
+        </Text>
+      ) : null}
+      {visibleChats.map((c: any) => (
         <Pressable
-          key={c.name}
-          onPress={() => navigation.navigate("ChatRoom", { name: c.name, initials: c.initials })}
+          key={c.id ?? c.name}
+          onPress={() => navigation.navigate("ChatRoom", { name: c.name, initials: c.initials, chatId: c.id, userId: c.userId })}
           style={styles.card}
         >
           <UserAvatar initials={c.initials} size={52} />
@@ -54,7 +103,11 @@ export default function ChatsScreen() {
             </View>
             <Text style={styles.last} numberOfLines={1}>{c.last}</Text>
           </View>
-          {c.unread > 0 ? <View style={styles.unreadDot} /> : null}
+          {c.unread > 0 ? (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadBadgeText}>{c.unread > 99 ? "99+" : c.unread}</Text>
+            </View>
+          ) : null}
         </Pressable>
       ))}
       </ScrollView>
@@ -78,6 +131,18 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
   sub: {
     fontSize: TextStyles.caption,
     color: colors.mutedText,
+  },
+
+  searchWrap: {
+    marginTop: moderateVerticalScale(12),
+    marginBottom: moderateVerticalScale(6),
+  },
+
+  emptyText: {
+    textAlign: "center",
+    color: colors.mutedText,
+    fontSize: TextStyles.body,
+    marginTop: moderateVerticalScale(30),
   },
 
   card: {
@@ -114,11 +179,21 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
     color: colors.mutedText,
   },
 
-  unreadDot: {
-    width: moderateScale(10),
-    height: moderateScale(10),
-    borderRadius: moderateScale(5),
+  unreadBadge: {
+    minWidth: moderateScale(20),
+    height: moderateScale(20),
+    borderRadius: moderateScale(10),
     backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: moderateScale(5),
+  },
+
+  unreadBadgeText: {
+    color: colors.white,
+    fontSize: moderateScale(10),
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
   },
 
 });

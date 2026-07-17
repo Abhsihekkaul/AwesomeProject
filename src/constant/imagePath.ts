@@ -29,6 +29,7 @@ const imagePath = {
     InfinityMark: require("../assets/icons/infinity-mark.png"),
     MoreIcon: require("../assets/icons/more.png"),
     SettingIcon: require("../assets/icons/setting.png"),
+    CameraIcon: require("../assets/icons/camera.png"),
 } as const;
 
 export default imagePath

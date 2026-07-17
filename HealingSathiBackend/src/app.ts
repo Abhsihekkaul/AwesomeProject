@@ -8,7 +8,9 @@ import postRoutes from "./routes/posts";
 import groupRoutes from "./routes/groups";
 import chatRoutes from "./routes/chats";
 import sathiRoutes from "./routes/sathi";
+import userRoutes from "./routes/users";
 import miscRoutes from "./routes/misc";
+import adminRoutes from "./routes/admin";
 import { errorHandler } from "./middleware/error";
 import { env } from "./config/env";
 
@@ -27,7 +29,9 @@ export const createApp = () => {
     cors(env.corsOrigins.length > 0 ? { origin: env.corsOrigins } : undefined),
   );
 
-  app.use(express.json({ limit: "1mb" }));
+  // 25mb: post photos travel inline as base64 data-URIs until cloud media storage
+  // lands — a post can carry up to 10 compressed photos (~0.3–0.7MB each).
+  app.use(express.json({ limit: "25mb" }));
 
   // Minimal request log: method, path, status, duration. Skipped during smoke tests.
   if (process.env.NODE_ENV !== "test") {
@@ -49,10 +53,11 @@ export const createApp = () => {
   });
 
   // Strict on auth: blunts credential stuffing / signup spam without locking out
-  // a household NAT (limit is per-IP per 15 min).
+  // a household NAT (limit is per-IP per 15 min). Relaxed under test — the smoke
+  // test legitimately hammers the auth routes from one IP.
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 30,
+    limit: process.env.NODE_ENV === "test" ? 1000 : 30,
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: "Too many attempts, please try again later" },
@@ -77,6 +82,8 @@ export const createApp = () => {
   app.use("/api/groups", groupRoutes);
   app.use("/api/chats", chatRoutes);
   app.use("/api/sathi", sathiRoutes);
+  app.use("/api/users", userRoutes);
+  app.use("/api/admin", adminRoutes);
   app.use("/api", miscRoutes); // /api/notifications, /api/consultants, /api/bookings, /api/tips
 
   app.use((_req, res) => res.status(404).json({ error: "Route not found" }));

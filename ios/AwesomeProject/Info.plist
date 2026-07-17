@@ -56,5 +56,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>HealingSathi needs access to your photos so you can attach images to your posts.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>HealingSathi uses your camera so you can take a photo and share it in a post or chat, and for video calls with your sathis.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>HealingSathi uses your microphone for audio and video calls with your sathis.</string>
 </dict>
 </plist>

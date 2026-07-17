@@ -11,6 +11,8 @@ import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
 import imagePath from "../../constant/imagePath";
+import { resourcesApi } from "../../api/resourcesApi";
+import { useLiveOrDemo } from "../../hooks/useLiveOrDemo";
 
 // Banner tints reference theme tokens so cards adapt to dark mode
 type BannerTint = "lightBlue" | "lightPurple" | "lightGreen" | "lightOrange";
@@ -52,17 +54,41 @@ const groups: {
   },
 ];
 
+const bannerTints: BannerTint[] = ["lightBlue", "lightPurple", "lightGreen", "lightOrange"];
+
 export default function GroupsScreen() {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
-  const [joinedMap, setJoinedMap] = useState<Record<string, boolean>>(
-    Object.fromEntries(groups.map((g) => [g.title, g.joined])),
+  // Live group directory when signed in; the built-in demo groups when signed out.
+  const { data: allGroups, isLive } = useLiveOrDemo(
+    async () =>
+      (await resourcesApi.getGroups()).map((g: any, i: number) => ({
+        id: g.id,
+        title: g.name,
+        members: `${g.memberCount} member${g.memberCount === 1 ? "" : "s"}`,
+        tag: g.tag || "Community",
+        tint: bannerTints[i % bannerTints.length],
+        joined: g.joined,
+        moderator: g.moderator,
+        description: g.description,
+      })),
+    groups.map((g) => ({
+      ...g,
+      id: undefined as string | undefined,
+      moderator: undefined as string | undefined,
+      description: undefined as string | undefined,
+    })),
   );
 
-  const toggleJoin = (title: string) => {
-    setJoinedMap((prev) => ({ ...prev, [title]: !prev[title] }));
+  // Local overrides let both demo and live toggles feel instant.
+  const [joinedMap, setJoinedMap] = useState<Record<string, boolean>>({});
+  const isJoined = (g: any) => joinedMap[g.title] ?? g.joined;
+
+  const toggleJoin = (g: any) => {
+    setJoinedMap((prev) => ({ ...prev, [g.title]: !isJoined(g) }));
+    if (isLive && g.id) resourcesApi.toggleJoinGroup(g.id).catch(() => {});
   };
 
   // Everything above the list goes into the Header Component
@@ -91,19 +117,29 @@ export default function GroupsScreen() {
   return (
     <ScreenWrapper edges={["top", "left", "right"]}>
       <FlatList
-        data={groups}
-        keyExtractor={(item) => item.title}
+        data={allGroups}
+        keyExtractor={(item: any) => item.title}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContent}
         renderItem={({ item: g }) => (
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => navigation.navigate("GroupDetails", { name: g.title })}
+            onPress={() =>
+              navigation.navigate("GroupDetails", {
+                id: g.id,
+                name: g.title,
+                members: g.members,
+                tag: g.tag,
+                moderator: g.moderator,
+                description: g.description,
+                joined: isJoined(g),
+              })
+            }
             style={styles.card}
           >
             {/* Banner Section */}
-            <View style={[styles.banner, { backgroundColor: colors[g.tint] }]}>
+            <View style={[styles.banner, { backgroundColor: colors[g.tint as BannerTint] }]}>
               <Image
                 source={imagePath.GroupIcon}
                 style={styles.bannerIcon}
@@ -121,16 +157,16 @@ export default function GroupsScreen() {
                   <Text style={styles.tagText}>{g.tag}</Text>
                 </View>
 
-                {joinedMap[g.title] ? (
+                {isJoined(g) ? (
                   <SecondaryButton
                     title="Joined ✓"
-                    onPress={() => toggleJoin(g.title)}
+                    onPress={() => toggleJoin(g)}
                     size="compact"
                   />
                 ) : (
                   <PrimaryButton
                     title="Join"
-                    onPress={() => toggleJoin(g.title)}
+                    onPress={() => toggleJoin(g)}
                     size="compact"
                   />
                 )}

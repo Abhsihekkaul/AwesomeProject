@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet, Image, Pressable } from "react-native";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import { useTheme } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
@@ -13,13 +13,16 @@ export type NotificationType = {
   time: string;
   color: string;
   unread?: boolean;
+  /** Message notifications carry their conversation — tapping the card opens it. */
+  chatId?: string | null;
 };
 
 type Props = {
   notification: NotificationType;
+  onPress?: () => void;
 };
 
-export default function NotificationCard({ notification }: Props) {
+export default function NotificationCard({ notification, onPress }: Props) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
@@ -34,7 +37,11 @@ export default function NotificationCard({ notification }: Props) {
   };
 
   return (
-    <View style={[styles.container, notification.unread && styles.containerUnread]}>
+    <Pressable
+      style={[styles.container, notification.unread && styles.containerUnread]}
+      onPress={onPress}
+      disabled={!onPress}
+    >
       {/* Icon with a slight opacity background based on its primary color */}
       <View style={[styles.iconBox, { backgroundColor: notification.color + "15" }]}>
         <Image
@@ -50,7 +57,7 @@ export default function NotificationCard({ notification }: Props) {
       </View>
 
       {notification.unread ? <View style={styles.unreadDot} /> : null}
-    </View>
+    </Pressable>
   );
 }
 

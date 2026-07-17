@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useRef, useState } from "react";
-import { Image, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, PanResponder, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { moderateScale, moderateVerticalScale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import UserAvatar from "../../components/ui/UserAvatar";
@@ -12,6 +12,10 @@ import imagePath from "../../constant/imagePath";
 import { radius } from "../../theme/radius";
 import { dummyPosts } from "../../utils/dummyPost";
 import { dummyFriends, dummyGroups } from "../../components/ui/DirectoryScreen";
+import { resourcesApi } from "../../api/resourcesApi";
+import { useAuth } from "../../context/AuthContext";
+import { useLiveOrDemo } from "../../hooks/useLiveOrDemo";
+import { timeAgo } from "../../utils/timeAgo";
 
 // Import your newly created sheets here
 import CommentsSheet from "../../components/ui/CommentsSheet";
@@ -25,14 +29,53 @@ export default function HomeScreen() {
 
     const { colors } = useTheme();
     const styles = makeStyles(colors);
+    const { user } = useAuth();
+    const myInitial = (user?.name ?? "A").trim()[0]?.toUpperCase() ?? "A";
+
+    // Live feed when signed in; built-in demo posts when signed out (see useLiveOrDemo).
+    // Refetches on focus (a just-created post shows up the moment you're back) and
+    // polls every 20s while the screen is open, so sathis' posts appear near-real-time.
+    const { data: posts, isLive, loading, refresh } = useLiveOrDemo(
+        async () =>
+            (await resourcesApi.getFeed()).map((p: any) => ({ ...p, time: timeAgo(p.time) })),
+        dummyPosts,
+        undefined,
+        20_000,
+    );
+    const [refreshing, setRefreshing] = useState(false);
+    const onPullRefresh = async () => {
+        setRefreshing(true);
+        await refresh({ silent: true });
+        setRefreshing(false);
+    };
+
+    // Quick-action counts are REAL for signed-in users (their joined groups, their
+    // posts, their sathis — a fresh account honestly shows 0s); the dummy numbers
+    // only ever appear in signed-out "Try the Demo" mode.
+    const { data: quickCounts } = useLiveOrDemo(
+        async () => {
+            const [groups, myPosts, sathis] = await Promise.all([
+                resourcesApi.getGroups(),
+                resourcesApi.getMyPosts(),
+                resourcesApi.getSathis(),
+            ]);
+            return {
+                groups: groups.filter((g: any) => g.joined).length,
+                posts: myPosts.length,
+                friends: sathis.length,
+            };
+        },
+        { groups: dummyGroups.length, posts: dummyPosts.slice(0, 2).length, friends: dummyFriends.length },
+        { groups: 0, posts: 0, friends: 0 },
+    );
 
     // Updated navigation routes and params, with social-style counts.
     // "My Posts" shows the user's mini avatar — it represents *their* content,
     // not the generic compose glyph.
     const quickActions = [
-        { title: "Groups", count: dummyGroups.length, icon: imagePath.GroupIcon, route: "Directory", type: "Groups" },
-        { title: "My Posts", count: dummyPosts.slice(0, 2).length, isAvatar: true, route: "Profile" }, // Routes straight to Profile
-        { title: "Friends", count: dummyFriends.length, icon: imagePath.UserIcon, route: "Directory", type: "Friends" },
+        { title: "Groups", count: quickCounts.groups, icon: imagePath.GroupIcon, route: "Directory", type: "Groups" },
+        { title: "My Posts", count: quickCounts.posts, isAvatar: true, route: "Profile" }, // Routes straight to Profile
+        { title: "Friends", count: quickCounts.friends, icon: imagePath.UserIcon, route: "Directory", type: "Friends" },
     ] as const;
 
     // Hidden Instagram-style gesture: swipe right anywhere on the feed to open the
@@ -66,10 +109,15 @@ export default function HomeScreen() {
     return (
         <ScreenWrapper edges={["top", "left", "right"]}>
             <View style={styles.flex} {...panResponder.panHandlers}>
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onPullRefresh} tintColor={colors.primary} />
+                }
+            >
                 <View style={styles.topBar}>
                     <Pressable onPress={() => navigation.navigate("Profile")}>
-                        <UserAvatar initials="A" size={40} MarginRightSide={0} />
+                        <UserAvatar initials={myInitial} uri={user?.avatarUrl} size={40} MarginRightSide={0} />
                     </Pressable>
 
                     <View style={styles.topBarSearch}>
@@ -134,7 +182,21 @@ export default function HomeScreen() {
                 </View>
 
                 <View style={{ marginTop: moderateVerticalScale(8) }}>
-                    {dummyPosts.map((item, index) => (
+                    {/* Fresh accounts see an honest empty stream (never fake posts) with a
+                        pointer to Search — connections are what fill the feed. */}
+                    {isLive && !loading && posts.length === 0 ? (
+                        <View style={styles.emptyFeed}>
+                            <Text style={styles.emptyFeedTitle}>Your stream is quiet</Text>
+                            <Text style={styles.emptyFeedBody}>
+                                Posts from you, your Sathis and your groups show up here. Find
+                                people to connect with, or share something yourself.
+                            </Text>
+                            <Pressable style={styles.emptyFeedBtn} onPress={() => navigation.navigate("Search")}>
+                                <Text style={styles.emptyFeedBtnText}>Find people</Text>
+                            </Pressable>
+                        </View>
+                    ) : null}
+                    {posts.map((item: any, index: number) => (
                         <PostCard
                             key={item.id}
                             post={item}
@@ -151,12 +213,14 @@ export default function HomeScreen() {
 
             <CommentsSheet
                 visible={!!selectedCommentPost}
+                post={selectedCommentPost}
                 onClose={() => setSelectedCommentPost(null)}
             />
 
             <ShareSheet
                 visible={!!selectedSharePost}
                 onClose={() => setSelectedSharePost(null)}
+                post={selectedSharePost}
                 postUrl={selectedSharePost ? `https://healingstream.app/p/${selectedSharePost.id}` : undefined}
             />
 
@@ -258,5 +322,37 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet
         height: moderateVerticalScale(20),
         width: moderateScale(20),
         tintColor: colors.text,
+    },
+    emptyFeed: {
+        alignItems: "center",
+        borderColor: colors.border,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderRadius: radius.md,
+        padding: moderateScale(24),
+        marginTop: moderateVerticalScale(8),
+    },
+    emptyFeedTitle: {
+        fontSize: TextStyles.body,
+        fontWeight: "700",
+        color: colors.text,
+    },
+    emptyFeedBody: {
+        fontSize: TextStyles.caption,
+        color: colors.mutedText,
+        textAlign: "center",
+        marginTop: moderateVerticalScale(6),
+        lineHeight: moderateVerticalScale(18),
+    },
+    emptyFeedBtn: {
+        marginTop: moderateVerticalScale(14),
+        backgroundColor: colors.primary,
+        borderRadius: radius.xl,
+        paddingHorizontal: moderateScale(18),
+        paddingVertical: moderateVerticalScale(8),
+    },
+    emptyFeedBtnText: {
+        color: colors.white,
+        fontWeight: "600",
+        fontSize: TextStyles.stepCounts,
     },
 });

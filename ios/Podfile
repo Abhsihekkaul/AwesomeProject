@@ -17,6 +17,11 @@ end
 target 'AwesomeProject' do
   config = use_native_modules!
 
+  # Required by @react-native-google-signin: these Google pods don't define modules,
+  # so Swift pods (AppCheckCore) can't import them as static libraries without this.
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'RecaptchaInterop', :modular_headers => true
+
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.

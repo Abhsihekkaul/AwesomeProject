@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Image } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTheme } from "../../theme/ThemeContext";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
@@ -57,6 +57,7 @@ const availableTimes = [
 
 export default function ConsultantProfileScreen() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
@@ -102,7 +103,7 @@ export default function ConsultantProfileScreen() {
           </View>
 
           <View style={styles.topCardText}>
-            <Text style={styles.name}>Dr. Sarah Chen ✦</Text>
+            <Text style={styles.name}>{route.params?.name ?? "Dr. Sarah Chen"} ✦</Text>
             <Text style={styles.role}>Clinical Psychologist</Text>
             <Text style={styles.rating}>
               ★★★★★ 4.9 <Text style={styles.reviewCount}>(127 reviews)</Text>
@@ -234,7 +235,8 @@ export default function ConsultantProfileScreen() {
           title="Book Session"
           onPress={() =>
             navigation.navigate("Booking", {
-              consultant: "Dr. Sarah Chen",
+              consultant: route.params?.name ?? "Dr. Sarah Chen",
+              consultantId: route.params?.consultantId,
               role: "Clinical Psychologist",
               sessionType: selectedSessionType,
               date: selectedDate,

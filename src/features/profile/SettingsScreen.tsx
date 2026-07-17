@@ -15,6 +15,7 @@ import AppToggle from "../../components/ui/AppToggle";
 import BackButton from "../../components/ui/BackButton";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import { useAuth } from "../../context/AuthContext";
+import { useChatNotifications } from "../../context/ChatNotificationsContext";
 import { useTheme, ThemeMode } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
@@ -23,7 +24,7 @@ import imagePath from "../../constant/imagePath";
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
   const { colors, mode, setMode } = useTheme();
-  const { signOut } = useAuth();
+  const { signOut, user, isAuthenticated } = useAuth();
   const styles = makeStyles(colors);
 
   const [publicProfile, setPublicProfile] = useState(false);
@@ -36,6 +37,10 @@ export default function SettingsScreen() {
   const [replies, setReplies] = useState(true);
   const [matches, setMatches] = useState(true);
   const [consultants, setConsultants] = useState(false);
+
+  // The one notification toggle that's fully real: off = no message popups and no
+  // Notifications-page entries (saved on the account; unread badges still count).
+  const { notificationsEnabled, setNotificationsEnabled } = useChatNotifications();
 
   const SettingRow = ({
     title,
@@ -62,12 +67,35 @@ export default function SettingsScreen() {
     </>
   );
 
-  // Navigation-style row for sections whose destination screens come later.
-  const NavRow = ({ title, subtitle, last }: { title: string; subtitle?: string; last?: boolean }) => (
+  // Navigation row. `screen` routes there; rows without a destination yet keep the
+  // "coming soon" alert so nothing looks silently broken.
+  const NavRow = ({
+    title,
+    subtitle,
+    screen,
+    needsAccount = true,
+    last,
+  }: {
+    title: string;
+    subtitle?: string;
+    screen?: string;
+    needsAccount?: boolean;
+    last?: boolean;
+  }) => (
     <>
       <Pressable
         style={styles.row}
-        onPress={() => Alert.alert(title, "This screen is coming soon — the design is reserved here so nothing gets forgotten.")}
+        onPress={() => {
+          if (!screen) {
+            Alert.alert(title, "This screen is coming soon — the design is reserved here so nothing gets forgotten.");
+            return;
+          }
+          if (needsAccount && !isAuthenticated) {
+            Alert.alert("Sign in required", "Account settings are available once you're signed in.");
+            return;
+          }
+          navigation.navigate(screen);
+        }}
       >
         <View style={styles.rowTextWrap}>
           <Text style={styles.title}>{title}</Text>
@@ -94,14 +122,12 @@ export default function SettingsScreen() {
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      "Delete account?",
-      "This will permanently erase your profile, posts and messages. This action cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Delete Forever", style: "destructive", onPress: () => {} },
-      ],
-    );
+    if (!isAuthenticated) {
+      Alert.alert("Sign in required", "There's no account to delete in demo mode.");
+      return;
+    }
+    // The real flow (password confirmation + final warning) lives on its own screen.
+    navigation.navigate("DeleteAccount");
   };
 
   const modeOptions: { key: ThemeMode; label: string }[] = [
@@ -122,12 +148,25 @@ export default function SettingsScreen() {
 
         <View style={styles.card}>
           <Text style={styles.section}>ACCOUNT</Text>
-          <NavRow title="Edit profile" subtitle="Name, avatar color, conditions" />
-          <NavRow title="Change email" subtitle="abhishek@healingsathi.dev" />
-          <NavRow title="Change password" subtitle="Last changed 30 days ago" />
-          <NavRow title="Blocked users" subtitle="Manage who can't reach you" />
-          <NavRow title="Language" subtitle="English" last />
+          <NavRow title="Edit profile" subtitle="Name, avatar color, conditions" screen="EditProfile" />
+          <NavRow title="Change email" subtitle={user?.email ?? "Sign in to manage your email"} screen="ChangeEmail" />
+          <NavRow title="Change password" subtitle="Update your account password" screen="ChangePassword" />
+          <NavRow title="Blocked users" subtitle="Manage who can't reach you" screen="BlockedUsers" />
+          <NavRow title="Language" subtitle="App language" screen="Language" needsAccount={false} last />
         </View>
+
+        {/* ADMIN — only rendered for superusers (role "admin"); the backend enforces it too */}
+        {user?.role === "admin" ? (
+          <View style={styles.card}>
+            <Text style={styles.section}>ADMIN</Text>
+            <NavRow
+              title="Review queue"
+              subtitle="Approve group proposals & consultant applications"
+              screen="AdminReview"
+              last
+            />
+          </View>
+        ) : null}
 
         {/* APPEARANCE */}
 
@@ -208,6 +247,13 @@ export default function SettingsScreen() {
           <Text style={styles.section}>
             NOTIFICATIONS
           </Text>
+
+          <SettingRow
+            title="Chat messages"
+            subtitle="Popups & alerts when someone messages you"
+            value={notificationsEnabled}
+            onChange={setNotificationsEnabled}
+          />
 
           <SettingRow
             title="Group activity"

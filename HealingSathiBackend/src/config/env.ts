@@ -46,5 +46,24 @@ export const env = {
     .map((o) => o.trim())
     .filter(Boolean),
 
+  // Outbound email (reset + sign-in codes). All four set → real emails are sent;
+  // any missing → codes are logged to the console and returned to dev app builds.
+  // Gmail: host smtp.gmail.com, port 465, user = your Gmail, pass = an App Password
+  // (myaccount.google.com/apppasswords — requires 2FA on the account).
+  smtp: {
+    host: process.env.SMTP_HOST ?? "",
+    port: Number(process.env.SMTP_PORT ?? 465),
+    user: process.env.SMTP_USER ?? "",
+    pass: process.env.SMTP_PASS ?? "",
+    from: process.env.SMTP_FROM ?? process.env.SMTP_USER ?? "HealingSathi <no-reply@healingsathi.dev>",
+  },
+
+  // Comma-separated Google OAuth client IDs allowed as `aud` on incoming id tokens
+  // (web client ID + iOS client ID). Empty = Google sign-in disabled (501).
+  googleClientIds: (process.env.GOOGLE_CLIENT_IDS ?? "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean),
+
   isProduction,
 } as const;

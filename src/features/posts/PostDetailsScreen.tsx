@@ -1,5 +1,6 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -10,14 +11,17 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import BackButton from "../../components/ui/BackButton";
 import UserAvatar from "../../components/ui/UserAvatar";
 import ShareSheet from "../../components/ui/ShareSheet";
+import ImageCarousel from "../../components/ui/ImageCarousel";
 import { CommentItem, initialComments } from "../../components/ui/CommentsSheet";
+import { ThreadedComment, useComments } from "../../hooks/useComments";
 import { Post } from "../../components/ui/PostCard";
+import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
@@ -36,24 +40,46 @@ const fallbackPost: Post = {
 
 export default function PostDetailsScreen() {
   const route = useRoute<any>();
+  const navigation = useNavigation<any>();
   const post: Post = route.params?.post ?? fallbackPost;
 
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
   const [inputText, setInputText] = useState("");
-  const [comments, setComments] = useState(initialComments);
   const [shareVisible, setShareVisible] = useState(false);
+  const [replyTo, setReplyTo] = useState<ThreadedComment | null>(null);
   const inputRef = useRef<TextInput>(null);
+
+  // Live thread for real posts; the demo thread keeps signed-out mode alive.
+  const { comments, refresh, addComment, toggleSupport, removeComment } = useComments(post.id, initialComments);
+  const { user } = useAuth();
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const confirmDeleteComment = (comment: ThreadedComment) => {
+    Alert.alert(
+      "Delete this comment?",
+      comment.replies.length > 0 ? "The replies under it are removed too." : "This can't be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => removeComment(comment.id) },
+      ],
+    );
+  };
+
+  const startReply = (comment: ThreadedComment) => {
+    setReplyTo(comment);
+    inputRef.current?.focus();
+  };
 
   const postReply = () => {
     const text = inputText.trim();
     if (!text) return;
-    setComments((prev) => [
-      ...prev,
-      { id: Date.now().toString(), user: "You", initials: "ME", text, time: "now", replies: [] },
-    ]);
+    addComment(text, replyTo?.id);
     setInputText("");
+    setReplyTo(null);
   };
 
   return (
@@ -67,7 +93,10 @@ export default function PostDetailsScreen() {
           <BackButton />
           <View style={styles.headerTextWrap}>
             <Text style={styles.headerTitle}>Post</Text>
-            <Text style={styles.headerSub} numberOfLines={1}>in {post.circle}</Text>
+            {/* Only group posts belong "in" somewhere — a feed post is just a post. */}
+            {post.circle ? (
+              <Text style={styles.headerSub} numberOfLines={1}>in {post.circle}</Text>
+            ) : null}
           </View>
         </View>
 
@@ -78,7 +107,7 @@ export default function PostDetailsScreen() {
             <View style={styles.authorInfo}>
               <Text style={styles.author}>{post.author}</Text>
               <Text style={styles.meta} numberOfLines={1}>
-                {post.circle} • {post.time}
+                {post.circle ? `${post.circle} • ${post.time}` : post.time}
               </Text>
             </View>
           </View>
@@ -86,8 +115,13 @@ export default function PostDetailsScreen() {
           {/* Content */}
           <Text style={styles.content}>{post.content}</Text>
 
-          {post.image ? (
-            <Image source={{ uri: post.image }} style={styles.image} resizeMode="cover" />
+          {/* One photo → full proportions; several → swipeable carousel (dots + 2/7). */}
+          {(post.images?.length || post.image) ? (
+            <ImageCarousel
+              images={post.images?.length ? post.images : [post.image!]}
+              height={moderateVerticalScale(280)}
+              style={styles.image}
+            />
           ) : null}
 
           {/* Actions */}
@@ -108,10 +142,35 @@ export default function PostDetailsScreen() {
 
           {/* Threaded Conversation */}
           <Text style={styles.repliesTitle}>Conversation</Text>
+          {comments.length === 0 ? (
+            <Text style={styles.emptyThread}>No comments yet — start the conversation.</Text>
+          ) : null}
           {comments.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} />
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              onReply={startReply}
+              onSupport={toggleSupport}
+              onAuthorPress={(c) =>
+                c.authorId && navigation.navigate("UserProfile", { userId: c.authorId, name: c.user })
+              }
+              onDelete={confirmDeleteComment}
+              currentUserId={user?.id}
+            />
           ))}
         </ScrollView>
+
+        {/* Reply target banner */}
+        {replyTo ? (
+          <View style={styles.replyBanner}>
+            <Text style={styles.replyBannerText} numberOfLines={1}>
+              Replying to {replyTo.user}
+            </Text>
+            <Pressable onPress={() => setReplyTo(null)} hitSlop={8}>
+              <Text style={styles.replyBannerClose}>✕</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         {/* Reply Input */}
         <View style={styles.inputSection}>
@@ -137,6 +196,7 @@ export default function PostDetailsScreen() {
       <ShareSheet
         visible={shareVisible}
         onClose={() => setShareVisible(false)}
+        post={post}
         postUrl={`https://healingstream.app/p/${post.id}`}
       />
     </ScreenWrapper>
@@ -194,9 +254,9 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       lineHeight: scale(24),
       color: colors.text,
     },
+    // Height follows the photo's real aspect ratio (AutoHeightImage).
     image: {
       width: "100%",
-      height: moderateVerticalScale(220),
       borderRadius: radius.md,
       marginTop: moderateVerticalScale(12),
     },
@@ -232,6 +292,33 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       paddingBottom: moderateVerticalScale(6),
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.border,
+    },
+    emptyThread: {
+      color: colors.mutedText,
+      fontSize: scale(13),
+      marginTop: moderateVerticalScale(12),
+    },
+    replyBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: moderateScale(12),
+      paddingVertical: moderateVerticalScale(6),
+      backgroundColor: colors.lightPurple,
+      borderRadius: radius.sm,
+      marginTop: moderateVerticalScale(6),
+    },
+    replyBannerText: {
+      flex: 1,
+      color: colors.primary,
+      fontSize: scale(12),
+      fontWeight: "600",
+      marginRight: moderateScale(10),
+    },
+    replyBannerClose: {
+      color: colors.primary,
+      fontSize: scale(13),
+      fontWeight: "700",
     },
     input: {
       flex: 1,

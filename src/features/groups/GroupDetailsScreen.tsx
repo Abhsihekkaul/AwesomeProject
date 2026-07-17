@@ -12,6 +12,18 @@ import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
 import { dummyPosts } from "../../utils/dummyPost";
 import BackButton from "../../components/ui/BackButton";
+import { useAuth } from "../../context/AuthContext";
+import { resourcesApi } from "../../api/resourcesApi";
+import { useLiveOrDemo } from "../../hooks/useLiveOrDemo";
+import { timeAgo } from "../../utils/timeAgo";
+
+const initialsOf = (name: string) =>
+  name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
 // Expanded Dummy Members
 const dummyMembers = [
@@ -45,14 +57,53 @@ export default function GroupDetailsScreen() {
   const route = useRoute<any>();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
+  const { user } = useAuth();
+
+  // Live groups arrive with their id + directory info from GroupsScreen;
+  // demo groups (signed out) have no id and render the built-in dummy content.
+  const groupId: string | undefined = route.params?.id;
   const groupName = route.params?.name ?? "Fibromyalgia Warriors";
+  const memberSummary: string = route.params?.members ?? "1,284 members";
+  const moderator: string = route.params?.moderator || "Dr. Priya Patel";
+  const description: string | undefined = route.params?.description;
+  const joined: boolean = route.params?.joined ?? true;
 
   const [tab, setTab] = useState<"Posts" | "Members" | "HealthTips" | "About">("Posts");
 
-  // Sathi (friend) requests to fellow members — local until backend-wired
+  // This group's posts. Refetches on focus, so a post created via the FAB is
+  // visible the moment you're back — this was the reported "posted to a group but
+  // it never shows up there" bug: the screen only ever rendered dummy data.
+  const { data: groupPosts, isLive: postsLive, loading: postsLoading } = useLiveOrDemo(
+    async () =>
+      groupId
+        ? (await resourcesApi.getFeed(groupId)).map((p: any) => ({ ...p, time: timeAgo(p.time) }))
+        : [],
+    dummyPosts,
+    undefined,
+    20_000,
+  );
+
+  const { data: members, isLive: membersLive } = useLiveOrDemo(
+    async () =>
+      groupId
+        ? (await resourcesApi.getGroupMembers(groupId)).map((m: any) => ({
+            ...m,
+            initials: initialsOf(m.name),
+          }))
+        : [],
+    dummyMembers,
+  );
+
+  // Sathi (friend) requests to fellow members — optimistic; live sends persist.
   const [requested, setRequested] = useState<Record<string, boolean>>({});
-  const toggleRequest = (id: string) =>
-    setRequested((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleRequest = (member: any) => {
+    setRequested((prev) => ({ ...prev, [member.id]: !prev[member.id] }));
+    if (membersLive && !requested[member.id]) {
+      resourcesApi.sendSathiRequest(member.id).catch(() => {
+        setRequested((prev) => ({ ...prev, [member.id]: false }));
+      });
+    }
+  };
 
   const switchTab = (next: typeof tab) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -70,20 +121,22 @@ export default function GroupDetailsScreen() {
       <View style={styles.topRow}>
         <BackButton />
         <Text style={styles.title} numberOfLines={1}>{groupName}</Text>
-        <View style={styles.joinedPill}>
-          <Text style={styles.joinedText}>Joined</Text>
-        </View>
+        {joined ? (
+          <View style={styles.joinedPill}>
+            <Text style={styles.joinedText}>Joined</Text>
+          </View>
+        ) : null}
       </View>
 
       {/* Meta Info */}
       <View style={styles.metaRow}>
-        <Text style={styles.metaText}>1,284 members</Text>
+        <Text style={styles.metaText}>{memberSummary}</Text>
         <View style={styles.dot} />
         <Text style={styles.metaText}> MODERATED</Text>
       </View>
 
       <View style={styles.moderatorBox}>
-        <Text style={styles.moderatorText}>Moderated by Dr. Priya Patel</Text>
+        <Text style={styles.moderatorText}>Moderated by {moderator}</Text>
       </View>
 
       {/* Tabs */}
@@ -100,10 +153,10 @@ export default function GroupDetailsScreen() {
 
   // Determine what data to feed the FlatList based on the selected tab
   const getListData = () => {
-    if (tab === "Posts") return dummyPosts;
-    if (tab === "Members") return dummyMembers;
+    if (tab === "Posts") return groupPosts;
+    if (tab === "Members") return members;
     if (tab === "HealthTips") return dummyHealthTips;
-    if (tab === "About") return dummyAbout;
+    if (tab === "About") return description ? [{ id: "1", text: description }] : dummyAbout;
     return [];
   };
 
@@ -118,6 +171,16 @@ export default function GroupDetailsScreen() {
         keyExtractor={(item: any) => item.id.toString()}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          tab === "Posts" && postsLive && !postsLoading ? (
+            <View style={styles.emptyPosts}>
+              <Text style={styles.emptyPostsTitle}>No posts here yet</Text>
+              <Text style={styles.emptyPostsBody}>
+                Be the first to share something with {groupName}.
+              </Text>
+            </View>
+          ) : null
+        }
         renderItem={({ item, index }: { item: any; index: number }) => {
 
           // Render POSTS Tab
@@ -137,22 +200,33 @@ export default function GroupDetailsScreen() {
 
           // Render MEMBERS Tab
           if (tab === "Members") {
+            const isMe = membersLive && item.id === user?.id;
             return (
               <View style={styles.memberCard}>
-                <UserAvatar initials={item.initials} size={40} />
-                <View style={styles.memberInfo}>
-                  <Text style={styles.memberName}>{item.name}</Text>
-                  <Text style={styles.memberRole}>{item.role}</Text>
-                </View>
                 <Pressable
-                  onPress={() => toggleRequest(item.id)}
-                  style={[styles.addSathiBtn, requested[item.id] && styles.addSathiBtnDone]}
-                  hitSlop={6}
+                  style={styles.memberTap}
+                  disabled={!membersLive || isMe}
+                  onPress={() =>
+                    navigation.navigate("UserProfile", { userId: item.id, name: item.name })
+                  }
                 >
-                  <Text style={[styles.addSathiText, requested[item.id] && styles.addSathiTextDone]}>
-                    {requested[item.id] ? "Requested ✓" : "+ Add Sathi"}
-                  </Text>
+                  <UserAvatar initials={item.initials} size={40} />
+                  <View style={styles.memberInfo}>
+                    <Text style={styles.memberName}>{item.name}</Text>
+                    <Text style={styles.memberRole}>{isMe ? "You" : item.role}</Text>
+                  </View>
                 </Pressable>
+                {!isMe ? (
+                  <Pressable
+                    onPress={() => toggleRequest(item)}
+                    style={[styles.addSathiBtn, requested[item.id] && styles.addSathiBtnDone]}
+                    hitSlop={6}
+                  >
+                    <Text style={[styles.addSathiText, requested[item.id] && styles.addSathiTextDone]}>
+                      {requested[item.id] ? "Requested ✓" : "+ Add Sathi"}
+                    </Text>
+                  </Pressable>
+                ) : null}
               </View>
             );
           }
@@ -185,9 +259,12 @@ export default function GroupDetailsScreen() {
         }}
       />
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button — composing from here preselects this group */}
       {tab === "Posts" && (
-        <Pressable style={styles.postFab} onPress={() => navigation.navigate("CreatePost")}>
+        <Pressable
+          style={styles.postFab}
+          onPress={() => navigation.navigate("CreatePost", groupId ? { groupId } : undefined)}
+        >
           <Text style={styles.postFabText}>+ Post</Text>
         </Pressable>
       )}
@@ -195,11 +272,13 @@ export default function GroupDetailsScreen() {
       {/* Bottom Sheets for Post Interactions */}
       <CommentsSheet
         visible={!!selectedCommentPost}
+        post={selectedCommentPost}
         onClose={() => setSelectedCommentPost(null)}
       />
       <ShareSheet
         visible={!!selectedSharePost}
         onClose={() => setSelectedSharePost(null)}
+        post={selectedSharePost}
         postUrl={selectedSharePost ? `https://healingstream.app/p/${selectedSharePost.id}` : undefined}
       />
     </ScreenWrapper>
@@ -320,6 +399,12 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       borderBottomColor: colors.border,
     },
 
+    memberTap: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+
     memberInfo: {
       flex: 1,
       marginLeft: moderateScale(8),
@@ -380,6 +465,26 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       fontSize: TextStyles.caption,
       color: colors.mutedText,
       marginTop: moderateVerticalScale(4),
+    },
+
+    emptyPosts: {
+      alignItems: "center",
+      borderColor: colors.border,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderRadius: radius.md,
+      padding: moderateScale(24),
+      marginTop: moderateVerticalScale(8),
+    },
+    emptyPostsTitle: {
+      fontSize: TextStyles.body,
+      fontWeight: "700",
+      color: colors.text,
+    },
+    emptyPostsBody: {
+      fontSize: TextStyles.caption,
+      color: colors.mutedText,
+      textAlign: "center",
+      marginTop: moderateVerticalScale(6),
     },
 
     // Floating Action Button

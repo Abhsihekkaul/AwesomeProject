@@ -7,6 +7,9 @@ import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import BackButton from "../../components/ui/BackButton";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import { AppInput } from "../../components/ui/AppInput";
+import { useAuth } from "../../context/AuthContext";
+import { resourcesApi } from "../../api/resourcesApi";
+import { apiErrorMessage } from "../../api/http";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
 import imagePath from "../../constant/imagePath";
@@ -25,7 +28,9 @@ export default function RequestGroupScreen() {
   const canSubmit = condition.trim() && description.trim() && reason.trim();
   const filledCount = [condition, description, reason].filter((v) => v.trim()).length;
 
-  const handleSubmit = () => {
+  const { isAuthenticated } = useAuth();
+
+  const handleSubmit = async () => {
     const missing = [
       !condition.trim() && "condition name",
       !description.trim() && "description",
@@ -35,6 +40,22 @@ export default function RequestGroupScreen() {
     if (missing.length > 0) {
       Alert.alert("A few details missing", `Please fill in the ${missing.join(", ")} field${missing.length > 1 ? "s" : ""} marked with *.`);
       return;
+    }
+
+    // Signed in → creates a real proposal for superuser review; demo → local success flow.
+    if (isAuthenticated) {
+      try {
+        await resourcesApi.requestGroup({
+          condition: condition.trim(),
+          description: description.trim(),
+          population: population.trim() || undefined,
+          reason: reason.trim(),
+          references: references.trim() || undefined,
+        });
+      } catch (err) {
+        Alert.alert("Couldn't submit", apiErrorMessage(err));
+        return;
+      }
     }
 
     Alert.alert(

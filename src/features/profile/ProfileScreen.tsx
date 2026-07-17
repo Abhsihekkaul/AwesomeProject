@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
-import { FlatList, Image, LayoutAnimation, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Image, LayoutAnimation, Pressable, StyleSheet, Text, View } from "react-native";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import BackButton from "../../components/ui/BackButton";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
@@ -14,6 +14,13 @@ import { radius } from "../../theme/radius";
 import { dummyPosts } from "../../utils/dummyPost";
 import imagePath from "../../constant/imagePath";
 import { useSavedPosts } from "../../context/SavedPostsContext";
+import { useAuth } from "../../context/AuthContext";
+import { authApi } from "../../api/authApi";
+import { apiErrorMessage } from "../../api/http";
+import { captureImageAsDataUri, pickImageAsDataUri } from "../../utils/pickImage";
+import { resourcesApi } from "../../api/resourcesApi";
+import { useLiveOrDemo } from "../../hooks/useLiveOrDemo";
+import { timeAgo } from "../../utils/timeAgo";
 
 type ProfileTab = "My Posts" | "Saved";
 
@@ -22,6 +29,7 @@ export default function ProfileScreen() {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const { savedPosts } = useSavedPosts();
+  const { user, isAuthenticated, updateUser } = useAuth();
 
   // Sheets State for PostCards
   const [selectedCommentPost, setSelectedCommentPost] = useState<any>(null);
@@ -29,14 +37,63 @@ export default function ProfileScreen() {
 
   const [activeTab, setActiveTab] = useState<ProfileTab>("My Posts");
 
-  // Example: Filtering dummy posts to only show the user's own posts
-  // You would replace this with an actual API call to fetch user posts
-  const userPosts = dummyPosts.slice(0, 2);
-  const listData = activeTab === "My Posts" ? userPosts : savedPosts;
+  const mapTimes = (posts: any[]) => posts.map((p) => ({ ...p, time: timeAgo(p.time) }));
+
+  // Live "my posts" / "saved" when signed in; demo slices + local saves when signed out.
+  const { data: userPosts } = useLiveOrDemo(
+    async () => mapTimes(await resourcesApi.getMyPosts()),
+    dummyPosts.slice(0, 2),
+  );
+  const { data: liveSaved, isLive: savedIsLive } = useLiveOrDemo(
+    async () => mapTimes(await resourcesApi.getSavedPosts()),
+    [] as any[],
+  );
+
+  const savedData = savedIsLive ? liveSaved : savedPosts;
+  const listData = activeTab === "My Posts" ? userPosts : savedData;
+
+  const displayName = user?.name ?? "Abhishek";
 
   const switchTab = (tab: ProfileTab) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setActiveTab(tab);
+  };
+
+  // Display picture: pick/take a photo → saved via PATCH /auth/me → shows
+  // everywhere UserAvatar gets a uri. Demo mode explains instead of failing.
+  const saveAvatar = async (uri: string | null) => {
+    try {
+      updateUser(await authApi.updateMe({ avatarUrl: uri }));
+    } catch (err) {
+      Alert.alert("Couldn't update your photo", apiErrorMessage(err));
+    }
+  };
+
+  const changeAvatar = () => {
+    if (!isAuthenticated) {
+      Alert.alert("Sign in required", "Create an account to set your profile photo.");
+      return;
+    }
+    Alert.alert("Profile photo", undefined, [
+      {
+        text: "Take photo",
+        onPress: async () => {
+          const uri = await captureImageAsDataUri();
+          if (uri) saveAvatar(uri);
+        },
+      },
+      {
+        text: "Choose from library",
+        onPress: async () => {
+          const uri = await pickImageAsDataUri();
+          if (uri) saveAvatar(uri);
+        },
+      },
+      ...(user?.avatarUrl
+        ? [{ text: "Remove photo", style: "destructive" as const, onPress: () => saveAvatar(null) }]
+        : []),
+      { text: "Cancel", style: "cancel" as const },
+    ]);
   };
 
   // Everything above the posts is extracted into this ListHeaderComponent
@@ -56,8 +113,19 @@ export default function ProfileScreen() {
 
       {/* Hero Section (Centered) */}
       <View style={styles.hero}>
-        <UserAvatar initials="A" size={100} />
-        <Text style={styles.name}>Abhishek</Text>
+        <View style={styles.avatarWrap}>
+          <UserAvatar
+            initials={displayName.trim()[0]?.toUpperCase() ?? "A"}
+            uri={user?.avatarUrl}
+            size={100}
+            MarginRightSide={0}
+          />
+          {/* Edit/upload DP */}
+          <Pressable style={styles.avatarEditBtn} onPress={changeAvatar} hitSlop={6}>
+            <Image source={imagePath.CameraIcon} style={styles.avatarEditIcon} />
+          </Pressable>
+        </View>
+        <Text style={styles.name}>{displayName}</Text>
         <Text style={styles.memberSince}>Member since June 2025</Text>
 
         <View style={styles.chipsRow}>
@@ -78,7 +146,7 @@ export default function ProfileScreen() {
             style={[styles.tabChip, activeTab === tab && styles.tabChipActive]}
           >
             <Text style={[styles.tabChipText, activeTab === tab && styles.tabChipTextActive]}>
-              {tab === "Saved" ? `Saved${savedPosts.length ? ` (${savedPosts.length})` : ""}` : tab}
+              {tab === "Saved" ? `Saved${savedData.length ? ` (${savedData.length})` : ""}` : tab}
             </Text>
           </Pressable>
         ))}
@@ -120,12 +188,14 @@ export default function ProfileScreen() {
       {/* Bottom Sheets for Post Interactions */}
       <CommentsSheet
         visible={!!selectedCommentPost}
+        post={selectedCommentPost}
         onClose={() => setSelectedCommentPost(null)}
       />
 
       <ShareSheet
         visible={!!selectedSharePost}
         onClose={() => setSelectedSharePost(null)}
+        post={selectedSharePost}
         postUrl={selectedSharePost ? `https://healingstream.app/p/${selectedSharePost.id}` : undefined}
       />
 
@@ -172,6 +242,28 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
     // Hero Section
     hero: {
       alignItems: "center",
+    },
+    avatarWrap: {
+      position: "relative",
+    },
+    avatarEditBtn: {
+      position: "absolute",
+      right: 0,
+      bottom: 0,
+      width: moderateScale(32),
+      height: moderateScale(32),
+      borderRadius: moderateScale(16),
+      backgroundColor: colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 2,
+      borderColor: colors.background,
+    },
+    avatarEditIcon: {
+      width: moderateScale(15),
+      height: moderateScale(15),
+      resizeMode: "contain",
+      tintColor: colors.white,
     },
     name: {
       marginTop: moderateVerticalScale(16),

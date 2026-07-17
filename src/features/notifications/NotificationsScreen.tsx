@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FlatList, LayoutAnimation, StyleSheet, Text, View, Pressable, ScrollView } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import NotificationCard, { NotificationType } from "../../components/ui/NotificationCard";
@@ -8,10 +9,15 @@ import UserAvatar from "../../components/ui/UserAvatar";
 import { useTheme } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
+import { resourcesApi } from "../../api/resourcesApi";
+import { useLiveOrDemo } from "../../hooks/useLiveOrDemo";
+import { timeAgo } from "../../utils/timeAgo";
 
 type SathiRequest = {
   id: string;
   name: string;
+  /** The requester's user id (live only) — tapping the card opens their profile. */
+  fromUserId?: string;
   initials: string;
   mutual: string;
   time: string;
@@ -29,10 +35,14 @@ type Tab = (typeof TABS)[number];
 
 export default function NotificationsScreen() {
   const [activeTab, setActiveTab] = useState<Tab>("All");
+  const navigation = useNavigation<any>();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
-  const [notifications, setNotifications] = useState<NotificationType[]>([
+  const typeColor = (type: string) =>
+    type === "Groups" ? colors.primary : type === "Chats" ? colors.info : colors.warning;
+
+  const demoNotifications: NotificationType[] = [
     {
       type: "Groups",
       title: "Jamie replied to your post",
@@ -70,9 +80,40 @@ export default function NotificationsScreen() {
       time: "1d ago",
       color: colors.primary,
     },
-  ]);
+  ];
 
-  const [requests, setRequests] = useState<SathiRequest[]>(initialRequests);
+  // Live notifications + requests when signed in; demo content when signed out.
+  const { data: notifications, setData: setNotifications, isLive } = useLiveOrDemo<NotificationType[]>(
+    async () =>
+      (await resourcesApi.getNotifications()).map((n: any) => ({
+        type: n.type,
+        title: n.title,
+        message: n.message,
+        time: timeAgo(n.time),
+        color: typeColor(n.type),
+        unread: n.unread,
+        chatId: n.chatId,
+      })),
+    demoNotifications,
+  );
+
+  const { data: requests, setData: setRequests } = useLiveOrDemo<SathiRequest[]>(
+    async () =>
+      (await resourcesApi.getSathiRequests()).map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        fromUserId: r.fromUserId,
+        initials: r.name
+          .split(" ")
+          .map((p: string) => p[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase(),
+        mutual: "Wants to connect with you",
+        time: timeAgo(r.time),
+      })),
+    initialRequests,
+  );
 
   const unreadCount = notifications.filter((n) => n.unread).length;
   const pendingCount = requests.filter((r) => !r.accepted).length;
@@ -80,16 +121,19 @@ export default function NotificationsScreen() {
   const markAllRead = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+    if (isLive) resourcesApi.markAllNotificationsRead().catch(() => {});
   };
 
   const acceptRequest = (id: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, accepted: true } : r)));
+    if (isLive) resourcesApi.respondToSathiRequest(id, "accept").catch(() => {});
   };
 
   const declineRequest = (id: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setRequests((prev) => prev.filter((r) => r.id !== id));
+    if (isLive) resourcesApi.respondToSathiRequest(id, "decline").catch(() => {});
   };
 
   const filteredNotifications =
@@ -147,8 +191,16 @@ export default function NotificationsScreen() {
     </View>
   );
 
+  // The whole card opens the requester's profile (accepted or not) — the
+  // Accept/Decline buttons are their own Pressables, so they still win their taps.
   const renderRequest = (item: SathiRequest) => (
-    <View style={styles.requestCard}>
+    <Pressable
+      style={styles.requestCard}
+      disabled={!item.fromUserId}
+      onPress={() =>
+        navigation.navigate("UserProfile", { userId: item.fromUserId, name: item.name })
+      }
+    >
       <UserAvatar initials={item.initials} size={48} />
       <View style={styles.requestInfo}>
         <Text style={styles.requestName}>{item.name}</Text>
@@ -170,7 +222,7 @@ export default function NotificationsScreen() {
           </View>
         )}
       </View>
-    </View>
+    </Pressable>
   );
 
   const isRequestsTab = activeTab === "Requests";
@@ -188,9 +240,26 @@ export default function NotificationsScreen() {
             {isRequestsTab ? "No pending Sathi requests. 💜" : "You're all caught up here."}
           </Text>
         }
-        renderItem={({ item }) =>
-          isRequestsTab ? renderRequest(item as SathiRequest) : <NotificationCard notification={item as NotificationType} />
-        }
+        renderItem={({ item }) => {
+          if (isRequestsTab) return renderRequest(item as SathiRequest);
+          const n = item as NotificationType;
+          return (
+            <NotificationCard
+              notification={n}
+              // Message notifications open their conversation (the title is
+              // "New message from {name}", so the chat header shows the sender).
+              onPress={
+                n.chatId
+                  ? () =>
+                      navigation.navigate("ChatRoom", {
+                        chatId: n.chatId,
+                        name: n.title.replace(/^New message from /, ""),
+                      })
+                  : undefined
+              }
+            />
+          );
+        }}
       />
     </ScreenWrapper>
   );

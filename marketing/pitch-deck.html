@@ -1,0 +1,371 @@
+<title>HealingSathi — Pitch Deck</title>
+<style>
+  :root {
+    --brand: #7453C8;
+    --brand-deep: #5A3FA8;
+    --bg: #F7F5FB;
+    --card: #FFFFFF;
+    --ink: #221A33;
+    --muted: #6E6685;
+    --line: #E4DFF0;
+    --tint: rgba(116, 83, 200, 0.09);
+    --tint-strong: rgba(116, 83, 200, 0.16);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151020;
+      --card: #1E1830;
+      --ink: #EFEAF8;
+      --muted: #9A92B0;
+      --line: #322A48;
+      --tint: rgba(151, 124, 224, 0.13);
+      --tint-strong: rgba(151, 124, 224, 0.22);
+      --brand: #977CE0;
+      --brand-deep: #B9A5EC;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151020;
+    --card: #1E1830;
+    --ink: #EFEAF8;
+    --muted: #9A92B0;
+    --line: #322A48;
+    --tint: rgba(151, 124, 224, 0.13);
+    --tint-strong: rgba(151, 124, 224, 0.22);
+    --brand: #977CE0;
+    --brand-deep: #B9A5EC;
+  }
+  :root[data-theme="light"] {
+    --bg: #F7F5FB;
+    --card: #FFFFFF;
+    --ink: #221A33;
+    --muted: #6E6685;
+    --line: #E4DFF0;
+    --tint: rgba(116, 83, 200, 0.09);
+    --tint-strong: rgba(116, 83, 200, 0.16);
+    --brand: #7453C8;
+    --brand-deep: #5A3FA8;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .slide {
+    min-height: 92svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 56px 28px;
+    border-bottom: 1px solid var(--line);
+    box-sizing: border-box;
+  }
+  .slide:last-child { border-bottom: none; }
+
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brand);
+    margin: 0 0 18px;
+    font-variant-numeric: tabular-nums;
+  }
+  h1, h2 {
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 20px;
+  }
+  h1 { font-size: clamp(40px, 8vw, 72px); line-height: 1.05; }
+  h2 { font-size: clamp(26px, 4.5vw, 42px); line-height: 1.12; }
+  p, li { font-size: 17px; max-width: 65ch; }
+  p.lead { font-size: clamp(18px, 2.5vw, 22px); color: var(--muted); }
+  ul { padding-left: 20px; margin: 0; display: grid; gap: 10px; }
+  strong { color: var(--brand-deep); }
+  .note { color: var(--muted); font-size: 14px; margin-top: 22px; }
+
+  /* Title slide */
+  .hero { align-items: flex-start; }
+  .wordmark {
+    display: inline-block;
+    background: var(--tint-strong);
+    color: var(--brand);
+    border-radius: 14px;
+    padding: 6px 16px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    margin-bottom: 26px;
+  }
+  .hero .tagline { color: var(--brand); }
+  .markets { display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap; }
+  .market {
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 999px;
+    padding: 7px 16px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* Stat row */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 26px; }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .stat .num {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .stat .cap { font-size: 14px; color: var(--muted); margin-top: 6px; }
+
+  /* Tables */
+  .tablewrap { overflow-x: auto; margin-top: 24px; }
+  table { border-collapse: collapse; width: 100%; min-width: 480px; }
+  th, td { text-align: left; padding: 12px 14px; font-size: 15px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+
+  /* Feature grid */
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 26px; }
+  .feature {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px 20px;
+  }
+  .feature h3 { margin: 0 0 6px; font-size: 16px; }
+  .feature p { font-size: 14px; color: var(--muted); margin: 0; }
+
+  /* Flywheel */
+  .flywheel { display: grid; gap: 0; margin-top: 26px; max-width: 560px; }
+  .fly-step {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-size: 15px;
+  }
+  .fly-arrow { text-align: center; color: var(--brand); font-size: 18px; padding: 4px 0; }
+  .fly-loop { color: var(--brand-deep); font-weight: 600; }
+
+  /* 2x2 competition map */
+  .map { margin-top: 26px; }
+  .map-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+    aspect-ratio: 4 / 3;
+    max-width: 640px;
+  }
+  .quad {
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 16px;
+    padding: 16px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .quad .who { font-weight: 600; color: var(--ink); display: block; margin-bottom: 4px; }
+  .quad.us {
+    background: var(--tint);
+    border-color: var(--brand);
+    color: var(--ink);
+  }
+  .quad.us .who { color: var(--brand); font-size: 16px; }
+  .axis { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin: 8px 0; }
+
+  /* Ask slide */
+  .fill { color: var(--brand); background: var(--tint); border-radius: 6px; padding: 0 6px; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .slide { scroll-margin-top: 12px; }
+  }
+</style>
+
+<section class="slide hero">
+  <span class="wordmark">HEALINGSATHI</span>
+  <h1>No one heals<br /><span class="tagline">alone.</span></h1>
+  <p class="lead">The moderated support network for people living with chronic conditions — community and verified professionals in one place.</p>
+  <div class="markets">
+    <span class="market">🇮🇳 India</span>
+    <span class="market">🇺🇸 United States</span>
+    <span class="market">🇨🇦 Canada</span>
+  </div>
+  <p class="note">"Sathi" (साथी) — Hindi for <em>companion</em>. Healthcare has doctors and pills. It doesn't have companions.</p>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">02 · Problem</p>
+  <h2>Chronic illness is a loneliness machine.</h2>
+  <p class="lead">The medical system treats the organ. Nobody treats the isolation between appointments.</p>
+  <div class="stats">
+    <div class="stat"><div class="num">6 in 10</div><div class="cap">US adults live with a chronic disease (CDC)</div></div>
+    <div class="stat"><div class="num">100M+</div><div class="cap">people with diabetes in India alone (est.)</div></div>
+    <div class="stat"><div class="num">2–3×</div><div class="cap">higher anxiety &amp; depression rates after diagnosis (est.)</div></div>
+  </div>
+  <p class="note">The 2am moment: newly diagnosed, terrified, googling. That's our user — at their moment of maximum need.</p>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">03 · Today's options fail them</p>
+  <h2>The gap isn't information. It's belonging, with safety.</h2>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Where they go</th><th>Why it fails</th></tr>
+      <tr><td>Facebook groups</td><td>Unmoderated, zero privacy, algorithmic noise</td></tr>
+      <tr><td>Reddit</td><td>Anonymous roulette — no continuity, no professionals</td></tr>
+      <tr><td>Telehealth apps</td><td>Transactional; you're alone the other 27 days of the month</td></tr>
+      <tr><td>Legacy patient forums</td><td>Data-first, desktop-era, relationship-last</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">04 · Product — built &amp; working</p>
+  <h2>Community and care, in one app.</h2>
+  <div class="features">
+    <div class="feature"><h3>Condition-matched feed</h3><p>Your community from minute one — posts from people and groups that share your condition.</p></div>
+    <div class="feature"><h3>Moderated groups</h3><p>Every group and consultant passes human review. The review queue is built and running.</p></div>
+    <div class="feature"><h3>Sathis</h3><p>1:1 companions — chat, photo sharing, threaded supportive conversations.</p></div>
+    <div class="feature"><h3>Audio &amp; video calls</h3><p>Peer-to-peer WebRTC on our own signaling. No third-party service.</p></div>
+    <div class="feature"><h3>Verified consultants</h3><p>Psychologists &amp; specialists — application-reviewed, bookable in-app.</p></div>
+    <div class="feature"><h3>Trust by design</h3><p>No ads in the feed. No data selling. Human moderators, publicly documented.</p></div>
+  </div>
+  <p class="note">Not a deck-stage product: 110+ automated end-to-end checks pass. Live demo available.</p>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">05 · Why now</p>
+  <h2>Four waves, one moment.</h2>
+  <ul>
+    <li><strong>Digital health is normalized</strong> — post-COVID, online support is default behavior, not fringe.</li>
+    <li><strong>Loneliness is now policy</strong> — declared a public-health priority (US Surgeon General advisory, 2023).</li>
+    <li><strong>India is ready</strong> — cheap data, smartphone-first health behavior already living in unmoderated WhatsApp groups, waiting to graduate.</li>
+    <li><strong>Trust collapse</strong> in ad-driven platforms → demand for purpose-built, private spaces.</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">06 · Market</p>
+  <h2>Beachheads first. The category after.</h2>
+  <div class="stats">
+    <div class="stat"><div class="num">100s of M</div><div class="cap">TAM — chronic-condition adults in launch markets (est.)</div></div>
+    <div class="stat"><div class="num">150–250M</div><div class="cap">SAM — smartphone-active, English/Hindi-speaking patients (est.)</div></div>
+    <div class="stat"><div class="num">150K</div><div class="cap">SOM — 24-month target across 9 beachhead condition-communities</div></div>
+  </div>
+  <p class="note">Beachheads: diabetes, PCOS, thyroid (India) · fibromyalgia, Long COVID, endometriosis (US) · chronic pain, Long COVID (Canada).</p>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">07 · Business model</p>
+  <h2>Community free forever. Care pays the bills.</h2>
+  <ul>
+    <li><strong>Consultant marketplace take-rate</strong> — booking fees on in-app sessions (live in product).</li>
+    <li><strong>HealingSathi Plus</strong> (later) — premium groups, priority consultations.</li>
+    <li><strong>B2B</strong> (later) — advocacy orgs, employers, insurers: engagement tooling for their members.</li>
+  </ul>
+  <p class="note">Trust is the asset. We never sell data and never put ads in the feed — that's the moat, not a constraint.</p>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">08 · Go-to-market</p>
+  <h2>3 conditions × 3 markets. Community-led. Near-zero paid spend.</h2>
+  <ul>
+    <li><strong>India:</strong> "graduate" existing WhatsApp condition-groups + 20 founding doctors whose patients become our first users.</li>
+    <li><strong>US/Canada:</strong> earned presence in condition subreddits and patient-advocacy orgs; patient micro-creators over mega-influencers.</li>
+    <li><strong>The 24-hour rule:</strong> every new user's first post gets a genuine reply within 24 hours. Retention lives here.</li>
+    <li><strong>Product-native loops:</strong> sathi invites, share cards, user-proposed groups — all shipped.</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">09 · The flywheel</p>
+  <h2>Support in → belonging → growth out.</h2>
+  <div class="flywheel">
+    <div class="fly-step">New user arrives — condition-matched feed shows a <strong>living community</strong></div>
+    <div class="fly-arrow">↓</div>
+    <div class="fly-step">First supportive reply <strong>&lt; 24 hours</strong></div>
+    <div class="fly-arrow">↓</div>
+    <div class="fly-step">Joins groups, adds sathis — invites the one person they know who <em>gets it</em></div>
+    <div class="fly-arrow">↓</div>
+    <div class="fly-step">Books a consultant on the hard weeks — <strong>revenue funds moderation</strong></div>
+    <div class="fly-arrow">↓</div>
+    <div class="fly-step"><span class="fly-loop">Trust &amp; safety bring the next user ↺</span></div>
+  </div>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">10 · Competition</p>
+  <h2>Alone in the quadrant that matters.</h2>
+  <div class="map">
+    <p class="axis">↑ Community-first</p>
+    <div class="map-grid">
+      <div class="quad"><span class="who">Facebook Groups · Reddit</span>Scale without safety — unmoderated, ad-driven, anonymous.</div>
+      <div class="quad us"><span class="who">HealingSathi</span>Moderated community <em>with</em> verified professionals attached.</div>
+      <div class="quad"><span class="who">Legacy patient forums</span>Data platforms, not companions.</div>
+      <div class="quad"><span class="who">BetterHelp · Practo · Zocdoc</span>Clinical &amp; transactional — no life between appointments.</div>
+    </div>
+    <p class="axis">Unmoderated ←&nbsp;&nbsp;&nbsp;→ Moderated &amp; verified · ↓ Clinical-first</p>
+  </div>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">11 · Moat</p>
+  <h2>Hard to copy, harder to leave.</h2>
+  <ul>
+    <li><strong>Trust infrastructure</strong> — human review of every group and consultant. Operational muscle, not a feature toggle.</li>
+    <li><strong>Community network effects</strong> — your sathis and your group's history don't port to a competitor.</li>
+    <li><strong>Language depth</strong> — Hindi and regional-language support communities no Western platform will build.</li>
+    <li><strong>The condition graph</strong> — consented, anonymized insight into what actually helps patients day-to-day.</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">12 · Traction &amp; roadmap</p>
+  <h2>The product is done. Now we light it up.</h2>
+  <ul>
+    <li>Complete end-to-end product — feed, groups, chat, calls, moderation, bookings. <strong>110+ automated checks green.</strong></li>
+    <li>Waitlist site live; founding-consultant recruitment underway.</li>
+    <li>Next 12 months: 500-user seeded beta → India launch → US/Canada launch → <strong>150K users</strong>, gated on community-health metrics (not vanity downloads).</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">13 · Team</p>
+  <h2>Built by people who couldn't find this app when they needed it.</h2>
+  <p><span class="fill">[Founder name — one-line bio: why you, why this]</span></p>
+  <p><span class="fill">[N]</span> founding consultants (doctors &amp; psychologists) committed · advisors: <span class="fill">[fill]</span></p>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">14 · The ask</p>
+  <h2>Raising <span class="fill">[amount]</span> for 18 months.</h2>
+  <ul>
+    <li>Community ops in two regions + the 24-hour reply team</li>
+    <li>Founding-consultant program &amp; trust-and-safety staffing</li>
+    <li>Growth engine: SEO, creators, referral program</li>
+    <li>Infrastructure: media storage, TURN servers, scale readiness</li>
+  </ul>
+  <p class="note">Milestone at +18 months: <span class="fill">[users / weekly supportive interactions / revenue]</span>.</p>
+</section>
+
+<section class="slide">
+  <p class="eyebrow">15 · Vision</p>
+  <h2>Every healthcare system has a treatment layer.<br />We're building the <span style="color: var(--brand)">companion layer</span>.</h2>
+  <p class="lead">India, US, Canada first. Then everywhere people heal.</p>
+</section>

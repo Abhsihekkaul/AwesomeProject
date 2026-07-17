@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, Image } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, Image, Alert } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
@@ -10,6 +10,17 @@ import { radius } from "../../theme/radius";
 import BackButton from "../../components/ui/BackButton";
 import SearchBar from "./SearchBar";
 import imagePath from "../../constant/imagePath";
+import { resourcesApi } from "../../api/resourcesApi";
+import { apiErrorMessage } from "../../api/http";
+import { useLiveOrDemo } from "../../hooks/useLiveOrDemo";
+
+const initialsOf = (name: string) =>
+    name
+        .split(" ")
+        .map((p) => p[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
 
 // --- Dummy Data ---
 export const dummyGroups = [
@@ -79,10 +90,78 @@ export default function DirectoryScreen() {
 
     const [query, setQuery] = useState("");
 
-    // Conditionally select data, filtered by the search query
-    const allData = directoryType === "Groups" ? dummyGroups : dummyFriends;
+    // Signed in → YOUR real groups/sathis (a fresh account honestly shows none);
+    // the 25-item dummy lists only ever appear in signed-out "Try the Demo" mode.
+    const { data: allData, isLive } = useLiveOrDemo<any[]>(
+        async () => {
+            if (directoryType === "Groups") {
+                return (await resourcesApi.getGroups())
+                    .filter((g: any) => g.joined)
+                    .map((g: any) => ({
+                        id: g.id,
+                        name: g.name,
+                        members: `${g.memberCount} member${g.memberCount === 1 ? "" : "s"}`,
+                        initials: initialsOf(g.name),
+                        tag: g.tag,
+                        moderator: g.moderator,
+                        description: g.description,
+                    }));
+            }
+            return (await resourcesApi.getSathis()).map((s: any) => ({
+                id: s.id,
+                name: s.name,
+                status: "Sathi · tap to view profile",
+                initials: initialsOf(s.name),
+            }));
+        },
+        directoryType === "Groups" ? dummyGroups : dummyFriends,
+    );
+
     const q = query.trim().toLowerCase();
     const data = q ? allData.filter((item: any) => item.name.toLowerCase().includes(q)) : allData;
+
+    const openItem = (item: any) => {
+        if (directoryType === "Groups") {
+            navigation.navigate(
+                "GroupDetails",
+                isLive
+                    ? {
+                          id: item.id,
+                          name: item.name,
+                          members: item.members,
+                          tag: item.tag,
+                          moderator: item.moderator,
+                          description: item.description,
+                          joined: true,
+                      }
+                    : { name: item.name },
+            );
+        } else if (isLive) {
+            // A friend's row opens their read-only profile (Message lives there too).
+            navigation.navigate("UserProfile", { userId: item.id, name: item.name });
+        } else {
+            navigation.navigate("ChatRoom", { name: item.name, initials: item.initials });
+        }
+    };
+
+    // The chat glyph on a friend row jumps straight into the conversation.
+    const openChat = async (item: any) => {
+        if (!isLive) {
+            navigation.navigate("ChatRoom", { name: item.name, initials: item.initials });
+            return;
+        }
+        try {
+            const chatId = await resourcesApi.openChatWith(item.id);
+            navigation.navigate("ChatRoom", {
+                name: item.name,
+                initials: item.initials,
+                chatId,
+                userId: item.id,
+            });
+        } catch (err) {
+            Alert.alert("Couldn't open the chat", apiErrorMessage(err));
+        }
+    };
 
     // Theme-aware avatar tints, cycled by list position
     const avatarTints = [
@@ -106,20 +185,19 @@ export default function DirectoryScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                 {data.length === 0 ? (
-                    <Text style={styles.emptyText}>No {directoryType.toLowerCase()} match "{query.trim()}".</Text>
+                    <Text style={styles.emptyText}>
+                        {q
+                            ? `No ${directoryType.toLowerCase()} match "${query.trim()}".`
+                            : directoryType === "Groups"
+                              ? "You haven't joined any groups yet — explore the Groups tab."
+                              : "No sathis yet — find people in Search and send a request."}
+                    </Text>
                 ) : null}
                 {data.map((item: any, i: number) => (
                     <Pressable
                         key={item.id}
                         style={styles.card}
-                        onPress={() => {
-                            if (directoryType === "Groups") {
-                                navigation.navigate("GroupDetails", { name: item.name });
-                            } else {
-                                // Navigate to private chat or profile
-                                navigation.navigate("ChatRoom", { name: item.name, initials: item.initials });
-                            }
-                        }}
+                        onPress={() => openItem(item)}
                     >
                         {directoryType === "Groups" ? (
                             // Group Item UI
@@ -145,7 +223,9 @@ export default function DirectoryScreen() {
                                         {item.status}
                                     </Text>
                                 </View>
-                                <Image source={imagePath.ChatIcon} style={[styles.Chat, { tintColor: colors.primary }]} />
+                                <Pressable onPress={() => openChat(item)} hitSlop={8}>
+                                    <Image source={imagePath.ChatIcon} style={[styles.Chat, { tintColor: colors.primary }]} />
+                                </Pressable>
                             </>
                         )}
                     </Pressable>

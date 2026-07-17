@@ -4,10 +4,12 @@ import {
   Platform,
   Pressable,
   StyleSheet,
+  Text,
   View,
   useWindowDimensions,
 } from "react-native";
 import { BlurView } from "@react-native-community/blur";
+import { useRoute } from "@react-navigation/native";
 import PagerView from "react-native-pager-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ChatsScreen from "../features/chat/ChatsScreen";
@@ -24,6 +26,7 @@ import {
 import imagePath from "../constant/imagePath";
 import { TextStyles } from "../theme/typography";
 import { useTheme } from "../theme/ThemeContext";
+import { useChatNotifications } from "../context/ChatNotificationsContext";
 
 const TAB_BAR_HEIGHT = moderateVerticalScale(70);
 
@@ -39,10 +42,13 @@ const TabItem = ({
   tab,
   focused,
   onPress,
+  badge = 0,
 }: {
   tab: (typeof tabs)[number];
   focused: boolean;
   onPress: () => void;
+  /** Unread count pill on the icon (the Chats tab's message badge). */
+  badge?: number;
 }) => {
   const { colors, resolvedScheme } = useTheme();
   const styles = makeStyles(colors, resolvedScheme);
@@ -76,10 +82,17 @@ const TabItem = ({
   return (
     <Pressable onPress={onPress} style={styles.tabItem}>
       <Animated.View style={[styles.tabItemBg, { backgroundColor }]}>
-        <Animated.Image
-          source={tab.icon}
-          style={[styles.tabIcon, { opacity: iconOpacity, tintColor: iconTint }]}
-        />
+        <View>
+          <Animated.Image
+            source={tab.icon}
+            style={[styles.tabIcon, { opacity: iconOpacity, tintColor: iconTint }]}
+          />
+          {badge > 0 ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{badge > 99 ? "99+" : badge}</Text>
+            </View>
+          ) : null}
+        </View>
         <Animated.Text style={[styles.tabLabel, { color: labelColor }]}>{tab.label}</Animated.Text>
       </Animated.View>
     </Pressable>
@@ -90,9 +103,24 @@ export default function MainTabNavigator() {
   const { colors, resolvedScheme } = useTheme();
   const styles = makeStyles(colors, resolvedScheme);
   const insets = useSafeAreaInsets();
+  const route = useRoute<any>();
   const pagerRef = useRef<PagerView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const { width } = useWindowDimensions();
+  // Total unread messages → count pill on the Chats tab (0 when signed out).
+  const { unreadTotal } = useChatNotifications();
+
+  // Deep-link into a tab: navigate("MainTabs", { tab: "Chats" }) selects it
+  // (used by the share sheet's "See all in Chats").
+  useEffect(() => {
+    const tabKey = route.params?.tab;
+    if (!tabKey) return;
+    const index = tabs.findIndex((t) => t.key === tabKey);
+    if (index >= 0) {
+      setActiveIndex(index);
+      pagerRef.current?.setPageWithoutAnimation(index);
+    }
+  }, [route.params?.tab]);
 
   const onTabPress = (index: number) => {
     setActiveIndex(index);
@@ -136,7 +164,13 @@ export default function MainTabNavigator() {
             />
           ) : null}
           {tabs.map((tab, index) => (
-            <TabItem key={tab.key} tab={tab} focused={activeIndex === index} onPress={() => onTabPress(index)} />
+            <TabItem
+              key={tab.key}
+              tab={tab}
+              focused={activeIndex === index}
+              onPress={() => onTabPress(index)}
+              badge={tab.key === "Chats" ? unreadTotal : 0}
+            />
           ))}
         </View>
       </View>
@@ -206,5 +240,23 @@ const makeStyles = (
     tabLabel: {
       fontSize: TextStyles.caption,
       fontWeight: "500",
+    },
+    badge: {
+      position: "absolute",
+      top: -moderateVerticalScale(5),
+      right: -moderateScale(10),
+      minWidth: moderateScale(16),
+      height: moderateScale(16),
+      borderRadius: moderateScale(8),
+      backgroundColor: colors.danger,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: moderateScale(3),
+    },
+    badgeText: {
+      color: colors.white,
+      fontSize: moderateScale(9),
+      fontWeight: "700",
+      fontVariant: ["tabular-nums"],
     },
   });

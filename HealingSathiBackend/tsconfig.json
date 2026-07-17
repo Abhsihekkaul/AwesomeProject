@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
-    "moduleResolution": "node10",
-    "ignoreDeprecations": "5.0",
-    "lib": ["ES2022"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": [
+      "ES2022"
+    ],
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,
@@ -17,5 +18,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

@@ -7,7 +7,7 @@ attachment sheet, and a new private **HealingDiary** feature built. Static verif
 passes clean; the runtime iOS check was skipped to save the user's remaining quota.
 
 ## Automated checks
-| Check | Command | Result |
+| Check | Command | Result 
 |-------|---------|--------|
 | TypeScript | `npx tsc --noEmit` | ✅ PASS — 0 errors |
 | ESLint | `npx eslint src App.tsx` | ✅ PASS — 0 errors (16 pre-existing style warnings: inline `{flex:1}` styles and 2 nested-component warnings, all predating this session) |
@@ -116,3 +116,4 @@ instead of the iOS-default green `Switch`.
   "Mark all read" in the header, unread-count badge on the All tab, and empty states
   ("No pending Sathi requests. 💜" / "You're all caught up here.").
 - Verified: TypeScript ✅ · Jest ✅ · ESLint ✅.
+ 

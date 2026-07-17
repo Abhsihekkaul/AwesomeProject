@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Image,
@@ -12,8 +12,17 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LinearGradient from "react-native-linear-gradient";
+import { useAuth } from "../../context/AuthContext";
+import { useCall } from "../../context/CallContext";
+import { useChatNotifications } from "../../context/ChatNotificationsContext";
+import { resourcesApi } from "../../api/resourcesApi";
+import { joinChatRoom } from "../../api/chatSocket";
+import { captureImageAsDataUri, pickImageAsDataUri } from "../../utils/pickImage";
+import { timeAgo } from "../../utils/timeAgo";
+import { useLiveOrDemo } from "../../hooks/useLiveOrDemo";
 import { useTheme } from "../../theme/ThemeContext";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
@@ -22,11 +31,16 @@ import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
 import BackButton from "../../components/ui/BackButton";
 import UserAvatar from "../../components/ui/UserAvatar";
+import AutoHeightImage from "../../components/ui/AutoHeightImage";
 
 type ChatMessage = {
   id: string;
   mine?: boolean;
   text: string;
+  /** Base64 data-URI photo (same MVP transport as post images). */
+  image?: string | null;
+  /** In-app shared post (full card shape) — renders as a tappable post card. */
+  sharedPost?: any;
   time: string;
 };
 
@@ -44,17 +58,45 @@ const initialMessages: ChatMessage[] = [
   { id: "11", text: "Thank you for saying that. I needed the reminder today. 😊", time: "10:38 AM" },
 ];
 
-// Attachment options shown from the "+" button. Emoji glyphs keep this asset-free,
-// matching how the rest of the app renders decorative icons (💡, 🛡, ⌕).
-const attachmentOptions: { key: string; label: string; glyph: string; tint: "lightPurple" | "lightBlue" | "lightGreen" | "lightOrange" }[] = [
-  { key: "camera", label: "Camera", glyph: "📷", tint: "lightPurple" },
-  { key: "photos", label: "Photos", glyph: "🖼️", tint: "lightBlue" },
-  { key: "files", label: "Files", glyph: "📄", tint: "lightGreen" },
-  { key: "location", label: "Location", glyph: "📍", tint: "lightOrange" },
+// Attachment options shown from the "+" button. Same tinted icon assets as the rest
+// of the platform (the post composer uses the identical Upload/Video icons), so the
+// sheet reads as one design language. Photos work today; the rest says when it lands.
+const attachmentOptions: {
+  key: string;
+  label: string;
+  icon: number;
+  tint: "lightPurple" | "lightBlue" | "lightGreen" | "lightOrange";
+  comingSoon?: string;
+}[] = [
+  { key: "camera", label: "Camera", icon: imagePath.CameraIcon, tint: "lightPurple" },
+  { key: "photo", label: "Photos", icon: imagePath.UploadIcon, tint: "lightBlue" },
+  {
+    key: "video",
+    label: "Video",
+    icon: imagePath.VideoIcon,
+    tint: "lightGreen",
+    comingSoon: "Video sharing arrives with cloud media storage (next on the roadmap). Photos work today!",
+  },
+  {
+    key: "file",
+    label: "File",
+    icon: imagePath.PostIcon,
+    tint: "lightOrange",
+    comingSoon: "File sharing arrives with cloud media storage (next on the roadmap). Photos work today!",
+  },
 ];
 
-const formatNow = () => {
-  const d = new Date();
+const initialsOf = (name: string) =>
+  name
+    .split(" ")
+    .map((p: string) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+const formatClock = (value?: string | Date) => {
+  const d = value ? new Date(value) : new Date();
+  if (Number.isNaN(d.getTime())) return String(value ?? "");
   const h = d.getHours();
   const m = d.getMinutes().toString().padStart(2, "0");
   const suffix = h >= 12 ? "PM" : "AM";
@@ -67,15 +109,56 @@ const Message = ({
   initials,
   gradient,
   styles,
+  onOpenPost,
+  onImagePress,
 }: {
   message: ChatMessage;
   initials: string;
   gradient: string[];
   styles: ReturnType<typeof makeStyles>;
+  onOpenPost?: (post: any) => void;
+  onImagePress?: (uri: string) => void;
 }) => {
+  const shared = message.sharedPost;
   const body = (
     <>
-      <Text style={[styles.msgText, message.mine && styles.mineText]}>{message.text}</Text>
+      {/* Photo message: full proportions in the bubble, tap for fullscreen. */}
+      {message.image ? (
+        <Pressable onPress={() => onImagePress?.(message.image!)}>
+          <AutoHeightImage uri={message.image} style={styles.msgImage} />
+        </Pressable>
+      ) : null}
+      {/* Shared post → a mini post card; tapping it opens the full post. */}
+      {shared ? (
+        <Pressable style={styles.sharedCard} onPress={() => onOpenPost?.(shared)}>
+          <View style={styles.sharedCardHeader}>
+            <UserAvatar initials={initialsOf(shared.author ?? "Member")} size={24} />
+            <View style={styles.sharedCardHeaderText}>
+              <Text style={styles.sharedCardAuthor} numberOfLines={1}>{shared.author}</Text>
+              {/* Feed posts have no group — "in {group}" only when there is one. */}
+              {shared.circle ? (
+                <Text style={styles.sharedCardCircle} numberOfLines={1}>in {shared.circle}</Text>
+              ) : null}
+            </View>
+          </View>
+          {shared.image ? (
+            <AutoHeightImage uri={shared.image} style={styles.sharedCardImage} />
+          ) : null}
+          {shared.title ? (
+            <Text style={styles.sharedCardTitle} numberOfLines={2}>{shared.title}</Text>
+          ) : null}
+          <Text style={styles.sharedCardSnippet} numberOfLines={3}>{shared.content}</Text>
+          <View style={styles.sharedCardFooter}>
+            <Text style={styles.sharedCardCounts}>
+              ♥ {shared.supportCount ?? 0}   💬 {shared.commentCount ?? 0}
+            </Text>
+            <Text style={styles.sharedCardCta}>View post →</Text>
+          </View>
+        </Pressable>
+      ) : null}
+      {message.text ? (
+        <Text style={[styles.msgText, message.mine && styles.mineText]}>{message.text}</Text>
+      ) : null}
       <Text style={[styles.time, message.mine && styles.mineTime]}>
         {message.time}
         {message.mine ? "  ✓✓" : ""}
@@ -106,8 +189,12 @@ const Message = ({
 
 export default function ChatRoomScreen() {
   const route = useRoute<any>();
+  const navigation = useNavigation<any>();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
+  // Keeps the attachment sheet above the home indicator on every device.
+  const insets = useSafeAreaInsets();
+  const sheetBottomPad = Math.max(insets.bottom, moderateVerticalScale(16));
 
   const name: string = route.params?.name ?? "Alex K.";
   const initials: string =
@@ -119,35 +206,131 @@ export default function ChatRoomScreen() {
       .slice(0, 2)
       .toUpperCase();
 
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const { isAuthenticated, user } = useAuth();
+  const chatId: string | undefined = route.params?.chatId;
+  // The other participant's id (live chats) — tapping the header opens their profile.
+  const otherUserId: string | undefined = route.params?.userId;
+
+  // While this conversation is on screen its messages never pop a banner, and the
+  // unread counter zeroes the moment you're here (badge on the Chats tab follows).
+  const { setActiveChat, markChatRead } = useChatNotifications();
+  useFocusEffect(
+    useCallback(() => {
+      if (!isAuthenticated || !chatId) return undefined;
+      setActiveChat(chatId);
+      markChatRead(chatId);
+      return () => setActiveChat(null);
+    }, [isAuthenticated, chatId, setActiveChat, markChatRead]),
+  );
+
+  // Live thread when signed in and opened from a live chat list; demo thread otherwise.
+  // The 15s poll is only the fallback — the socket below delivers messages instantly.
+  const { data: messages, setData: setMessages, isLive } = useLiveOrDemo<ChatMessage[]>(
+    async () => {
+      if (!chatId) return [];
+      return (await resourcesApi.getMessages(chatId)).map((m: any) => ({
+        id: m.id,
+        mine: m.mine,
+        text: m.text,
+        image: m.image,
+        sharedPost: m.sharedPost,
+        time: formatClock(m.time),
+      }));
+    },
+    initialMessages,
+    undefined,
+    15_000,
+  );
+
+  // Realtime receive: the other side's messages appear the moment they're sent.
+  // Own messages are skipped (the optimistic bubble already showed them) and ids
+  // are deduped in case the fallback poll landed first.
+  useEffect(() => {
+    if (!isAuthenticated || !chatId) return undefined;
+    return joinChatRoom(chatId, ({ message }) => {
+      if (message.senderId === user?.id) return;
+      setMessages((prev) =>
+        prev.some((m) => m.id === message.id)
+          ? prev
+          : [
+              ...prev,
+              {
+                id: message.id,
+                mine: false,
+                text: message.text,
+                image: message.image,
+                sharedPost: message.sharedPost,
+                time: formatClock(message.time),
+              },
+            ],
+      );
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, chatId, user?.id]);
+
   const [draft, setDraft] = useState("");
   const [attachOpen, setAttachOpen] = useState(false);
+  // Fullscreen photo viewer — tapping any chat image shows the complete picture.
+  const [viewerUri, setViewerUri] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+
+  // Shared send path for text and photos: optimistic bubble first, then the API
+  // persists it (the socket + polling reconcile the real message for the other side).
+  const deliver = async (payload: { text?: string; image?: string }) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `local-${Date.now()}`,
+        mine: true,
+        text: payload.text ?? "",
+        image: payload.image ?? null,
+        time: formatClock(),
+      },
+    ]);
+    if (isAuthenticated && isLive && chatId) {
+      try {
+        await resourcesApi.sendMessage(chatId, payload);
+      } catch {
+        // Keep the optimistic bubble; polling will reconcile next open.
+      }
+    }
+  };
 
   const sendMessage = () => {
     const text = draft.trim();
     if (!text) return;
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), mine: true, text, time: formatNow() },
-    ]);
     setDraft("");
+    deliver({ text });
   };
 
+  // Gallery photo or a fresh camera shot — either way the photo sends immediately.
+  const sendPhoto = async (source: "camera" | "library") => {
+    const image =
+      source === "camera" ? await captureImageAsDataUri() : await pickImageAsDataUri();
+    if (image) deliver({ image });
+  };
+
+  // Real WebRTC calls (audio/video, peer-to-peer over our own signaling).
+  // Demo chats have no real person behind them, so they explain instead.
+  const { startCall: startWebrtcCall } = useCall();
   const startCall = (kind: "voice" | "video") => {
-    Alert.alert(
-      kind === "voice" ? `Call ${name}?` : `Video call ${name}?`,
-      "Calls connect once the realtime backend goes live.",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: kind === "voice" ? "Call" : "Start", onPress: () => {} },
-      ],
-    );
+    if (!isAuthenticated || !otherUserId) {
+      Alert.alert(
+        "Calls need a real Sathi",
+        "Sign in and open a conversation with one of your sathis to call them.",
+      );
+      return;
+    }
+    startWebrtcCall({ id: otherUserId, name }, kind === "voice" ? "audio" : "video");
   };
 
-  const pickAttachment = (label: string) => {
+  const pickAttachment = (option: (typeof attachmentOptions)[number]) => {
     setAttachOpen(false);
-    Alert.alert(label, `${label} sharing will open here once media upload is wired to the backend.`);
+    if (option.comingSoon) {
+      Alert.alert(`${option.label}s are coming soon`, option.comingSoon);
+      return;
+    }
+    sendPhoto(option.key === "camera" ? "camera" : "library");
   };
 
   return (
@@ -159,14 +342,22 @@ export default function ChatRoomScreen() {
         {/* Header */}
         <View style={styles.header}>
           <BackButton />
-          <UserAvatar initials={initials} size={38} />
-          <View style={styles.headerCenter}>
-            <Text style={styles.name} numberOfLines={1}>{name}</Text>
-            <View style={styles.statusRow}>
-              <View style={styles.onlineDot} />
-              <Text style={styles.status}>Online · Fibromyalgia</Text>
+          <Pressable
+            style={styles.headerIdentity}
+            disabled={!otherUserId}
+            onPress={() =>
+              navigation.navigate("UserProfile", { userId: otherUserId, name })
+            }
+          >
+            <UserAvatar initials={initials} size={38} />
+            <View style={styles.headerCenter}>
+              <Text style={styles.name} numberOfLines={1}>{name}</Text>
+              <View style={styles.statusRow}>
+                <View style={styles.onlineDot} />
+                <Text style={styles.status}>Online · Fibromyalgia</Text>
+              </View>
             </View>
-          </View>
+          </Pressable>
 
           <Pressable style={styles.headerBtn} hitSlop={6} onPress={() => startCall("voice")}>
             <Image source={imagePath.PhoneIcon} style={styles.headerBtnIcon} />
@@ -194,6 +385,10 @@ export default function ChatRoomScreen() {
               initials={initials}
               gradient={[colors.primary, colors.primaryDark]}
               styles={styles}
+              onOpenPost={(post) =>
+                navigation.navigate("PostDetails", { post: { ...post, time: timeAgo(post.time) } })
+              }
+              onImagePress={setViewerUri}
             />
           ))}
         </ScrollView>
@@ -223,18 +418,33 @@ export default function ChatRoomScreen() {
         </View>
       </KeyboardAvoidingView>
 
+      {/* Fullscreen photo viewer — the complete image, letterboxed, tap to close */}
+      <Modal
+        visible={!!viewerUri}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setViewerUri(null)}
+      >
+        <Pressable style={styles.viewerBackdrop} onPress={() => setViewerUri(null)}>
+          {viewerUri ? (
+            <Image source={{ uri: viewerUri }} style={styles.viewerImage} resizeMode="contain" />
+          ) : null}
+          <Text style={styles.viewerHint}>Tap anywhere to close</Text>
+        </Pressable>
+      </Modal>
+
       {/* Attachment sheet */}
       <Modal visible={attachOpen} transparent animationType="slide" onRequestClose={() => setAttachOpen(false)}>
         <View style={styles.sheetOverlay}>
           <Pressable style={styles.sheetDismiss} onPress={() => setAttachOpen(false)} />
-          <View style={styles.sheet}>
+          <View style={[styles.sheet, { paddingBottom: sheetBottomPad + moderateVerticalScale(12) }]}>
             <View style={styles.dragHandle} />
             <Text style={styles.sheetTitle}>Share</Text>
             <View style={styles.sheetGrid}>
               {attachmentOptions.map((opt) => (
-                <Pressable key={opt.key} style={styles.sheetOption} onPress={() => pickAttachment(opt.label)}>
+                <Pressable key={opt.key} style={styles.sheetOption} onPress={() => pickAttachment(opt)}>
                   <View style={[styles.sheetOptionCircle, { backgroundColor: colors[opt.tint] }]}>
-                    <Text style={styles.sheetOptionGlyph}>{opt.glyph}</Text>
+                    <Image source={opt.icon} style={styles.sheetOptionIcon} />
                   </View>
                   <Text style={styles.sheetOptionLabel}>{opt.label}</Text>
                 </Pressable>
@@ -261,6 +471,11 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       borderBottomColor: colors.border,
       paddingBottom: moderateVerticalScale(10),
       paddingTop: moderateVerticalScale(4),
+    },
+    headerIdentity: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
     },
     headerCenter: {
       flex: 1,
@@ -356,6 +571,105 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       fontSize: TextStyles.stepCounts,
       lineHeight: moderateScale(21),
     },
+    // Height comes from the photo's real aspect ratio (AutoHeightImage) — the
+    // complete picture shows, nothing is cropped into a square.
+    msgImage: {
+      width: moderateScale(220),
+      borderRadius: radius.md,
+      marginBottom: moderateVerticalScale(4),
+    },
+
+    // Shared-post card inside a bubble: a real mini PostCard — author header,
+    // full-proportion image, title/snippet, engagement footer.
+    sharedCard: {
+      width: moderateScale(230),
+      backgroundColor: colors.card,
+      borderRadius: radius.md,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      overflow: "hidden",
+      marginBottom: moderateVerticalScale(4),
+    },
+    sharedCardHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: moderateScale(10),
+      paddingTop: moderateScale(10),
+      paddingBottom: moderateScale(8),
+    },
+    sharedCardHeaderText: {
+      flex: 1,
+      marginLeft: moderateScale(2),
+    },
+    sharedCardAuthor: {
+      color: colors.text,
+      fontSize: scale(12),
+      fontWeight: "700",
+    },
+    sharedCardCircle: {
+      color: colors.mutedText,
+      fontSize: scale(10),
+      fontWeight: "500",
+      marginTop: moderateVerticalScale(1),
+    },
+    sharedCardImage: {
+      width: "100%",
+    },
+    sharedCardTitle: {
+      color: colors.text,
+      fontSize: TextStyles.stepCounts,
+      fontWeight: "700",
+      paddingHorizontal: moderateScale(10),
+      marginTop: moderateVerticalScale(8),
+    },
+    sharedCardSnippet: {
+      color: colors.text,
+      fontSize: scale(12),
+      lineHeight: scale(17),
+      paddingHorizontal: moderateScale(10),
+      marginTop: moderateVerticalScale(3),
+    },
+    sharedCardFooter: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: moderateScale(10),
+      paddingVertical: moderateScale(8),
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+      marginTop: moderateVerticalScale(8),
+    },
+    sharedCardCounts: {
+      color: colors.mutedText,
+      fontSize: scale(11),
+      fontWeight: "600",
+      fontVariant: ["tabular-nums"],
+    },
+    sharedCardCta: {
+      color: colors.primary,
+      fontSize: scale(11),
+      fontWeight: "700",
+    },
+
+    // Fullscreen photo viewer
+    viewerBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.94)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    viewerImage: {
+      width: "100%",
+      height: "86%",
+    },
+    viewerHint: {
+      position: "absolute",
+      bottom: moderateVerticalScale(40),
+      alignSelf: "center",
+      color: "rgba(255,255,255,0.75)",
+      fontSize: scale(12),
+      fontWeight: "500",
+    },
     mineText: {
       color: colors.white,
     },
@@ -432,12 +746,12 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
     sheetDismiss: {
       flex: 1,
     },
+    // Bottom padding is applied inline from the live safe-area inset.
     sheet: {
       backgroundColor: colors.card,
       borderTopLeftRadius: radius.lg,
       borderTopRightRadius: radius.lg,
       paddingHorizontal: moderateScale(20),
-      paddingBottom: moderateVerticalScale(36),
     },
     dragHandle: {
       width: moderateScale(40),
@@ -470,8 +784,11 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       justifyContent: "center",
       marginBottom: moderateVerticalScale(8),
     },
-    sheetOptionGlyph: {
-      fontSize: scale(24),
+    sheetOptionIcon: {
+      width: moderateScale(24),
+      height: moderateScale(24),
+      resizeMode: "contain",
+      tintColor: colors.primary,
     },
     sheetOptionLabel: {
       fontSize: TextStyles.caption,
