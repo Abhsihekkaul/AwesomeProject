@@ -569,4 +569,24 @@ buttons), not guessed. Grouped by how much it blocks a public launch._
 
 ### 38. Git & GitHub — DONE (17/07/26)
 - [x] Everything since Phase 4 committed; **private** GitHub repo created and pushed
-      (see the commit history for the cycle-by-cycle breakdown)  
+      (see the commit history for the cycle-by-cycle breakdown)
+
+---
+
+## Phase 9 — THE WEB APP (initiated 17/07/26) — the next big thing
+- [x] **`MainWebsite.md`** written (repo root): complete architecture + design for
+      `HealingSathiWeb/` — a full WORKING web app at app.healingsathi.com (like
+      facebook.com, NOT the marketing brochure at `HealingSathiWebsite/`).
+      Covers: stack (Next.js + Tailwind v4 + React Query + socket.io-client),
+      token-for-token design system from the app, Facebook-shaped 3-column shell,
+      two-pane Messenger chat, complete page map (every route → existing API —
+      ZERO new endpoints needed), feature parity matrix w/ web upgrades (browser
+      notifications, drag-drop photos, real share links, app↔web WebRTC calls),
+      the 4 technical ports (http client / sockets / calls / image pipeline),
+      security model, and a 5-phase build plan (W1 Foundation+Auth → W5 polish)
+      each with definition-of-done + a phone↔laptop sync test checklist
+- [ ] AWAITING GO: user approves `MainWebsite.md` → W1 starts
+- [ ] Backend prep when W1 starts (env-only): add web origins to `CORS_ORIGIN`,
+      web OAuth client id to `GOOGLE_CLIENT_IDS`
+- [ ] User decisions: confirm `app.healingsathi.com` subdomain; Google web
+      client id alongside the existing GoogleSignInSetup.md task  
