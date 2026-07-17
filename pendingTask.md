@@ -499,8 +499,8 @@ buttons), not guessed. Grouped by how much it blocks a public launch._
       only one): hooks (`useLiveOrDemo`, `useComments`) and the new
       ChatNotifications engine are pure logic — easy wins
 - [ ] CI (GitHub Actions): tsc + eslint + jest + backend smoke on every push
-- [ ] **Commit everything to git** — carried over from two cycles ago, still pending;
-      the working tree currently holds ALL of Phases 4–8 uncommitted
+- [x] **Commit everything to git** — DONE 17/07/26: Phases 4–8 committed and pushed
+      to the PRIVATE GitHub repo (`Abhsihekkaul/AwesomeProject`, origin/main)
 
 ---
 
