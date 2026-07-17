@@ -340,7 +340,7 @@ _Same convention as `pendingTask.md`: `[x]` done · `[~]` in progress · `[ ]` p
 Every build session updates this section (and only this section), so the doc above
 stays the stable blueprint while this is the heartbeat._
 
-**Status: W1 + W2 + W3 DONE (2026-07-17). Build green (21 routes), lint 0 errors. NEXT: W4 — people & groups (search, profiles, sathi requests, groups, share dialog), then the W4.5 mobile-web pass.**
+**Status: W1–W4 DONE except ShareDialog (2026-07-17). Build green (23 routes), lint 0 errors. NEXT: W4's ShareDialog, then the W4.5 mobile-web pass, then W5.**
 
 ### W1 — Foundation + Auth
 - [x] Scaffold `HealingSathiWebApp/` (Next.js 16 + TS + Tailwind v4; folder renamed from npm's lowercase requirement), tokens + light/dark (`@custom-variant dark`, next-themes class mode)
@@ -397,12 +397,29 @@ first-class, not an afterthought._
       safe-area insets, no horizontal scroll anywhere
 - [ ] Test on a real phone browser against the LAN backend
 
-### W4 — People & groups
-- [ ] Top-bar + `/search` (people w/ relation status, groups, consultants)
-- [ ] `/user/[id]` public profiles, sathi requests, blocking
-- [ ] `/groups` + `/groups/[id]` (Posts/Members/About, join, request group)
-- [ ] ShareDialog: quick row + multi-select picker + copy-link
-- [ ] DoD check: find→request→accept→chat loop across web and phone
+### W4 — People & groups — DONE except ShareDialog
+- [x] `/search`: debounced people search w/ live relation status (+ Add Sathi
+      optimistic, Message → opens/creates the chat), matching groups + consultants,
+      shimmer while searching; top-bar search focuses it
+- [x] `/user/[id]`: public profile hero (avatar, member-since, sathi count,
+      condition chips), Message / + Add Sathi / relation pills, Posts + Liked tabs
+      of real PostCards
+- [x] `/groups`: live directory w/ join/leave toggles + "Request a group" modal
+      (feeds the admin review queue); `/groups/[id]`: Posts (20s poll) / Members
+      (rows → profiles) / About tabs, join toggle, "+ Post in {group}" preselects
+      the destination in the Composer
+- [x] RightRail is LIVE: real sathis (row → profile, 💬 → conversation) + joined
+      groups, honest empty states w/ find-people/browse-groups links
+- [x] **Bugfixes from live testing (user-reported)**: (1) opening a chat scrolled the
+      WHOLE PAGE down and hid the list — scrollIntoView scrolls every ancestor;
+      now only the message pane scrolls (scrollTop on the container). (2) the
+      message send box vanished on long threads — flex/grid children default
+      min-height:auto so the column outgrew the clipped card; min-h-0 applied at
+      every level of the chat height chain
+- [x] Build green (23 routes) · ESLint 0 errors · all routes serve 200
+- [ ] ShareDialog (quick row + multi-select picker + copy-link) — next up
+- [ ] DoD cross-device check (user): find→request→accept→chat loop web↔phone
+- [ ] Blocking UI (block from profile) — rolls into W5 settings
 
 ### W5 — The rest + polish + deploy
 - [ ] Help: consultants, booking, become-a-consultant

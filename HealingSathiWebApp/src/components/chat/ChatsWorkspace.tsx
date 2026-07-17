@@ -137,7 +137,7 @@ function ChatThread({ chat }: { chat: ChatListItem }) {
   const [messages, setMessages] = useState<ChatMessage[]>(isAuthenticated ? [] : DEMO_THREAD);
   const [loadingThread, setLoadingThread] = useState(isAuthenticated);
   const [draft, setDraft] = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -191,8 +191,12 @@ function ChatThread({ chat }: { chat: ChatListItem }) {
     });
   }, [isAuthenticated, chatId, user?.id]);
 
+  // Scroll ONLY the message pane to its newest message. (scrollIntoView would
+  // scroll every ancestor — the whole page jumped down and hid the chat list,
+  // the reported anomaly.)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = messagesRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [messages.length]);
 
   const deliver = async (payload: { text?: string; image?: string }) => {
@@ -231,7 +235,10 @@ function ChatThread({ chat }: { chat: ChatListItem }) {
   };
 
   return (
-    <div className="flex h-full flex-col">
+    // min-h-0 at every level: without it, a long thread makes the flex column
+    // grow past the clipped card and the composer disappears below the fold
+    // (the reported "message box nowhere" bug).
+    <div className="flex h-full min-h-0 flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-line px-4 py-3">
         {chat.userId ? (
@@ -262,7 +269,7 @@ function ChatThread({ chat }: { chat: ChatListItem }) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+      <div ref={messagesRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {loadingThread ? (
           <>
             <div className="flex justify-start"><SkeletonChatRow /></div>
@@ -273,7 +280,6 @@ function ChatThread({ chat }: { chat: ChatListItem }) {
         {messages.map((m) => (
           <MessageBubble key={m.id} message={m} />
         ))}
-        <div ref={bottomRef} />
       </div>
 
       {/* Composer */}
@@ -366,9 +372,9 @@ export default function ChatsWorkspace({ activeChatId }: { activeChatId?: string
 
   return (
     <div className="mx-auto h-[calc(100vh-6.5rem)] max-w-5xl overflow-hidden rounded-2xl border border-line bg-card">
-      <div className="grid h-full md:grid-cols-[300px_1fr]">
+      <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)] md:grid-cols-[300px_minmax(0,1fr)]">
         {/* List pane */}
-        <div className={cn("flex-col border-r border-line", activeChatId ? "hidden md:flex" : "flex")}>
+        <div className={cn("min-h-0 flex-col overflow-hidden border-r border-line", activeChatId ? "hidden md:flex" : "flex")}>
           <div className="border-b border-line p-3">
             <h1 className="px-1 text-heading font-bold text-ink">Chats</h1>
             <input
@@ -424,7 +430,7 @@ export default function ChatsWorkspace({ activeChatId }: { activeChatId?: string
         </div>
 
         {/* Thread pane */}
-        <div className={cn("h-full", activeChatId ? "block" : "hidden md:block")}>
+        <div className={cn("h-full min-h-0 overflow-hidden", activeChatId ? "block" : "hidden md:block")}>
           {activeChatId ? (
             <ChatThread
               key={activeChatId}
