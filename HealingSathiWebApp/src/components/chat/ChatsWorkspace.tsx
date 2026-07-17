@@ -7,6 +7,7 @@ import UserAvatar from "@/components/ui/UserAvatar";
 import Icon from "@/components/ui/Icon";
 import { useAuth } from "@/context/AuthContext";
 import { useChatNotifications } from "@/context/ChatNotificationsContext";
+import { useCall } from "@/context/CallContext";
 import { resourcesApi } from "@/api/resourcesApi";
 import { apiErrorMessage } from "@/api/http";
 import { joinChatRoom } from "@/api/chatSocket";
@@ -139,6 +140,7 @@ function MessageBubble({
 function ChatThread({ chat }: { chat: ChatListItem }) {
   const { isAuthenticated, user } = useAuth();
   const { setActiveChat, markChatRead } = useChatNotifications();
+  const { startCall } = useCall();
   const chatId = chat.id;
 
   const [messages, setMessages] = useState<ChatMessage[]>(isAuthenticated ? [] : DEMO_THREAD);
@@ -273,9 +275,13 @@ function ChatThread({ chat }: { chat: ChatListItem }) {
             <button
               key={icon}
               aria-label={icon === "phone" ? "Voice call" : "Video call"}
-              onClick={() =>
-                window.alert("Audio/video calls arrive on the web in the W5 build phase — the app has them today.")
-              }
+              onClick={() => {
+                if (!isAuthenticated || !chat.userId) {
+                  window.alert("Calls need a real Sathi — sign in and open a conversation with one of your sathis.");
+                  return;
+                }
+                startCall({ id: chat.userId, name: chat.name }, icon === "phone" ? "audio" : "video");
+              }}
               className="flex h-9 w-9 items-center justify-center rounded-full bg-light-purple text-primary hover:opacity-90"
             >
               <Icon name={icon} size={16} />

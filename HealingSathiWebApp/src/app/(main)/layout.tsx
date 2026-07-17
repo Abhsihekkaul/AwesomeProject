@@ -7,6 +7,7 @@ import LeftNav from "@/components/shell/LeftNav";
 import RightRail from "@/components/shell/RightRail";
 import BottomTabs from "@/components/shell/BottomTabs";
 import ChatToast from "@/components/ChatToast";
+import CallOverlay from "@/components/CallOverlay";
 import { useAuth } from "@/context/AuthContext";
 
 /**
@@ -34,8 +35,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen">
       <TopBar />
-      {/* message toasts render above the whole shell — any page */}
+      {/* message toasts + calls render above the whole shell — any page */}
       <ChatToast />
+      <CallOverlay />
       <div className="mx-auto grid max-w-7xl grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_280px]">
         <div className="hidden lg:block">
           <div className="sticky top-14">

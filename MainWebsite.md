@@ -340,7 +340,30 @@ _Same convention as `pendingTask.md`: `[x]` done · `[~]` in progress · `[ ]` p
 Every build session updates this section (and only this section), so the doc above
 stays the stable blueprint while this is the heartbeat._
 
-**Status: W1–W4.5 DONE + W5 pages DONE (2026-07-17). Build green (26 routes), lint 0 errors. REMAINING: WebRTC calls, Google sign-in button, Vercel deploy + domain (see W5 checklist).**
+**Status (2026-07-17, end of session): W1–W5 CODE COMPLETE — including WebRTC
+calls (CallContext + CallOverlay ported, chat call buttons live, same `call:*`
+signaling → web↔phone calls). Build green (26 routes), lint clean.**
+
+### ⚡ PENDING — IN PRIORITY ORDER (start the next session here)
+1. **TEST the web↔phone call live** (code done, not yet exercised end-to-end):
+   both servers running, web signed in as one user, phone as their sathi, ring
+   from the chat header. Note: browsers require HTTPS for mic/camera EXCEPT on
+   localhost — testing from another device on the LAN needs the deploy (item 3)
+   or an https tunnel.
+2. **Run the full §10 sync checklist** phone↔laptop (post/like/message/badge/
+   sathi/call, both directions) and fix whatever it shakes out.
+3. **DEPLOY**: backend to a host (Render/Railway/Fly — it's a plain Express+
+   Socket.io server), then Vercel for `HealingSathiWebApp/` with
+   `NEXT_PUBLIC_API_HOST=<backend URL>`; GoDaddy CNAME `app.healingsathi.com`
+   → Vercel; set backend `CORS_ORIGIN=https://app.healingsathi.com`.
+4. **Google sign-in button** (web OAuth client id → `GOOGLE_CLIENT_IDS` on the
+   backend + `NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID`; wire Google Identity Services
+   into the login page's button — currently explains honestly).
+5. Blocking UI on web profiles (backend ready) · report-post (blocked on the
+   APP backlog A2 endpoint) · accessibility/Lighthouse pass ≥90.
+6. APP-side items living in `pendingTask.md`: shimmer skeletons, chat-photo
+   save-to-camera-roll, and the whole A–E backlog (report post, Apple sign-in,
+   push notifications, cloud media storage).
 
 ### W1 — Foundation + Auth
 - [x] Scaffold `HealingSathiWebApp/` (Next.js 16 + TS + Tailwind v4; folder renamed from npm's lowercase requirement), tokens + light/dark (`@custom-variant dark`, next-themes class mode)
