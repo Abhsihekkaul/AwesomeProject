@@ -340,7 +340,7 @@ _Same convention as `pendingTask.md`: `[x]` done · `[~]` in progress · `[ ]` p
 Every build session updates this section (and only this section), so the doc above
 stays the stable blueprint while this is the heartbeat._
 
-**Status: W1–W4 AND W4.5 (mobile-web) DONE (2026-07-17). Build green (23 routes), lint 0 errors. NEXT: W5 — help/consultants, profile, settings, admin, tips, diary, calls, deploy.**
+**Status: W1–W4.5 DONE + W5 pages DONE (2026-07-17). Build green (26 routes), lint 0 errors. REMAINING: WebRTC calls, Google sign-in button, Vercel deploy + domain (see W5 checklist).**
 
 ### W1 — Foundation + Auth
 - [x] Scaffold `HealingSathiWebApp/` (Next.js 16 + TS + Tailwind v4; folder renamed from npm's lowercase requirement), tokens + light/dark (`@custom-variant dark`, next-themes class mode)
@@ -432,9 +432,31 @@ first-class, not an afterthought._
 - [ ] DoD cross-device check (user): find→request→accept→chat loop web↔phone
 - [ ] Blocking UI (block from profile) — rolls into W5 settings
 
-### W5 — The rest + polish + deploy
-- [ ] Help: consultants, booking, become-a-consultant
-- [ ] Profile (avatar upload) · Settings (all real rows incl. delete account) · Admin queue
-- [ ] Tips · Diary (localStorage) · WebRTC calls (app↔web call verified)
-- [ ] Mobile-web pass (bottom tabs, sheets) · accessibility ≥90 · deploy to Vercel + `app.healingsathi.com`
-- [ ] Final phone↔laptop sync checklist from §10 — all green
+### W5 — The rest + polish + deploy — PAGES DONE, 3 items remain
+- [x] `/help`: consultant directory (rating/tags/fees), **booking modal**
+      (Video/Audio/Chat + date/time/note → real booking + "My bookings" list),
+      `/help/apply` (become-a-consultant form + pending/approved/rejected states)
+- [x] `/profile`: hero w/ PHOTO UPLOAD (📷 badge → compressed → PATCH avatarUrl,
+      remove-photo), condition chips, real Posts/Sathis/Saved counts, My Posts +
+      Saved tabs
+- [x] `/settings` — every row REAL: theme trio, chat-notifications toggle
+      (account-synced), change password (other devices signed out) + change email
+      (inline, password-confirmed), blocked users w/ unblock, ADMIN link for
+      admins, sign out, delete account
+- [x] `/settings/delete-account`: exit-reason chips + anonymous feedback +
+      password + final confirm → full erase, app signed out too
+- [x] `/admin`: review queue — group proposals + consultant applications w/
+      confirm-guarded Approve/Reject (optional reason prompt); backend enforces
+      the role regardless
+- [x] `/tips` (condition filter chips) · `/diary` (device-only localStorage,
+      same privacy contract as the app)
+- [x] **Fullscreen ImageViewer** (user-reported): chat photos AND post-carousel
+      photos now open a real viewer — ← back, ⬇ download, Esc/backdrop closes
+      (was: raw data-URI in a new tab). App-side save-to-camera-roll tracked in
+      pendingTask.md
+- [x] Build green (26 routes) · ESLint 0 errors · every route serves 200
+- [ ] WebRTC calls (CallProvider port + overlay; same `call:*` signaling → app↔web)
+- [ ] Google sign-in button (needs the web OAuth client id — user action)
+- [ ] Deploy: Vercel + `app.healingsathi.com` CNAME + backend `CORS_ORIGIN` +
+      hosted backend URL in `NEXT_PUBLIC_API_HOST`
+- [ ] Final phone↔laptop sync checklist from §10 — all green (user + one session)

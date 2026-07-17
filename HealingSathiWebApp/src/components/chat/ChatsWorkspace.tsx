@@ -14,6 +14,7 @@ import { fileToCompressedDataUri } from "@/lib/compressImage";
 import { timeAgo } from "@/lib/timeAgo";
 import { cn } from "@/lib/cn";
 import { SkeletonChatRow } from "@/components/ui/Skeleton";
+import ImageViewer from "@/components/ui/ImageViewer";
 
 type ChatListItem = {
   id?: string;
@@ -67,7 +68,13 @@ const formatClock = (value?: string | Date) => {
 };
 
 /** One message bubble — text, photo, and/or a tappable shared-post mini card. */
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({
+  message,
+  onImageClick,
+}: {
+  message: ChatMessage;
+  onImageClick?: (src: string) => void;
+}) {
   const shared = message.sharedPost;
   return (
     <div className={cn("flex", message.mine ? "justify-end" : "justify-start")}>
@@ -85,7 +92,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             src={message.image}
             alt="shared photo"
             className="mb-1 max-h-72 w-full cursor-pointer rounded-xl object-contain"
-            onClick={() => window.open(message.image!, "_blank")}
+            onClick={() => onImageClick?.(message.image!)}
           />
         ) : null}
         {shared ? (
@@ -137,6 +144,7 @@ function ChatThread({ chat }: { chat: ChatListItem }) {
   const [messages, setMessages] = useState<ChatMessage[]>(isAuthenticated ? [] : DEMO_THREAD);
   const [loadingThread, setLoadingThread] = useState(isAuthenticated);
   const [draft, setDraft] = useState("");
+  const [viewerSrc, setViewerSrc] = useState<string | null>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -286,9 +294,12 @@ function ChatThread({ chat }: { chat: ChatListItem }) {
           </>
         ) : null}
         {messages.map((m) => (
-          <MessageBubble key={m.id} message={m} />
+          <MessageBubble key={m.id} message={m} onImageClick={setViewerSrc} />
         ))}
       </div>
+
+      {/* Fullscreen viewer: back + download, Esc/backdrop closes */}
+      <ImageViewer src={viewerSrc} onClose={() => setViewerSrc(null)} />
 
       {/* Composer */}
       <div className="flex items-end gap-2 border-t border-line px-4 py-3">

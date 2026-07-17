@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/cn";
+import ImageViewer from "@/components/ui/ImageViewer";
 
 /**
  * The app's ImageCarousel, web edition: one photo renders plainly; several get
@@ -15,6 +16,7 @@ export default function ImageCarousel({
   className?: string;
 }) {
   const [index, setIndex] = useState(0);
+  const [viewerSrc, setViewerSrc] = useState<string | null>(null);
   if (images.length === 0) return null;
 
   const go = (delta: number) =>
@@ -26,8 +28,14 @@ export default function ImageCarousel({
       <img
         src={images[index]}
         alt={`photo ${index + 1} of ${images.length}`}
-        className="max-h-[480px] w-full object-contain"
+        className="max-h-[480px] w-full cursor-zoom-in object-contain"
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          setViewerSrc(images[index]);
+        }}
       />
+      <ImageViewer src={viewerSrc} onClose={() => setViewerSrc(null)} />
       {images.length > 1 ? (
         <>
           {index > 0 ? (

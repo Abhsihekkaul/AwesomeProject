@@ -348,6 +348,10 @@ all screens live-wired, demo-mode contract in place.
 - [ ] **Shimmer loading states in the APP** (requested 17/07/26, already live on the
       web): skeleton cards w/ light sweep on feed/chats/groups/profile while data
       loads — mirror `HealingSathiWebApp/src/components/ui/Skeleton.tsx`
+- [ ] **Chat photo viewer: add a DOWNLOAD/save button in the APP** (reported
+      17/07/26; the web viewer now has back + ⬇ download). The app's fullscreen
+      viewer (ChatRoomScreen) only closes on tap — saving to the camera roll needs
+      `@react-native-camera-roll/camera-roll` + a native rebuild
 - [ ] Commit everything to git
 - [ ] SMTP creds in `HealingSathiBackend/.env` (Phase 4 §8) and Google OAuth client ids
       (`GoogleSignInSetup.md`) remain outstanding user actions
