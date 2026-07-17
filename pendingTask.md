@@ -575,7 +575,7 @@ buttons), not guessed. Grouped by how much it blocks a public launch._
 
 ## Phase 9 — THE WEB APP (initiated 17/07/26) — the next big thing
 - [x] **`MainWebsite.md`** written (repo root): complete architecture + design for
-      `HealingSathiWeb/` — a full WORKING web app at app.healingsathi.com (like
+      `HealingSathiWebApp/` — a full WORKING web app at app.healingsathi.com (like
       facebook.com, NOT the marketing brochure at `HealingSathiWebsite/`).
       Covers: stack (Next.js + Tailwind v4 + React Query + socket.io-client),
       token-for-token design system from the app, Facebook-shaped 3-column shell,

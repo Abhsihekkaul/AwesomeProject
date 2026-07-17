@@ -3,14 +3,14 @@
 **One product, three doors.** iPhone app, Android app, and now a full working
 website — the same account, the same feed, the same chats, the same everything.
 Like Facebook: `facebook.com` isn't a brochure, it IS Facebook. This document is
-the complete architecture + design for `HealingSathiWeb` — read it, approve it,
+the complete architecture + design for `HealingSathiWebApp` — read it, approve it,
 and building starts.
 
 > **Not the marketing site.** `HealingSathiWebsite/` (the existing Next.js
 > brochure with the waitlist form) stays exactly what it is — the front door at
 > `healingsathi.com`. This document describes a NEW project: the logged-in
 > product, living at **`app.healingsathi.com`**, in a new folder
-> **`HealingSathiWeb/`**. The marketing site's "Open HealingSathi" button will
+> **`HealingSathiWebApp/`**. The marketing site's "Open HealingSathi" button will
 > simply link to it. (Same split Facebook uses: about.facebook.com vs
 > facebook.com.)
 
@@ -22,7 +22,7 @@ and building starts.
 flowchart LR
     subgraph Clients
       A[📱 React Native app\niOS + Android]
-      W[💻 HealingSathiWeb\nNext.js at app.healingsathi.com]
+      W[💻 HealingSathiWebApp\nNext.js at app.healingsathi.com]
     end
     subgraph One backend - already built
       B[Express REST API\nHealingSathiBackend]
@@ -51,12 +51,13 @@ comment notification back on your phone — it's one database, so sync is automa
 
 | Decision | Choice | Why |
 |---|---|---|
-| Folder | `HealingSathiWeb/` at repo root | Sibling of `HealingSathiBackend/` and `HealingSathiWebsite/`; the repo root is the RN app so it can't live there |
+| Folder | `HealingSathiWebApp/` at repo root | Sibling of `HealingSathiBackend/` and `HealingSathiWebsite/`; the repo root is the RN app so it can't live there |
 | Domain | `app.healingsathi.com` | Marketing keeps `healingsathi.com`; clean cookie/origin separation |
 | Framework | **Next.js (App Router) + TypeScript** | Same family as the marketing site (shared knowledge), file-based routing gives every post/profile/group a real URL |
 | Rendering | Client-side data fetching behind auth (no SSR of private data) | The feed is personal and JWT-authed — SSR adds complexity for zero SEO gain (private content shouldn't be indexed anyway) |
 | Styling | **Tailwind v4** + design tokens copied from the app | Marketing site already proved this setup; tokens below |
-| Data fetching | **TanStack Query (React Query)** | Gives the web the same "refetch on focus + background polling" behavior `useLiveOrDemo` gives the app, plus caching and optimistic updates for free |
+| Data fetching | **TanStack Query (React Query)** | Gives the web the same "refetch 
+on focus + background polling" behavior `useLiveOrDemo` gives the app, plus caching and optimistic updates for free |
 | API client | `axios` instance ported from `src/api/http.ts` | The interceptor logic (attach token → 401 → single-flight refresh → retry) is already written and battle-tested; it ports almost line-for-line |
 | Realtime | `socket.io-client` | Identical events the app already uses (`message:new`, `chat:updated`, `call:*`) |
 | Auth/session state | Small `AuthProvider` (React context), tokens in `localStorage` | Mirrors the app's `tokenStorage` + `AuthContext`; upgrade path to httpOnly cookies noted in §9 |
@@ -247,7 +248,7 @@ browser notifications cover the open-tab case today).
 1. **HTTP client** — port `src/api/http.ts` + `resourcesApi.ts` + `authApi.ts`
    nearly verbatim (they're plain axios/TS, nothing React-Native about them).
    `tokenStorage` swaps AsyncStorage for `localStorage`. One shared folder
-   `HealingSathiWeb/src/api/` that intentionally mirrors the app's file names.
+   `HealingSathiWebApp/src/api/` that intentionally mirrors the app's file names.
 2. **Realtime** — port `appSocket.ts`/`chatSocket.ts` as-is (socket.io-client is
    isomorphic). The web `ChatNotificationsProvider` is the same state machine as
    the app's, plus: update `document.title` with the unread count, and fire a
@@ -266,7 +267,7 @@ browser notifications cover the open-tab case today).
 ## 8. Project structure
 
 ```
-HealingSathiWeb/
+HealingSathiWebApp/
 ├── src/
 │   ├── app/                      # Next.js App Router pages (the page map above)
 │   │   ├── (auth)/login, signup, ...      # public routes
@@ -330,3 +331,50 @@ reverse of each).
 2. **Google web client id** — same Cloud Console project as
    `GoogleSignInSetup.md`, add an "OAuth Web application" id when you do that task.
 3. **Go/no-go on this document.** Say "go" and W1 starts.
+
+---
+
+## 12. LIVE BUILD TRACKER — updated as the work happens
+
+_Same convention as `pendingTask.md`: `[x]` done · `[~]` in progress · `[ ]` pending.
+Every build session updates this section (and only this section), so the doc above
+stays the stable blueprint while this is the heartbeat._
+
+**Status: NOT STARTED — awaiting go-ahead.**
+
+### W1 — Foundation + Auth
+- [ ] Scaffold `HealingSathiWebApp/` (Next.js + TS + Tailwind v4), tokens + light/dark theme
+- [ ] Port `src/api/*` (http interceptor, authApi, resourcesApi, tokenStorage→localStorage, sockets)
+- [ ] AuthProvider + route guard + demo-mode contract
+- [ ] Login / Signup / Email-code / Forgot-password pages (+ Google button, lazy until web client id exists)
+- [ ] App shell: top bar (search, bells, avatar) + left nav + right rail, responsive skeleton
+- [ ] Backend env: web origins added to `CORS_ORIGIN`
+- [ ] DoD check: real sign-in on localhost, shell in both themes
+
+### W2 — Feed & posts
+- [ ] `/feed`: PostCard, carousel, reactions, save, honest empty state
+- [ ] Composer modal: drag-drop ≤10 photos (canvas compression), destination chips, content warning
+- [ ] `/post/[id]`: full thread (replies, comment likes, delete cascade), real share URL
+- [ ] Edit/Delete own posts (`/post/[id]/edit`)
+- [ ] DoD check: post from web w/ photos → visible on the phone
+
+### W3 — Chat & notifications
+- [ ] Two-pane `/chats` + thread: photos, shared-post cards, Enter-to-send
+- [ ] Unread badges: left nav + tab title `(N)`; zero-on-open both directions
+- [ ] Toast popup + browser `Notification` when tab hidden; chat-notifications toggle
+- [ ] `/notifications` page (tabs, sathi request cards, mark all read)
+- [ ] DoD check: phone↔web live messaging with badges behaving on both
+
+### W4 — People & groups
+- [ ] Top-bar + `/search` (people w/ relation status, groups, consultants)
+- [ ] `/user/[id]` public profiles, sathi requests, blocking
+- [ ] `/groups` + `/groups/[id]` (Posts/Members/About, join, request group)
+- [ ] ShareDialog: quick row + multi-select picker + copy-link
+- [ ] DoD check: find→request→accept→chat loop across web and phone
+
+### W5 — The rest + polish + deploy
+- [ ] Help: consultants, booking, become-a-consultant
+- [ ] Profile (avatar upload) · Settings (all real rows incl. delete account) · Admin queue
+- [ ] Tips · Diary (localStorage) · WebRTC calls (app↔web call verified)
+- [ ] Mobile-web pass (bottom tabs, sheets) · accessibility ≥90 · deploy to Vercel + `app.healingsathi.com`
+- [ ] Final phone↔laptop sync checklist from §10 — all green
