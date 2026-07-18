@@ -340,9 +340,11 @@ _Same convention as `pendingTask.md`: `[x]` done · `[~]` in progress · `[ ]` p
 Every build session updates this section (and only this section), so the doc above
 stays the stable blueprint while this is the heartbeat._
 
-**Status (2026-07-17, end of session): W1–W5 CODE COMPLETE — including WebRTC
-calls (CallContext + CallOverlay ported, chat call buttons live, same `call:*`
-signaling → web↔phone calls). Build green (26 routes), lint clean.**
+**Status (2026-07-18, end of session): W1–W5 CODE COMPLETE. This session:
+Google Identity Services wired into the login button (dormant until the web
+OAuth client id exists), block/unblock UI on profiles, Lighthouse accessibility
+100 (login/signup/tips), pre-existing lint errors in the call files fixed.
+Build green (26 routes), lint 0 errors.**
 
 ### ⚡ PENDING — IN PRIORITY ORDER (start the next session here)
 1. **TEST the web↔phone call live** (code done, not yet exercised end-to-end):
@@ -356,11 +358,11 @@ signaling → web↔phone calls). Build green (26 routes), lint clean.**
    Socket.io server), then Vercel for `HealingSathiWebApp/` with
    `NEXT_PUBLIC_API_HOST=<backend URL>`; GoDaddy CNAME `app.healingsathi.com`
    → Vercel; set backend `CORS_ORIGIN=https://app.healingsathi.com`.
-4. **Google sign-in button** (web OAuth client id → `GOOGLE_CLIENT_IDS` on the
-   backend + `NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID`; wire Google Identity Services
-   into the login page's button — currently explains honestly).
-5. Blocking UI on web profiles (backend ready) · report-post (blocked on the
-   APP backlog A2 endpoint) · accessibility/Lighthouse pass ≥90.
+4. **Google sign-in — USER ACTION ONLY**: the login page now renders the real
+   GIS button the moment `NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID` exists. Follow
+   `GoogleSignInSetup.md` (updated with the web-app steps: Authorized
+   JavaScript origins + the web env var + backend `GOOGLE_CLIENT_IDS`).
+5. Report-post (still blocked on the APP backlog A2 endpoint).
 6. APP-side items living in `pendingTask.md`: shimmer skeletons, chat-photo
    save-to-camera-roll, and the whole A–E backlog (report post, Apple sign-in,
    push notifications, cloud media storage).
@@ -453,7 +455,9 @@ first-class, not an afterthought._
       copy-link (REAL post URLs), native share sheet; bottom-sheet on phones —
       wired into every PostCard's share button
 - [ ] DoD cross-device check (user): find→request→accept→chat loop web↔phone
-- [ ] Blocking UI (block from profile) — rolls into W5 settings
+- [x] Blocking UI: "Block {name}" on `/user/[id]` w/ consequence-explaining
+      confirm → blocked card (backend 404s the profile from then on) w/ instant
+      Unblock; Settings → Blocked users already listed/unblocked them
 
 ### W5 — The rest + polish + deploy — PAGES DONE, 3 items remain
 - [x] `/help`: consultant directory (rating/tags/fees), **booking modal**
@@ -478,8 +482,18 @@ first-class, not an afterthought._
       (was: raw data-URI in a new tab). App-side save-to-camera-roll tracked in
       pendingTask.md
 - [x] Build green (26 routes) · ESLint 0 errors · every route serves 200
-- [ ] WebRTC calls (CallProvider port + overlay; same `call:*` signaling → app↔web)
-- [ ] Google sign-in button (needs the web OAuth client id — user action)
+- [x] WebRTC calls (CallProvider port + overlay; same `call:*` signaling → app↔web)
+      — live end-to-end test still pending (PENDING item 1)
+- [x] Google sign-in button: real Google Identity Services wiring
+      (`GoogleSignInButton` — official button, theme-aware, credential →
+      `POST /auth/google`); renders the honest explainer until the web OAuth
+      client id env var exists (user action, GoogleSignInSetup.md)
+- [x] Accessibility: Lighthouse a11y 100 on login/signup/tips (was 98 — missing
+      `<main>` landmark on the auth shell, fixed); icons aria-hidden, imgs
+      have alt, icon-only controls labeled — from earlier sessions
+- [x] Lint truly 0 errors: fixed pre-existing errors in CallContext/CallOverlay
+      (ref write during render → setter-synced ref, 5 `any` payloads typed,
+      timer setState-in-effect → self-contained `CallTimer`)
 - [ ] Deploy: Vercel + `app.healingsathi.com` CNAME + backend `CORS_ORIGIN` +
       hosted backend URL in `NEXT_PUBLIC_API_HOST`
 - [ ] Final phone↔laptop sync checklist from §10 — all green (user + one session)

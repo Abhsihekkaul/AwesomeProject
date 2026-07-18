@@ -26,18 +26,20 @@ function Video({ stream, muted, className }: { stream: MediaStream | null; muted
  * can be rung on any page: incoming accept/decline, remote video fullscreen,
  * local preview PiP, mute / video / hang-up controls, live timer.
  */
-export default function CallOverlay() {
-  const { call, localStream, remoteStream, muted, videoEnabled, acceptCall, declineCall, hangUp, toggleMute, toggleVideo } = useCall();
+/** Mounted only while the call is active, so every call's timer starts at 0. */
+function CallTimer() {
   const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
-    if (call?.status !== "active") {
-      setSeconds(0);
-      return undefined;
-    }
     const interval = setInterval(() => setSeconds((s) => s + 1), 1000);
     return () => clearInterval(interval);
-  }, [call?.status]);
+  }, []);
+
+  return <>{formatDuration(seconds)}</>;
+}
+
+export default function CallOverlay() {
+  const { call, localStream, remoteStream, muted, videoEnabled, acceptCall, declineCall, hangUp, toggleMute, toggleVideo } = useCall();
 
   if (!call) return null;
 
@@ -59,7 +61,7 @@ export default function CallOverlay() {
             ? `Incoming ${call.kind} call...`
             : call.status === "outgoing"
               ? "Ringing..."
-              : formatDuration(seconds)}
+              : <CallTimer />}
         </p>
       </div>
 

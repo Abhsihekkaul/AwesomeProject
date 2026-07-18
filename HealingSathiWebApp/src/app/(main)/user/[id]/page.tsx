@@ -35,8 +35,12 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
   const { isAuthenticated } = useAuth();
   const [tab, setTab] = useState<"Posts" | "Liked">("Posts");
   const [requested, setRequested] = useState(false);
+  // Set the moment a block succeeds — the backend 404s this profile from then on
+  // (blocking is never confirmable to the other side), so we keep the name to
+  // render the blocked card instead of "Profile unavailable".
+  const [blockedName, setBlockedName] = useState<string | null>(null);
 
-  const { data: profile, loading, isLive } = useLiveData<PublicProfile | null>(
+  const { data: profile, loading, isLive, refresh } = useLiveData<PublicProfile | null>(
     ["user-profile", id],
     async () => {
       const fetched = await resourcesApi.getUserProfile(id);
@@ -57,6 +61,33 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
       <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card p-8 text-center">
         <h1 className="text-body font-bold text-ink">Profiles are for members</h1>
         <p className="mt-2 text-step text-muted">Sign in to see who&apos;s behind a post.</p>
+      </div>
+    );
+  }
+
+  if (blockedName) {
+    const unblock = async () => {
+      try {
+        await resourcesApi.unblockUser(id);
+        setBlockedName(null);
+        refresh();
+      } catch (err) {
+        window.alert(apiErrorMessage(err, "Couldn't unblock"));
+      }
+    };
+    return (
+      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card p-8 text-center">
+        <h1 className="text-body font-bold text-ink">{blockedName} is blocked</h1>
+        <p className="mt-2 text-step text-muted">
+          They can&apos;t message you or send you sathi requests, and neither of you sees the
+          other in search. Your block list lives in Settings → Blocked users.
+        </p>
+        <button
+          onClick={unblock}
+          className="mt-4 rounded-xl border border-primary px-5 py-2.5 text-step font-semibold text-primary hover:bg-light-purple"
+        >
+          Unblock
+        </button>
       </div>
     );
   }
@@ -105,6 +136,19 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
     }
   };
 
+  const block = async () => {
+    const ok = window.confirm(
+      `Block ${user.name}?\n\nThey won't be able to message you or send you sathi requests, and an existing sathi connection is removed. They won't be notified. You can unblock them anytime in Settings → Blocked users.`,
+    );
+    if (!ok) return;
+    try {
+      await resourcesApi.blockUser(user.id);
+      setBlockedName(user.name);
+    } catch (err) {
+      window.alert(apiErrorMessage(err, "Couldn't block"));
+    }
+  };
+
   const shown = tab === "Posts" ? profile.posts : profile.likedPosts;
 
   return (
@@ -150,6 +194,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
               </button>
             )}
           </div>
+        ) : null}
+        {user.relation !== "self" ? (
+          <button
+            onClick={block}
+            className="mt-3 text-caption font-medium text-muted hover:text-danger hover:underline"
+          >
+            Block {user.name.split(" ")[0]}
+          </button>
         ) : null}
       </div>
 

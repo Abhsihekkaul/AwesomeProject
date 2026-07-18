@@ -1,9 +1,10 @@
 # Google Sign-In — one-time setup (10 minutes)
 
-All the code is already wired (app button → native Google picker → id token →
-`POST /api/auth/google` → account created/signed in). It stays dormant until you
-create OAuth client IDs and paste them in — these are tied to YOUR Google account,
-so only you can do this part.
+All the code is already wired — app AND web app (app button → native Google
+picker → id token → `POST /api/auth/google` → account created/signed in; web
+login page → official Google Identity Services button → same endpoint). It stays
+dormant until you create OAuth client IDs and paste them in — these are tied to
+YOUR Google account, so only you can do this part.
 
 ## 1. Google Cloud console
 
@@ -14,7 +15,7 @@ so only you can do this part.
 
    | Type | Fields | Used by |
    |---|---|---|
-   | **Web application** | no redirect URIs needed | app's `webClientId` **and** the backend's token audience |
+   | **Web application** | no redirect URIs; **Authorized JavaScript origins**: `http://localhost:3000` + `https://app.healingsathi.com` (the web app's button won't render without them) | app's `webClientId`, the WEB APP's login button, **and** the backend's token audience |
    | **iOS** | Bundle ID: `org.reactjs.native.example.AwesomeProject` (check in Xcode → target → General) | iOS native flow |
    | **Android** | Package name: `com.awesomeproject` (see `android/app/build.gradle`) + SHA-1 | Android native flow |
 
@@ -29,6 +30,10 @@ so only you can do this part.
   ```ts
   export const GOOGLE_WEB_CLIENT_ID = "1234…xyz.apps.googleusercontent.com";  // the WEB one
   export const GOOGLE_IOS_CLIENT_ID = "1234…abc.apps.googleusercontent.com";  // the iOS one
+  ```
+- **Web app** — `HealingSathiWebApp/.env.local` (and the same var in Vercel for prod):
+  ```
+  NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID=1234…xyz.apps.googleusercontent.com   # the WEB one again
   ```
 - **Backend** — `HealingSathiBackend/.env`:
   ```

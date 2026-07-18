@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Field from "@/components/ui/Field";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { useAuth } from "@/context/AuthContext";
-import { GOOGLE_WEB_CLIENT_ID } from "@/api/config";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,17 +29,6 @@ export default function LoginPage() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleGoogle = () => {
-    // Wired for real in W5 via Google Identity Services; until the web client id
-    // exists (GoogleSignInSetup.md) the button explains instead of breaking —
-    // the same honest pattern the app uses.
-    setError(
-      GOOGLE_WEB_CLIENT_ID
-        ? "Google sign-in arrives with the W5 polish pass."
-        : "Google sign-in needs the web OAuth client id first — see GoogleSignInSetup.md.",
-    );
   };
 
   const handleDemo = () => {
@@ -90,9 +79,7 @@ export default function LoginPage() {
       </div>
 
       <div className="space-y-3">
-        <Button variant="outline" onClick={handleGoogle}>
-          Continue with Google
-        </Button>
+        <GoogleSignInButton onError={setError} />
         <Link href="/login/code" className="block">
           <Button variant="outline">Email me a sign-in code</Button>
         </Link>

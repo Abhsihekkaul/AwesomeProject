@@ -87,7 +87,7 @@ const startRinger = () => {
 export const CallProvider = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
 
-  const [call, setCall] = useState<CallState | null>(null);
+  const [call, setCallState] = useState<CallState | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [muted, setMuted] = useState(false);
@@ -99,7 +99,13 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
   const pendingIceRef = useRef<RTCIceCandidateInit[]>([]);
   const ringerStopRef = useRef<(() => void) | null>(null);
   const callRef = useRef<CallState | null>(null);
-  callRef.current = call;
+
+  // Ref and state move together in the same tick: socket handlers read the ref
+  // (stale-closure-safe), render reads the state.
+  const setCall = useCallback((next: CallState | null) => {
+    callRef.current = next;
+    setCallState(next);
+  }, []);
 
   const cleanup = useCallback(() => {
     try {
@@ -119,7 +125,7 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
     setMuted(false);
     setVideoEnabled(true);
     setCall(null);
-  }, []);
+  }, [setCall]);
 
   const getMedia = useCallback(async (kind: CallKind) => {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -190,7 +196,7 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
         );
       }
     },
-    [cleanup, createPeerConnection, getMedia],
+    [cleanup, createPeerConnection, getMedia, setCall],
   );
 
   const acceptCall = useCallback(async () => {
@@ -223,7 +229,7 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
         `Couldn't join the call: ${err instanceof Error ? err.message : "check mic/camera permissions"}`,
       );
     }
-  }, [cleanup, createPeerConnection, drainPendingIce, getMedia]);
+  }, [cleanup, createPeerConnection, drainPendingIce, getMedia, setCall]);
 
   const declineCall = useCallback(() => {
     const current = callRef.current;
@@ -270,12 +276,18 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
       const socket = await connectAppSocket();
       if (!socket || disposed) return;
 
-      const on = (event: string, handler: (payload: any) => void) => {
-        handlers[event] = handler;
-        socket.on(event, handler);
+      const on = <T,>(event: string, handler: (payload: T) => void) => {
+        handlers[event] = handler as (payload: never) => void;
+        socket.on(event, handler as (...args: unknown[]) => void);
       };
 
-      on("call:incoming", (payload: any) => {
+      on<{
+        callId: string;
+        fromUserId: string;
+        fromName?: string;
+        kind?: string;
+        offer: RTCSessionDescriptionInit;
+      }>("call:incoming", (payload) => {
         if (callRef.current) {
           socket.emit("call:decline", { toUserId: payload.fromUserId, callId: payload.callId });
           return;
@@ -292,7 +304,7 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
         ringerStopRef.current = startRinger();
       });
 
-      on("call:answered", async (payload: any) => {
+      on<{ callId: string; answer: RTCSessionDescriptionInit }>("call:answered", async (payload) => {
         const current = callRef.current;
         if (!current || payload.callId !== current.callId || !pcRef.current) return;
         try {
@@ -304,7 +316,7 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
         }
       });
 
-      on("call:ice", async (payload: any) => {
+      on<{ callId: string; candidate: RTCIceCandidateInit }>("call:ice", async (payload) => {
         if (payload.callId !== callRef.current?.callId) return;
         const pc = pcRef.current;
         if (pc?.remoteDescription) {
@@ -324,7 +336,7 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
         ["call:unavailable", "They're not reachable right now — try a message instead."],
       ];
       for (const [event, notice] of endEvents) {
-        on(event, (payload: any) => {
+        on<{ callId?: string } | undefined>(event, (payload) => {
           if (payload?.callId !== callRef.current?.callId) return;
           cleanup();
           if (notice) window.alert(notice);
@@ -340,7 +352,7 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
       }
       cleanup();
     };
-  }, [isAuthenticated, cleanup, drainPendingIce, hangUp]);
+  }, [isAuthenticated, cleanup, drainPendingIce, hangUp, setCall]);
 
   const value = useMemo(
     () => ({
