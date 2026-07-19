@@ -20,12 +20,14 @@ import { useTheme, ThemeMode } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
 import imagePath from "../../constant/imagePath";
+import { useT } from "../../i18n";
 
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
   const { colors, mode, setMode } = useTheme();
   const { signOut, user, isAuthenticated } = useAuth();
   const styles = makeStyles(colors);
+  const t = useT();
 
   const [publicProfile, setPublicProfile] = useState(false);
   const [showConditions, setShowConditions] = useState(true);
@@ -131,9 +133,9 @@ export default function SettingsScreen() {
   };
 
   const modeOptions: { key: ThemeMode; label: string }[] = [
-    { key: "system", label: "System" },
-    { key: "light", label: "Light" },
-    { key: "dark", label: "Dark" },
+    { key: "system", label: t("themeSystem") },
+    { key: "light", label: t("themeLight") },
+    { key: "dark", label: t("themeDark") },
   ];
 
   return (
@@ -141,24 +143,24 @@ export default function SettingsScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
           <BackButton />
-          <Text style={styles.headerTitle}>Settings</Text>
+          <Text style={styles.headerTitle}>{t("settings")}</Text>
         </View>
 
         {/* ACCOUNT */}
 
         <View style={styles.card}>
-          <Text style={styles.section}>ACCOUNT</Text>
-          <NavRow title="Edit profile" subtitle="Name, avatar color, conditions" screen="EditProfile" />
-          <NavRow title="Change email" subtitle={user?.email ?? "Sign in to manage your email"} screen="ChangeEmail" />
-          <NavRow title="Change password" subtitle="Update your account password" screen="ChangePassword" />
-          <NavRow title="Blocked users" subtitle="Manage who can't reach you" screen="BlockedUsers" />
-          <NavRow title="Language" subtitle="App language" screen="Language" needsAccount={false} last />
+          <Text style={styles.section}>{t("sectionAccount")}</Text>
+          <NavRow title={t("editProfile")} subtitle={t("editProfileHint")} screen="EditProfile" />
+          <NavRow title={t("changeEmail")} subtitle={user?.email ?? "Sign in to manage your email"} screen="ChangeEmail" />
+          <NavRow title={t("changePassword")} subtitle={t("changePasswordHint")} screen="ChangePassword" />
+          <NavRow title={t("blockedUsers")} subtitle={t("blockedUsersHint")} screen="BlockedUsers" />
+          <NavRow title={t("language")} subtitle={t("languageHint")} screen="Language" needsAccount={false} last />
         </View>
 
         {/* ADMIN — only rendered for superusers (role "admin"); the backend enforces it too */}
         {user?.role === "admin" ? (
           <View style={styles.card}>
-            <Text style={styles.section}>ADMIN</Text>
+            <Text style={styles.section}>{t("sectionAdmin")}</Text>
             <NavRow
               title="Review queue"
               subtitle="Approve group proposals & consultant applications"
@@ -171,7 +173,7 @@ export default function SettingsScreen() {
         {/* APPEARANCE */}
 
         <View style={styles.card}>
-          <Text style={styles.section}>APPEARANCE</Text>
+          <Text style={styles.section}>{t("sectionAppearance")}</Text>
 
           <View style={styles.modeRow}>
             {modeOptions.map((opt) => {
@@ -245,12 +247,12 @@ export default function SettingsScreen() {
 
         <View style={styles.card}>
           <Text style={styles.section}>
-            NOTIFICATIONS
+            {t("sectionNotifications")}
           </Text>
 
           <SettingRow
-            title="Chat messages"
-            subtitle="Popups & alerts when someone messages you"
+            title={t("chatMessages")}
+            subtitle={t("chatMessagesHint")}
             value={notificationsEnabled}
             onChange={setNotificationsEnabled}
           />
@@ -322,11 +324,11 @@ export default function SettingsScreen() {
 
         {/* Sign out / danger zone */}
         <Pressable style={styles.signOutBtn} onPress={handleSignOut}>
-          <Text style={styles.signOutText}>Sign Out</Text>
+          <Text style={styles.signOutText}>{t("signOut")}</Text>
         </Pressable>
 
         <Pressable onPress={handleDeleteAccount} hitSlop={8}>
-          <Text style={styles.deleteText}>Delete my account</Text>
+          <Text style={styles.deleteText}>{t("deleteMyAccount")}</Text>
         </Pressable>
 
         <View style={{ height: moderateVerticalScale(40) }} />

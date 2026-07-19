@@ -6,6 +6,8 @@ export type ApiUser = {
   name: string;
   avatarColor: string;
   avatarUrl?: string | null;
+  /** Profile cover/banner photo (base64 data-URI). */
+  coverUrl?: string | null;
   conditions?: string[];
   /** "admin" unlocks the Settings → Admin review queue. */
   role?: "member" | "admin";
@@ -34,6 +36,8 @@ export const authApi = {
     conditions?: string[];
     /** Profile photo as a base64 data-URI; null removes it. */
     avatarUrl?: string | null;
+    /** Cover/banner photo as a base64 data-URI; null removes it. */
+    coverUrl?: string | null;
     notifyOnMessages?: boolean;
   }): Promise<ApiUser> => (await http.patch("/auth/me", patch)).data.user,
 

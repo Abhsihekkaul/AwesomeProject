@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import PostCard, { type Post } from "@/components/PostCard";
 import Composer from "@/components/Composer";
+import DiyaBar from "@/components/DiyaBar";
 import UserAvatar from "@/components/ui/UserAvatar";
 import Icon from "@/components/ui/Icon";
 import { SkeletonPostCard } from "@/components/ui/Skeleton";
@@ -36,10 +37,13 @@ export default function FeedPage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
+      {/* Diya — the daily check-in ring bar (DiyaFeature.md) */}
+      <DiyaBar />
+
       {/* Composer strip — clicking it opens the full composer */}
       <button
         onClick={() => setComposerOpen(true)}
-        className="flex w-full items-center gap-3 rounded-2xl border border-line bg-card p-4 text-left transition-shadow hover:shadow-sm"
+        className="flex w-full items-center gap-3 rounded-2xl border border-line bg-card p-4 text-left shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift"
       >
         <UserAvatar name={user?.name ?? "Demo"} src={user?.avatarUrl} size={40} />
         <span className="flex-1 rounded-full bg-light-blue px-4 py-2.5 text-step text-muted">
@@ -65,7 +69,7 @@ export default function FeedPage() {
       ) : null}
 
       {isLive && !loading && posts.length === 0 ? (
-        <div className="rounded-2xl border border-line bg-card p-8 text-center">
+        <div className="rounded-2xl border border-line bg-card shadow-soft p-8 text-center">
           <h2 className="text-body font-bold text-ink">Your stream is quiet — for now</h2>
           <p className="mt-2 text-step text-muted">
             The feed fills with your posts, your sathis&apos; posts and your groups&apos;

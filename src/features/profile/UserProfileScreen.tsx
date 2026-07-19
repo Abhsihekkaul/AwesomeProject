@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import {
   Alert,
+  Image,
   LayoutAnimation,
   Pressable,
   ScrollView,
@@ -26,10 +27,14 @@ type ProfileUser = {
   id: string;
   name: string;
   avatarColor: string;
+  avatarUrl?: string | null;
+  coverUrl?: string | null;
   conditions: string[];
   memberSince: string;
   sathiCount: number;
   relation: "self" | "sathi" | "pending" | "none";
+  healingPoints?: number;
+  badge?: { level: number; name: string; icon: string };
 };
 
 const initialsOf = (name: string) =>
@@ -138,14 +143,29 @@ export default function UserProfileScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Cover photo (when they've set one) */}
+        {profile?.coverUrl ? (
+          <Image source={{ uri: profile.coverUrl }} style={styles.coverImage} />
+        ) : null}
+
         {/* Identity */}
-        <View style={styles.identity}>
-          <UserAvatar initials={initialsOf(name)} size={64} />
+        <View style={[styles.identity, profile?.coverUrl ? styles.identityOverlap : null]}>
+          <UserAvatar initials={initialsOf(name)} uri={profile?.avatarUrl} size={64} />
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.tenure}>
             {profile ? memberSinceLabel(profile.memberSince) : " "}
             {profile ? ` · ${profile.sathiCount} sathi${profile.sathiCount === 1 ? "" : "s"}` : ""}
           </Text>
+
+          {/* Healing Points badge — the circle chases better health together */}
+          {profile?.badge ? (
+            <View style={styles.badgePill}>
+              <Text style={styles.badgePillText}>
+                {profile.badge.icon} {profile.badge.name} · Level {profile.badge.level} · ✨{" "}
+                {profile.healingPoints ?? 0} pts
+              </Text>
+            </View>
+          ) : null}
 
           {profile && profile.conditions.length > 0 ? (
             <View style={styles.conditionsWrap}>
@@ -232,6 +252,19 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       alignItems: "center",
       paddingVertical: moderateVerticalScale(16),
     },
+    coverImage: {
+      width: "100%",
+      height: moderateVerticalScale(110),
+      borderRadius: radius.md,
+      resizeMode: "cover",
+      marginTop: moderateVerticalScale(6),
+    },
+    // Pulls the avatar up over the cover's bottom edge
+    identityOverlap: {
+      marginTop: -moderateVerticalScale(34),
+      paddingVertical: 0,
+      paddingBottom: moderateVerticalScale(16),
+    },
     name: {
       fontSize: TextStyles.title,
       fontWeight: "700",
@@ -242,6 +275,18 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       fontSize: TextStyles.caption,
       color: colors.mutedText,
       marginTop: moderateVerticalScale(4),
+    },
+    badgePill: {
+      backgroundColor: colors.lightPurple,
+      borderRadius: radius.pill,
+      paddingHorizontal: moderateScale(12),
+      paddingVertical: moderateVerticalScale(4),
+      marginTop: moderateVerticalScale(8),
+    },
+    badgePillText: {
+      fontSize: TextStyles.caption,
+      fontWeight: "700",
+      color: colors.primary,
     },
     conditionsWrap: {
       flexDirection: "row",

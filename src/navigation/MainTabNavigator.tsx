@@ -27,15 +27,16 @@ import imagePath from "../constant/imagePath";
 import { TextStyles } from "../theme/typography";
 import { useTheme } from "../theme/ThemeContext";
 import { useChatNotifications } from "../context/ChatNotificationsContext";
+import { useT, type StringKey } from "../i18n";
 
 const TAB_BAR_HEIGHT = moderateVerticalScale(70);
 
-const tabs = [
-  { key: "Home", label: "Home", icon: imagePath.HomeIcon, component: HomeScreen },
-  { key: "Groups", label: "Groups", icon: imagePath.GroupIcon, component: GroupsScreen },
-  { key: "Chats", label: "Chats", icon: imagePath.ChatIcon, component: ChatsScreen },
-  { key: "Help", label: "Help", icon: imagePath.HelpIcon, component: PsychologicalHelpScreen },
-  { key: "Profile", label: "Profile", icon: imagePath.User, component: ProfileScreen },
+const tabs: { key: string; label: StringKey; icon: number; component: React.ComponentType }[] = [
+  { key: "Home", label: "home", icon: imagePath.HomeIcon, component: HomeScreen },
+  { key: "Groups", label: "groups", icon: imagePath.GroupIcon, component: GroupsScreen },
+  { key: "Chats", label: "chats", icon: imagePath.ChatIcon, component: ChatsScreen },
+  { key: "Help", label: "help", icon: imagePath.HelpIcon, component: PsychologicalHelpScreen },
+  { key: "Profile", label: "profile", icon: imagePath.User, component: ProfileScreen },
 ];
 
 const TabItem = ({
@@ -52,6 +53,7 @@ const TabItem = ({
 }) => {
   const { colors, resolvedScheme } = useTheme();
   const styles = makeStyles(colors, resolvedScheme);
+  const t = useT();
   const progress = useRef(new Animated.Value(focused ? 1 : 0)).current;
 
   useEffect(() => {
@@ -93,7 +95,7 @@ const TabItem = ({
             </View>
           ) : null}
         </View>
-        <Animated.Text style={[styles.tabLabel, { color: labelColor }]}>{tab.label}</Animated.Text>
+        <Animated.Text style={[styles.tabLabel, { color: labelColor }]}>{t(tab.label)}</Animated.Text>
       </Animated.View>
     </Pressable>
   );

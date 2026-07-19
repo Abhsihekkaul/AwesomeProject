@@ -173,7 +173,7 @@ export default function ShareDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-t-2xl border border-line bg-card p-5 sm:rounded-2xl"
+        className="w-full max-w-md animate-fade-up rounded-t-2xl border border-line bg-card p-5 shadow-lift sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {mode === "quick" ? (

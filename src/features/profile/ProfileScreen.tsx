@@ -14,6 +14,7 @@ import { radius } from "../../theme/radius";
 import { dummyPosts } from "../../utils/dummyPost";
 import imagePath from "../../constant/imagePath";
 import { useSavedPosts } from "../../context/SavedPostsContext";
+import HealingBadgeCard from "../habits/HealingBadgeCard";
 import { useAuth } from "../../context/AuthContext";
 import { authApi } from "../../api/authApi";
 import { apiErrorMessage } from "../../api/http";
@@ -22,7 +23,7 @@ import { resourcesApi } from "../../api/resourcesApi";
 import { useLiveOrDemo } from "../../hooks/useLiveOrDemo";
 import { timeAgo } from "../../utils/timeAgo";
 
-type ProfileTab = "My Posts" | "Saved";
+type ProfileTab = "My Posts" | "Saved" | "Commented";
 
 export default function ProfileScreen() {
   const navigation = useNavigation<any>();
@@ -49,8 +50,15 @@ export default function ProfileScreen() {
     [] as any[],
   );
 
+  // Posts I've commented on (Profile → Commented tab); empty in demo mode.
+  const { data: commentedData } = useLiveOrDemo(
+    async () => mapTimes(await resourcesApi.getCommentedPosts()),
+    [] as any[],
+  );
+
   const savedData = savedIsLive ? liveSaved : savedPosts;
-  const listData = activeTab === "My Posts" ? userPosts : savedData;
+  const listData =
+    activeTab === "My Posts" ? userPosts : activeTab === "Saved" ? savedData : commentedData;
 
   const displayName = user?.name ?? "Abhishek";
 
@@ -67,6 +75,42 @@ export default function ProfileScreen() {
     } catch (err) {
       Alert.alert("Couldn't update your photo", apiErrorMessage(err));
     }
+  };
+
+  // Cover/banner photo — same pick/take/remove flow, saved as coverUrl.
+  const saveCover = async (uri: string | null) => {
+    try {
+      updateUser(await authApi.updateMe({ coverUrl: uri }));
+    } catch (err) {
+      Alert.alert("Couldn't update your cover", apiErrorMessage(err));
+    }
+  };
+
+  const changeCover = () => {
+    if (!isAuthenticated) {
+      Alert.alert("Sign in required", "Create an account to set your cover photo.");
+      return;
+    }
+    Alert.alert("Cover photo", undefined, [
+      {
+        text: "Take photo",
+        onPress: async () => {
+          const uri = await captureImageAsDataUri();
+          if (uri) saveCover(uri);
+        },
+      },
+      {
+        text: "Choose from library",
+        onPress: async () => {
+          const uri = await pickImageAsDataUri();
+          if (uri) saveCover(uri);
+        },
+      },
+      ...(user?.coverUrl
+        ? [{ text: "Remove cover", style: "destructive" as const, onPress: () => saveCover(null) }]
+        : []),
+      { text: "Cancel", style: "cancel" as const },
+    ]);
   };
 
   const changeAvatar = () => {
@@ -111,9 +155,21 @@ export default function ProfileScreen() {
         </Pressable>
       </View>
 
+      {/* Cover photo — brand tint until one is set; tap to change */}
+      <Pressable style={styles.coverWrap} onPress={changeCover}>
+        {user?.coverUrl ? (
+          <Image source={{ uri: user.coverUrl }} style={styles.coverImage} />
+        ) : (
+          <View style={[styles.coverImage, styles.coverFallback]} />
+        )}
+        <View style={styles.coverEditBtn}>
+          <Image source={imagePath.CameraIcon} style={styles.avatarEditIcon} />
+        </View>
+      </Pressable>
+
       {/* Hero Section (Centered) */}
       <View style={styles.hero}>
-        <View style={styles.avatarWrap}>
+        <View style={[styles.avatarWrap, styles.avatarOverlap]}>
           <UserAvatar
             initials={displayName.trim()[0]?.toUpperCase() ?? "A"}
             uri={user?.avatarUrl}
@@ -137,9 +193,12 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* My Posts / Saved segmented tabs */}
+      {/* Healing Points badge + progress to the next level */}
+      <HealingBadgeCard />
+
+      {/* My Posts / Saved / Commented segmented tabs */}
       <View style={styles.tabRow}>
-        {(["My Posts", "Saved"] as const).map((tab) => (
+        {(["My Posts", "Saved", "Commented"] as const).map((tab) => (
           <Pressable
             key={tab}
             onPress={() => switchTab(tab)}
@@ -169,6 +228,14 @@ export default function ProfileScreen() {
               <Text style={styles.emptyTitle}>No saved posts yet</Text>
               <Text style={styles.emptyText}>
                 Tap the ••• menu on any post and choose "Save Post" — it will show up here.
+              </Text>
+            </View>
+          ) : activeTab === "Commented" ? (
+            <View style={styles.emptyWrap}>
+              <Text style={styles.emptyEmoji}>💬</Text>
+              <Text style={styles.emptyTitle}>No comments yet</Text>
+              <Text style={styles.emptyText}>
+                Posts you comment on will gather here so you can find those conversations again.
               </Text>
             </View>
           ) : null
@@ -239,12 +306,44 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       tintColor: colors.text,
     },
 
+    // Cover photo band
+    coverWrap: {
+      marginTop: moderateVerticalScale(10),
+      position: "relative",
+    },
+    coverImage: {
+      width: "100%",
+      height: moderateVerticalScale(110),
+      borderRadius: radius.md,
+      resizeMode: "cover",
+    },
+    coverFallback: {
+      backgroundColor: colors.lightPurple,
+    },
+    coverEditBtn: {
+      position: "absolute",
+      right: moderateScale(10),
+      bottom: moderateScale(10),
+      width: moderateScale(30),
+      height: moderateScale(30),
+      borderRadius: moderateScale(15),
+      backgroundColor: colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 2,
+      borderColor: colors.background,
+    },
+
     // Hero Section
     hero: {
       alignItems: "center",
     },
     avatarWrap: {
       position: "relative",
+    },
+    // Pulls the avatar up over the cover's bottom edge (Facebook-style)
+    avatarOverlap: {
+      marginTop: -moderateVerticalScale(38),
     },
     avatarEditBtn: {
       position: "absolute",

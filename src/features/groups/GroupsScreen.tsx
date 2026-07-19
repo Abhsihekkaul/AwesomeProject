@@ -73,12 +73,14 @@ export default function GroupsScreen() {
         joined: g.joined,
         moderator: g.moderator,
         description: g.description,
+        coverUrl: g.coverUrl ?? null,
       })),
     groups.map((g) => ({
       ...g,
       id: undefined as string | undefined,
       moderator: undefined as string | undefined,
       description: undefined as string | undefined,
+      coverUrl: undefined as string | null | undefined,
     })),
   );
 
@@ -134,17 +136,23 @@ export default function GroupsScreen() {
                 moderator: g.moderator,
                 description: g.description,
                 joined: isJoined(g),
+                coverUrl: g.coverUrl ?? null,
               })
             }
             style={styles.card}
           >
-            {/* Banner Section */}
-            <View style={[styles.banner, { backgroundColor: colors[g.tint as BannerTint] }]}>
-              <Image
-                source={imagePath.GroupIcon}
-                style={styles.bannerIcon}
-              />
-            </View>
+            {/* Banner: the group's cover (server sends one for every live group —
+                a member's photo or its healing preset); tinted icon in demo mode */}
+            {g.coverUrl ? (
+              <Image source={{ uri: g.coverUrl }} style={styles.bannerImage} />
+            ) : (
+              <View style={[styles.banner, { backgroundColor: colors[g.tint as BannerTint] }]}>
+                <Image
+                  source={imagePath.GroupIcon}
+                  style={styles.bannerIcon}
+                />
+              </View>
+            )}
 
             {/* Content Section */}
             <View style={styles.cardContent}>
@@ -235,6 +243,11 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet
     height: moderateScale(100),
     alignItems: "center",
     justifyContent: "center",
+  },
+  bannerImage: {
+    width: "100%",
+    height: moderateScale(100),
+    resizeMode: "cover",
   },
   bannerIcon: {
     width: moderateScale(36),

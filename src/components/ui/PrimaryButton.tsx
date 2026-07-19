@@ -50,16 +50,17 @@ const PrimaryButton = ({ title, onPress, style, disabled, size = "full" }: Props
 };
 
 const styles = StyleSheet.create({
+  // Design v2: pill buttons — the web app's Button went full-pill and the app follows.
   button: {
     height: moderateScale(58),
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: moderateScale(20),
   },
   buttonCompact: {
     height: moderateScale(40),
-    borderRadius: radius.xl,
+    borderRadius: radius.pill,
     alignSelf: "flex-start",
     paddingHorizontal: moderateScale(18),
   },

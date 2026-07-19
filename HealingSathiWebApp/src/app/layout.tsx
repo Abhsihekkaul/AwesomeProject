@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
+import { Nunito } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
+
+// A soft, rounded humanist face — the "healing" voice of the web app.
+// Self-hosted by next/font at build time (no runtime font CDN).
+const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" });
 
 export const metadata: Metadata = {
   title: "HealingSathi",
@@ -22,7 +27,7 @@ export default function RootLayout({
     // suppressHydrationWarning: next-themes stamps the .dark class on <html>
     // before hydration, which React would otherwise flag as a mismatch.
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${nunito.variable} antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

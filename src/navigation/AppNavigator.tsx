@@ -29,6 +29,8 @@ import EditProfileScreen from "../features/settings/EditProfileScreen";
 import LanguageScreen from "../features/settings/LanguageScreen";
 import HealingDiaryScreen from "../features/diary/HealingDiaryScreen";
 import HealthTipsScreen from "../features/tips/HealthTipsScreen";
+import TipDetailsScreen from "../features/tips/TipDetailsScreen";
+import type { Tip } from "../features/tips/tipsLibrary";
 import EditPostScreen from "../features/posts/EditPostScreen";
 import PostDetailsScreen from "../features/posts/PostDetailsScreen";
 import type { Post } from "../components/ui/PostCard";
@@ -86,6 +88,7 @@ export type RootStackParamList = {
   Search: undefined;
   HealingDiary: undefined;
   HealthTips: undefined;
+  TipDetails: { id: string; tip?: Tip };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -140,6 +143,7 @@ export default function AppNavigator({
         <Stack.Screen name="Search" component={SearchScreen} />
         <Stack.Screen name="HealingDiary" component={HealingDiaryScreen} />
         <Stack.Screen name="HealthTips" component={HealthTipsScreen} />
+        <Stack.Screen name="TipDetails" component={TipDetailsScreen} />
 
       </Stack.Navigator>
     </NavigationContainer>

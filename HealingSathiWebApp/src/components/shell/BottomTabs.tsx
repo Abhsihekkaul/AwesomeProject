@@ -5,14 +5,15 @@ import { usePathname } from "next/navigation";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import { useChatNotifications } from "@/context/ChatNotificationsContext";
 import { cn } from "@/lib/cn";
+import { useT, type StringKey } from "@/lib/i18n";
 
 // The app's 5 tabs, same icon assets — phone browsers get the app's layout.
-const TABS: { href: string; label: string; icon: IconName }[] = [
-  { href: "/feed", label: "Home", icon: "home" },
-  { href: "/groups", label: "Groups", icon: "people" },
-  { href: "/chats", label: "Chats", icon: "chat" },
-  { href: "/help", label: "Help", icon: "staff" },
-  { href: "/profile", label: "Profile", icon: "user2" },
+const TABS: { href: string; label: StringKey; icon: IconName }[] = [
+  { href: "/feed", label: "home", icon: "home" },
+  { href: "/groups", label: "groups", icon: "people" },
+  { href: "/chats", label: "chats", icon: "chat" },
+  { href: "/help", label: "help", icon: "staff" },
+  { href: "/profile", label: "profile", icon: "user2" },
 ];
 
 /**
@@ -22,10 +23,11 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
 export default function BottomTabs() {
   const pathname = usePathname();
   const { unreadTotal } = useChatNotifications();
+  const t = useT();
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card/85 backdrop-blur-md lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="flex">
@@ -48,7 +50,7 @@ export default function BottomTabs() {
                   </span>
                 ) : null}
               </span>
-              <span className="text-[11px] font-medium">{tab.label}</span>
+              <span className="text-[11px] font-medium">{t(tab.label)}</span>
             </Link>
           );
         })}

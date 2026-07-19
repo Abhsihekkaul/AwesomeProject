@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Field from "@/components/ui/Field";
 import { useAuth } from "@/context/AuthContext";
+import { useT } from "@/lib/i18n";
 
 export default function SignupPage() {
   const router = useRouter();
   const { signUp } = useAuth();
+  const t = useT();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -33,7 +35,8 @@ export default function SignupPage() {
     setSubmitting(true);
     try {
       await signUp(email.trim(), password, name.trim());
-      router.replace("/feed");
+      // New accounts flow through the app's 3-step profile setup first.
+      router.replace("/welcome");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create account");
     } finally {
@@ -43,7 +46,7 @@ export default function SignupPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-ink">Create your account</h1>
+      <h1 className="text-xl font-bold text-ink">{t("createYourAccount")}</h1>
       <p className="mt-1 text-sm text-muted">
         Find your people — support for your journey starts here.
       </p>
@@ -52,7 +55,7 @@ export default function SignupPage() {
 
       <form onSubmit={handleSubmit} className="mt-5 space-y-4">
         <Field
-          label="Name"
+          label={t("name")}
           autoComplete="name"
           placeholder="Your name"
           value={name}
@@ -60,7 +63,7 @@ export default function SignupPage() {
           required
         />
         <Field
-          label="Email"
+          label={t("email")}
           type="email"
           autoComplete="email"
           placeholder="you@example.com"
@@ -69,7 +72,7 @@ export default function SignupPage() {
           required
         />
         <Field
-          label="Password"
+          label={t("password")}
           type="password"
           autoComplete="new-password"
           placeholder="At least 8 characters"
@@ -87,14 +90,14 @@ export default function SignupPage() {
           required
         />
         <Button type="submit" disabled={submitting}>
-          {submitting ? "Creating account..." : "Create Account"}
+          {submitting ? t("signingUp") : t("signUp")}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-muted">
-        Already have an account?{" "}
+        {t("alreadyHaveAccount")}{" "}
         <Link href="/login" className="font-semibold text-primary hover:underline">
-          Sign in
+          {t("signIn")}
         </Link>
       </p>
     </div>

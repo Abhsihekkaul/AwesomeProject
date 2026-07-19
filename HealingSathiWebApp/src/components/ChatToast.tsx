@@ -15,7 +15,7 @@ export default function ChatToast() {
   if (!toast) return null;
 
   return (
-    <div className="fixed top-16 right-4 z-50 w-80 animate-[slideIn_.2s_ease-out] rounded-2xl border border-line bg-card p-3 shadow-lg">
+    <div className="fixed top-16 right-4 z-50 w-80 animate-[slideIn_.2s_ease-out] rounded-2xl border border-line bg-card p-3 shadow-lift">
       <button
         className="flex w-full items-center gap-3 text-left"
         onClick={() => {

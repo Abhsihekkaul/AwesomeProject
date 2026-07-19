@@ -52,11 +52,11 @@ const ActionButton = ({
       onClick?.(e);
     }}
     className={cn(
-      "flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-step font-semibold transition-colors hover:bg-light-blue",
+      "group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-step font-semibold transition-all hover:bg-light-blue active:scale-95",
       active ? activeClass : "text-ink",
     )}
   >
-    <Icon name={icon} size={19} />
+    <Icon name={icon} size={19} className="transition-transform group-hover:scale-110" />
     {typeof count === "number" && count > 0 ? (
       <span className={cn("text-caption", active ? activeClass : "text-muted")}>{count}</span>
     ) : null}
@@ -140,7 +140,7 @@ export default function PostCard({
   if (deleted) return null;
 
   return (
-    <article className="rounded-2xl border border-line bg-card p-4 transition-shadow hover:shadow-sm">
+    <article className="animate-fade-up rounded-2xl border border-line bg-card p-4 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
       <header className="flex items-center gap-3">
         {post.authorId ? (
           <Link
@@ -179,7 +179,7 @@ export default function PostCard({
           {menuOpen ? (
             <>
               <button className="fixed inset-0 z-30 cursor-default" aria-hidden onClick={() => setMenuOpen(false)} />
-              <div className="absolute right-0 z-40 mt-1 w-44 rounded-xl border border-line bg-card p-1 shadow-lg">
+              <div className="animate-fade-up absolute right-0 z-40 mt-1 w-44 rounded-xl border border-line bg-card p-1 shadow-lift">
                 {isOwnPost ? (
                   <>
                     <button

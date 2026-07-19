@@ -136,12 +136,12 @@ export default function NotificationsPage() {
       <div className="mt-4 space-y-3">
         {tab === "Requests" ? (
           openRequests.length === 0 ? (
-            <p className="rounded-2xl border border-line bg-card p-6 text-center text-step text-muted">
+            <p className="rounded-2xl border border-line bg-card shadow-soft p-6 text-center text-step text-muted">
               No pending Sathi requests. 💜
             </p>
           ) : (
             openRequests.map((r) => (
-              <div key={r.id} className="flex items-start gap-3 rounded-2xl border border-line bg-card p-4">
+              <div key={r.id} className="flex items-start gap-3 rounded-2xl border border-line bg-card shadow-soft p-4">
                 {r.fromUserId ? (
                   <Link href={`/user/${r.fromUserId}`}>
                     <UserAvatar name={r.name} size={44} />
@@ -179,7 +179,7 @@ export default function NotificationsPage() {
         ) : loading ? (
           [0, 1, 2].map((i) => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)
         ) : visible.length === 0 ? (
-          <p className="rounded-2xl border border-line bg-card p-6 text-center text-step text-muted">
+          <p className="rounded-2xl border border-line bg-card shadow-soft p-6 text-center text-step text-muted">
             You&apos;re all caught up here.
           </p>
         ) : (

@@ -7,6 +7,7 @@ import { CallProvider } from "./src/context/CallContext";
 import { ChatNotificationsProvider } from "./src/context/ChatNotificationsContext";
 import { SavedPostsProvider } from "./src/context/SavedPostsContext";
 import { ThemeProvider } from "./src/theme/ThemeContext";
+import { LanguageProvider } from "./src/i18n";
 import CallOverlay from "./src/features/call/CallOverlay";
 import ChatMessageBanner from "./src/components/ui/ChatMessageBanner";
 
@@ -21,6 +22,7 @@ const RootNavigator = () => {
 export default function App() {
   return (
     <ThemeProvider>
+      <LanguageProvider>
       <AuthProvider>
         <SavedPostsProvider>
           <CallProvider>
@@ -35,6 +37,7 @@ export default function App() {
           </CallProvider>
         </SavedPostsProvider>
       </AuthProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

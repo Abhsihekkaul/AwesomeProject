@@ -5,23 +5,12 @@ import Link from "next/link";
 import Button from "@/components/ui/Button";
 import UserAvatar from "@/components/ui/UserAvatar";
 import Skeleton from "@/components/ui/Skeleton";
+import BookingModal from "@/components/BookingModal";
 import { useAuth } from "@/context/AuthContext";
 import { useLiveData } from "@/hooks/useLiveData";
 import { resourcesApi } from "@/api/resourcesApi";
-import { apiErrorMessage } from "@/api/http";
+import { DEMO_CONSULTANTS, type Consultant } from "@/lib/consultants";
 import { cn } from "@/lib/cn";
-
-type Consultant = {
-  id: string;
-  name: string;
-  role: string;
-  bio?: string;
-  rating: number;
-  reviewCount: number;
-  tags?: string[];
-  languages?: string[];
-  feeRange?: string;
-};
 
 type Booking = {
   id: string;
@@ -32,11 +21,6 @@ type Booking = {
   time: string;
   status: string;
 };
-
-const DEMO_CONSULTANTS: Consultant[] = [
-  { id: "c1", name: "Dr. Sarah Chen", role: "Clinical Psychologist", rating: 4.9, reviewCount: 128, tags: ["Anxiety", "Chronic Illness"], feeRange: "$80–120/session", bio: "Specializes in chronic-illness adjustment and anxiety." },
-  { id: "c2", name: "Dr. Priya Patel", role: "Pain Psychologist", rating: 4.8, reviewCount: 96, tags: ["Chronic Pain", "CBT"], feeRange: "$90–130/session", bio: "CBT for persistent pain and pacing." },
-];
 
 /** Psychological Help (the app's tab): consultant directory, booking, applications. */
 export default function HelpPage() {
@@ -65,7 +49,7 @@ export default function HelpPage() {
       <p className="text-step text-muted">Licensed professionals who understand chronic conditions.</p>
 
       {bookings.length > 0 ? (
-        <section className="rounded-2xl border border-line bg-card p-4">
+        <section className="rounded-2xl border border-line bg-card shadow-soft p-4">
           <h2 className="text-caption font-bold tracking-wide text-muted uppercase">My bookings</h2>
           <div className="mt-2 space-y-2">
             {bookings.map((b) => (
@@ -90,8 +74,8 @@ export default function HelpPage() {
       {loading
         ? [0, 1].map((i) => <Skeleton key={i} className="h-36 w-full rounded-2xl" />)
         : consultants.map((c) => (
-            <div key={c.id} className="rounded-2xl border border-line bg-card p-4">
-              <div className="flex items-start gap-3">
+            <div key={c.id} className="rounded-2xl border border-line bg-card shadow-soft p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+              <Link href={`/help/${c.id}`} className="flex items-start gap-3">
                 <UserAvatar name={c.name} size={48} />
                 <div className="min-w-0 flex-1">
                   <h2 className="text-step font-bold text-ink">{c.name}</h2>
@@ -101,7 +85,7 @@ export default function HelpPage() {
                   </p>
                 </div>
                 <span className="shrink-0 text-caption font-semibold text-muted">{c.feeRange}</span>
-              </div>
+              </Link>
               {c.bio ? <p className="mt-2 text-step leading-snug text-muted">{c.bio}</p> : null}
               {(c.tags ?? []).length > 0 ? (
                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -112,9 +96,17 @@ export default function HelpPage() {
                   ))}
                 </div>
               ) : null}
-              <Button className="mt-3" onClick={() => setBookingFor(c)}>
-                Book a Session
-              </Button>
+              <div className="mt-3 flex gap-2">
+                <Link
+                  href={`/help/${c.id}`}
+                  className="flex flex-1 items-center justify-center rounded-xl border border-line bg-card px-4 py-2.5 text-sm font-semibold text-ink transition-all hover:border-primary/40 hover:bg-light-purple hover:text-primary"
+                >
+                  View profile
+                </Link>
+                <Button className="flex-1" onClick={() => setBookingFor(c)}>
+                  Book a Session
+                </Button>
+              </div>
             </div>
           ))}
       {!isLive && !loading ? (
@@ -129,103 +121,6 @@ export default function HelpPage() {
           onBooked={refreshBookings}
         />
       ) : null}
-    </div>
-  );
-}
-
-function BookingModal({
-  consultant,
-  canBook,
-  onClose,
-  onBooked,
-}: {
-  consultant: Consultant;
-  canBook: boolean;
-  onClose: () => void;
-  onBooked: () => void;
-}) {
-  const [sessionType, setSessionType] = useState<"Video" | "Audio" | "Chat">("Video");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [note, setNote] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
-  const [busy, setBusy] = useState(false);
-
-  const submit = async () => {
-    if (!date || !time) {
-      setError("Pick a date and time");
-      return;
-    }
-    if (!canBook) {
-      setError("Demo mode can't book — sign in first");
-      return;
-    }
-    setError(null);
-    setBusy(true);
-    try {
-      await resourcesApi.createBooking({
-        consultantId: consultant.id,
-        sessionType,
-        date,
-        time,
-        note: note.trim() || undefined,
-      });
-      setDone(true);
-      onBooked();
-    } catch (err) {
-      setError(apiErrorMessage(err, "Couldn't book the session"));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center sm:p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-t-2xl border border-line bg-card p-5 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
-        {done ? (
-          <div className="text-center">
-            <h2 className="text-heading font-bold text-ink">Booked ✓</h2>
-            <p className="mt-2 text-step text-muted">
-              Your {sessionType.toLowerCase()} session with {consultant.name} is set for {date} at {time}.
-            </p>
-            <Button className="mt-4" onClick={onClose}>Done</Button>
-          </div>
-        ) : (
-          <>
-            <h2 className="text-heading font-bold text-ink">Book {consultant.name}</h2>
-            {error ? <p className="mt-2 text-step font-medium text-danger">{error}</p> : null}
-            <div className="mt-4 flex gap-2">
-              {(["Video", "Audio", "Chat"] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setSessionType(t)}
-                  className={cn(
-                    "flex-1 rounded-xl border py-2 text-step font-semibold",
-                    sessionType === t ? "border-primary bg-primary text-white" : "border-line bg-card text-muted",
-                  )}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-            <div className="mt-3 flex gap-3">
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="flex-1 rounded-xl border border-line bg-light-blue px-3 py-2.5 text-step text-ink focus:border-primary focus:outline-none" />
-              <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="flex-1 rounded-xl border border-line bg-light-blue px-3 py-2.5 text-step text-ink focus:border-primary focus:outline-none" />
-            </div>
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={2}
-              placeholder="Anything they should know beforehand? (optional)"
-              className="mt-3 w-full resize-y rounded-xl border border-line bg-light-blue px-3.5 py-2.5 text-step text-ink placeholder:text-muted focus:border-primary focus:outline-none"
-            />
-            <Button className="mt-4" onClick={submit} disabled={busy}>
-              {busy ? "Booking..." : "Confirm Booking"}
-            </Button>
-          </>
-        )}
-      </div>
     </div>
   );
 }

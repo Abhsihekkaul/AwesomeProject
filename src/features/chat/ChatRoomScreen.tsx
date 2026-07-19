@@ -41,8 +41,14 @@ type ChatMessage = {
   image?: string | null;
   /** In-app shared post (full card shape) — renders as a tappable post card. */
   sharedPost?: any;
+  /** A diya reply's reference card (diyas expire in 24h — this snapshot doesn't). */
+  diyaCard?: { name: string; mood: string; note: string } | null;
   time: string;
 };
+
+// Diya mood keys → labels (mirrors DIYA_MOODS; custom moods display verbatim).
+const moodLabel = (key: string) =>
+  ({ bright: "Bright day", steady: "Steady", managing: "Managing", heavy: "Heavy", resting: "Resting", "small-win": "Small win" }[key] ?? key);
 
 const initialMessages: ChatMessage[] = [
   { id: "1", text: "I've found that pacing myself and not pushing through pain helps the most. Also, warm baths before sleep. What's been your biggest challenge lately?", time: "10:18 AM" },
@@ -156,6 +162,19 @@ const Message = ({
           </View>
         </Pressable>
       ) : null}
+      {/* Diya reply reference: which diya this message answers (snapshot, outlives the diya). */}
+      {message.diyaCard ? (
+        <View style={[styles.diyaCard, message.mine && styles.diyaCardMine]}>
+          <Text style={[styles.diyaCardTitle, message.mine && styles.diyaCardTitleMine]} numberOfLines={1}>
+            {message.diyaCard.name}&apos;s diya · {moodLabel(message.diyaCard.mood)}
+          </Text>
+          {message.diyaCard.note ? (
+            <Text style={[styles.diyaCardNote, message.mine && styles.diyaCardNoteMine]} numberOfLines={1}>
+              {message.diyaCard.note}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
       {message.text ? (
         <Text style={[styles.msgText, message.mine && styles.mineText]}>{message.text}</Text>
       ) : null}
@@ -234,6 +253,7 @@ export default function ChatRoomScreen() {
         text: m.text,
         image: m.image,
         sharedPost: m.sharedPost,
+        diyaCard: m.diyaCard ?? null,
         time: formatClock(m.time),
       }));
     },
@@ -260,6 +280,7 @@ export default function ChatRoomScreen() {
                 text: message.text,
                 image: message.image,
                 sharedPost: message.sharedPost,
+                diyaCard: (message as { diyaCard?: ChatMessage["diyaCard"] }).diyaCard ?? null,
                 time: formatClock(message.time),
               },
             ],
@@ -577,6 +598,38 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       width: moderateScale(220),
       borderRadius: radius.md,
       marginBottom: moderateVerticalScale(4),
+    },
+
+    // Diya reply reference inside a bubble — a quiet quoted strip, like the web thread.
+    diyaCard: {
+      borderLeftWidth: 3,
+      borderLeftColor: colors.primary,
+      backgroundColor: colors.lightBlue,
+      borderRadius: radius.sm,
+      paddingHorizontal: moderateScale(10),
+      paddingVertical: moderateVerticalScale(6),
+      marginBottom: moderateVerticalScale(4),
+      maxWidth: moderateScale(230),
+    },
+    diyaCardMine: {
+      borderLeftColor: "rgba(255,255,255,0.6)",
+      backgroundColor: "rgba(255,255,255,0.15)",
+    },
+    diyaCardTitle: {
+      color: colors.text,
+      fontSize: scale(11),
+      fontWeight: "700",
+    },
+    diyaCardTitleMine: {
+      color: "rgba(255,255,255,0.9)",
+    },
+    diyaCardNote: {
+      color: colors.mutedText,
+      fontSize: scale(11),
+      marginTop: moderateVerticalScale(1),
+    },
+    diyaCardNoteMine: {
+      color: "rgba(255,255,255,0.75)",
     },
 
     // Shared-post card inside a bubble: a real mini PostCard — author header,

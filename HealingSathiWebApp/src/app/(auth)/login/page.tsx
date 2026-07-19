@@ -7,10 +7,12 @@ import Button from "@/components/ui/Button";
 import Field from "@/components/ui/Field";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { useAuth } from "@/context/AuthContext";
+import { useT } from "@/lib/i18n";
 
 export default function LoginPage() {
   const router = useRouter();
   const { signIn, enterDemo } = useAuth();
+  const t = useT();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,14 +40,14 @@ export default function LoginPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-ink">Welcome back</h1>
-      <p className="mt-1 text-sm text-muted">Sign in to your circles, chats and care.</p>
+      <h1 className="text-xl font-bold text-ink">{t("welcomeBack")}</h1>
+      <p className="mt-1 text-sm text-muted">{t("signInSubtitle")}</p>
 
       {error ? <p className="mt-4 text-sm font-medium text-danger">{error}</p> : null}
 
       <form onSubmit={handleSubmit} className="mt-5 space-y-4">
         <Field
-          label="Email"
+          label={t("email")}
           type="email"
           autoComplete="email"
           placeholder="you@example.com"
@@ -54,7 +56,7 @@ export default function LoginPage() {
           required
         />
         <Field
-          label="Password"
+          label={t("password")}
           type="password"
           autoComplete="current-password"
           placeholder="••••••••"
@@ -64,34 +66,34 @@ export default function LoginPage() {
         />
         <div className="flex justify-end">
           <Link href="/login/forgot" className="text-sm font-medium text-primary hover:underline">
-            Forgot password?
+            {t("forgotPassword")}
           </Link>
         </div>
         <Button type="submit" disabled={submitting}>
-          {submitting ? "Signing in..." : "Sign In"}
+          {submitting ? t("signingIn") : t("signIn")}
         </Button>
       </form>
 
       <div className="my-5 flex items-center gap-3">
         <div className="h-px flex-1 bg-line" />
-        <span className="text-xs font-medium text-muted">or</span>
+        <span className="text-xs font-medium text-muted">{t("or")}</span>
         <div className="h-px flex-1 bg-line" />
       </div>
 
       <div className="space-y-3">
         <GoogleSignInButton onError={setError} />
         <Link href="/login/code" className="block">
-          <Button variant="outline">Email me a sign-in code</Button>
+          <Button variant="outline">{t("emailCodeButton")}</Button>
         </Link>
         <Button variant="ghost" onClick={handleDemo}>
-          Try the demo
+          {t("tryDemo")}
         </Button>
       </div>
 
       <p className="mt-6 text-center text-sm text-muted">
-        New here?{" "}
+        {t("newHere")}{" "}
         <Link href="/signup" className="font-semibold text-primary hover:underline">
-          Create an account
+          {t("createAccount")}
         </Link>
       </p>
     </div>

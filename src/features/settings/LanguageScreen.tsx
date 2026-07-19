@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { moderateScale, moderateVerticalScale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
 import BackButton from "../../components/ui/BackButton";
@@ -8,17 +7,15 @@ import imagePath from "../../constant/imagePath";
 import { useTheme } from "../../theme/ThemeContext";
 import { TextStyles } from "../../theme/typography";
 import { radius } from "../../theme/radius";
+import { useLanguage, useT, LANGUAGE_STORAGE_KEY } from "../../i18n";
 
-export const LANGUAGE_STORAGE_KEY = "healingsathi:language";
+export { LANGUAGE_STORAGE_KEY };
 
-// Display strings only for now — full i18n (react-i18next) is a post-launch task;
-// the persisted choice here is what that system will boot from.
+// Only languages with real dictionaries (src/i18n) are offered — no options
+// that silently fall back to English.
 const LANGUAGES = [
   { code: "en", label: "English", native: "English" },
   { code: "hi", label: "Hindi", native: "हिन्दी" },
-  { code: "ne", label: "Nepali", native: "नेपाली" },
-  { code: "bn", label: "Bengali", native: "বাংলা" },
-  { code: "ta", label: "Tamil", native: "தமிழ்" },
   { code: "es", label: "Spanish", native: "Español" },
 ];
 
@@ -26,30 +23,19 @@ const LANGUAGES = [
 export default function LanguageScreen() {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
+  const t = useT();
 
-  const [selected, setSelected] = useState("en");
-
-  useEffect(() => {
-    AsyncStorage.getItem(LANGUAGE_STORAGE_KEY).then((stored) => {
-      if (stored) setSelected(stored);
-    });
-  }, []);
-
-  const handleSelect = async (code: string) => {
-    setSelected(code);
-    await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, code);
-  };
+  // The provider persists the choice and re-renders the whole app's chrome live.
+  const { language: selected, setLanguage: handleSelect } = useLanguage();
 
   return (
     <ScreenWrapper>
       <View style={styles.headerRow}>
         <BackButton />
-        <Text style={styles.headerTitle}>Language</Text>
+        <Text style={styles.headerTitle}>{t("language")}</Text>
       </View>
 
-      <Text style={styles.hint}>
-        Your choice is saved on this device. Translated content is rolling out gradually.
-      </Text>
+      <Text style={styles.hint}>{t("languageScreenHint")}</Text>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {LANGUAGES.map((lang) => {

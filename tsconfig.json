@@ -4,5 +4,5 @@
     "types": ["jest"]
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["**/node_modules", "**/Pods", "HealingSathiBackend"]
+  "exclude": ["**/node_modules", "**/Pods", "HealingSathiBackend", "HealingSathiWebApp", "HealingSathiWebsite"]
 }

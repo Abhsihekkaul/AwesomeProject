@@ -23,6 +23,11 @@
   --danger: #e36a6a;
   --info: #4e79c7;
   --warning: #e67e22;
+
+  /* Depth — soft brand-tinted elevation for light, deeper neutrals for dark.
+     Cards sit ON the page instead of being drawn on it. */
+  --elev-soft: 0 1px 2px rgb(31 51 77 / 0.04), 0 4px 12px rgb(116 83 200 / 0.06);
+  --elev-lift: 0 2px 4px rgb(31 51 77 / 0.06), 0 12px 28px rgb(116 83 200 / 0.12);
 }
 
 .dark {
@@ -41,6 +46,9 @@
   --danger: #e36a6a;
   --info: #7e9fdc;
   --warning: #e68a4e;
+
+  --elev-soft: 0 1px 2px rgb(0 0 0 / 0.35), 0 4px 12px rgb(0 0 0 / 0.28);
+  --elev-lift: 0 2px 4px rgb(0 0 0 / 0.4), 0 12px 28px rgb(0 0 0 / 0.45);
 }
 
 /* Expose the tokens as Tailwind utilities: bg-page, bg-card, text-ink,
@@ -72,6 +80,15 @@
   --text-heading: 1.25rem;
   --text-title: 1.625rem;
   --text-hero: 2.375rem;
+
+  /* shadow-soft / shadow-lift utilities (theme-aware via the vars above) */
+  --shadow-soft: var(--elev-soft);
+  --shadow-lift: var(--elev-lift);
+
+  /* Softer, rounder geometry — the whole app relaxes without touching markup. */
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.375rem;
+  --radius-3xl: 1.75rem;
 }
 
 html,
@@ -86,11 +103,99 @@ body {
   }
 }
 
+/* Entrance motion — cards and menus rise gently into place. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.3s ease-out both;
+}
+
+/* Slow "breathing" for the brand mark — the pace of a calm exhale. */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.045);
+  }
+}
+
+.animate-breathe {
+  animation: breathe 4.5s ease-in-out infinite;
+}
+
+/* Aurora — two soft brand-hued fields that drift almost imperceptibly,
+   giving every page a living, calm backdrop (the "healing" ambiance). */
+@keyframes aurora-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4rem, 2.5rem, 0) scale(1.08);
+  }
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+  will-change: transform;
+}
+
+body::before {
+  top: -14rem;
+  left: -10rem;
+  width: 44rem;
+  height: 30rem;
+  background: radial-gradient(closest-side, rgb(116 83 200 / 0.16), transparent);
+  animation: aurora-drift 46s ease-in-out infinite;
+}
+
+body::after {
+  right: -12rem;
+  bottom: -12rem;
+  width: 40rem;
+  height: 28rem;
+  background: radial-gradient(closest-side, rgb(79 165 123 / 0.12), transparent);
+  animation: aurora-drift 58s ease-in-out infinite reverse;
+}
+
+.dark body::before {
+  background: radial-gradient(closest-side, rgb(154 130 224 / 0.1), transparent);
+}
+
+.dark body::after {
+  background: radial-gradient(closest-side, rgb(79 165 123 / 0.07), transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-breathe,
+  body::before,
+  body::after {
+    animation: none;
+  }
+}
+
 body {
   background: var(--page);
   color: var(--ink);
-  /* The platform's system font — the same faces the RN app renders with
-     (SF on Apple, Roboto on Android/Chrome OS, Segoe on Windows), so the
-     two products share typography by construction. */
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  /* Nunito (self-hosted via next/font) — a soft rounded voice for the web;
+     system faces stay as fallback so nothing flashes unstyled. */
+  font-family: var(--font-nunito), system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }

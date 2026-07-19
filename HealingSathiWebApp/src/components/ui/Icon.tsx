@@ -11,7 +11,7 @@ export type IconName =
   | "heart" | "help" | "send" | "more" | "search" | "notification"
   | "post" | "star" | "setting" | "upload" | "Video" | "camera"
   | "phone" | "clock" | "shield" | "right-arrow" | "left-arrow"
-  | "google" | "language" | "report" | "alert" | "love";
+  | "google" | "language" | "report" | "alert" | "love" | "liked" | "like";
 
 export default function Icon({
   name,

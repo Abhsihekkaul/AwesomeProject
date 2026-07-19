@@ -14,6 +14,8 @@ import { resourcesApi } from "@/api/resourcesApi";
 import { apiErrorMessage } from "@/api/http";
 import { timeAgo } from "@/lib/timeAgo";
 import { cn } from "@/lib/cn";
+import { GROUP_COVER_PRESETS } from "@/lib/groupCovers";
+import { fileToCompressedDataUri } from "@/lib/compressImage";
 
 type GroupInfo = {
   id: string;
@@ -23,6 +25,7 @@ type GroupInfo = {
   moderator?: string;
   memberCount: number;
   joined: boolean;
+  coverUrl?: string | null;
 };
 
 type Member = { id: string; name: string; isMe?: boolean; relation?: string };
@@ -40,6 +43,8 @@ export default function GroupDetailsPage({ params }: { params: Promise<{ id: str
   const { isAuthenticated } = useAuth();
   const [tab, setTab] = useState<Tab>("Posts");
   const [composerOpen, setComposerOpen] = useState(false);
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false);
+  const [savingCover, setSavingCover] = useState(false);
 
   const { data: group, refresh: refreshGroup } = useLiveData<GroupInfo | null>(
     ["group", id],
@@ -68,7 +73,7 @@ export default function GroupDetailsPage({ params }: { params: Promise<{ id: str
 
   if (!isAuthenticated) {
     return (
-      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card p-8 text-center">
+      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card shadow-soft p-8 text-center">
         <h1 className="text-body font-bold text-ink">Group pages are for members</h1>
         <p className="mt-2 text-step text-muted">Sign in to browse real circles.</p>
       </div>
@@ -84,10 +89,47 @@ export default function GroupDetailsPage({ params }: { params: Promise<{ id: str
     }
   };
 
+  const saveCover = async (coverUrl: string | null) => {
+    setSavingCover(true);
+    try {
+      await resourcesApi.setGroupCover(id, coverUrl);
+      await refreshGroup();
+      setCoverPickerOpen(false);
+    } catch (err) {
+      window.alert(apiErrorMessage(err, "Couldn't change the cover"));
+    } finally {
+      setSavingCover(false);
+    }
+  };
+
+  const uploadCover = async (file: File | undefined) => {
+    if (!file) return;
+    saveCover(await fileToCompressedDataUri(file));
+  };
+
   return (
     <div className="mx-auto max-w-xl space-y-4">
       {/* Header card */}
-      <div className="rounded-2xl border border-line bg-card p-5">
+      <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-soft">
+        {/* Cover — every group has one (a member's photo or its healing preset) */}
+        <div className="relative">
+          {group?.coverUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={group.coverUrl} alt="" className="h-32 w-full object-cover sm:h-40" />
+          ) : (
+            <div className="h-32 w-full bg-gradient-to-br from-light-purple to-light-blue sm:h-40" />
+          )}
+          {group?.joined ? (
+            <button
+              onClick={() => setCoverPickerOpen(true)}
+              className="absolute right-3 bottom-3 rounded-full bg-black/45 px-3 py-1 text-caption font-semibold text-white backdrop-blur-sm hover:bg-black/60"
+            >
+              📷 Change cover
+            </button>
+          ) : null}
+        </div>
+
+        <div className="p-5">
         <div className="flex items-start gap-3">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-light-purple text-primary">
             <Icon name="people" size={22} />
@@ -127,7 +169,61 @@ export default function GroupDetailsPage({ params }: { params: Promise<{ id: str
             </button>
           ))}
         </div>
+        </div>
       </div>
+
+      {/* Cover picker: healing presets first, own photo second */}
+      {coverPickerOpen ? (
+        <>
+          <button
+            aria-hidden
+            className="fixed inset-0 z-40 cursor-default bg-black/40"
+            onClick={() => setCoverPickerOpen(false)}
+          />
+          <div className="fixed inset-x-4 top-1/2 z-50 mx-auto max-w-md -translate-y-1/2 rounded-2xl border border-line bg-card p-5 shadow-lift">
+            <h2 className="text-step font-bold text-ink">Group cover</h2>
+            <p className="mt-0.5 text-caption text-muted">
+              Pick a healing scene, or upload your own — calm imagery keeps the space gentle.
+            </p>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {GROUP_COVER_PRESETS.map((p) => (
+                <button
+                  key={p.key}
+                  onClick={() => saveCover(p.key)}
+                  disabled={savingCover}
+                  className="group overflow-hidden rounded-xl border border-line transition-all hover:border-primary"
+                  title={p.name}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.uri} alt={p.name} className="h-14 w-full object-cover" />
+                  <span className="block py-1 text-center text-[10px] font-semibold text-muted group-hover:text-primary">
+                    {p.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <label className="flex-1 cursor-pointer rounded-xl border border-line py-2 text-center text-caption font-semibold text-ink hover:border-primary hover:text-primary">
+                Upload a photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => uploadCover(e.target.files?.[0])}
+                />
+              </label>
+              <button
+                onClick={() => saveCover(null)}
+                disabled={savingCover}
+                className="flex-1 rounded-xl border border-line py-2 text-caption font-semibold text-muted hover:text-ink"
+              >
+                Use the group&apos;s preset
+              </button>
+            </div>
+            {savingCover ? <p className="mt-2 text-caption text-muted">Saving...</p> : null}
+          </div>
+        </>
+      ) : null}
 
       {tab === "Posts" ? (
         <>
@@ -142,7 +238,7 @@ export default function GroupDetailsPage({ params }: { params: Promise<{ id: str
           {loading ? (
             <SkeletonPostCard />
           ) : posts.length === 0 ? (
-            <p className="rounded-2xl border border-line bg-card p-6 text-center text-step text-muted">
+            <p className="rounded-2xl border border-line bg-card shadow-soft p-6 text-center text-step text-muted">
               No posts in this circle yet — be the first to share.
             </p>
           ) : (
@@ -150,7 +246,7 @@ export default function GroupDetailsPage({ params }: { params: Promise<{ id: str
           )}
         </>
       ) : tab === "Members" ? (
-        <div className="rounded-2xl border border-line bg-card p-2">
+        <div className="rounded-2xl border border-line bg-card shadow-soft p-2">
           {members.length === 0 ? (
             <p className="p-4 text-center text-step text-muted">No members listed yet.</p>
           ) : (
@@ -168,7 +264,7 @@ export default function GroupDetailsPage({ params }: { params: Promise<{ id: str
           )}
         </div>
       ) : (
-        <div className="rounded-2xl border border-line bg-card p-5">
+        <div className="rounded-2xl border border-line bg-card shadow-soft p-5">
           <h2 className="text-body font-bold text-ink">About this circle</h2>
           <p className="mt-2 text-step leading-relaxed text-muted">
             {group?.description || "A supportive, moderated space for people on the same journey."}

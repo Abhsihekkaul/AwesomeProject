@@ -26,7 +26,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       <BrandMark className="mb-6" />
       {/* slightly translucent card so the illustration whispers through */}
-      <main className="relative w-full max-w-md rounded-2xl border border-line bg-card/90 p-6 shadow-sm backdrop-blur-sm">
+      <main className="relative w-full max-w-md rounded-2xl border border-line bg-card/90 p-6 shadow-lift backdrop-blur-sm">
         {children}
       </main>
       <p className="mt-6 text-xs text-muted">

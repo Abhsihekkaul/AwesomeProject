@@ -43,6 +43,8 @@ type ChatMessage = {
   text: string;
   image?: string | null;
   sharedPost?: SharedPostCard | null;
+  /** A diya reply's reference card (diyas expire — this snapshot doesn't). */
+  diyaCard?: { name: string; mood: string; note: string } | null;
   time: string;
 };
 
@@ -59,6 +61,10 @@ const DEMO_THREAD: ChatMessage[] = [
   { id: "2", mine: true, text: "Definitely the unpredictability. I've been trying journaling — it helps me notice patterns.", time: "10:22 AM" },
   { id: "3", text: "That's such a good idea. It's really comforting to talk to someone who gets it. 💙", time: "10:24 AM" },
 ];
+
+// Diya mood keys → labels (mirrors DIYA_MOODS; custom moods display verbatim).
+const moodLabel = (key: string) =>
+  ({ bright: "Bright day", steady: "Steady", managing: "Managing", heavy: "Heavy", resting: "Resting", "small-win": "Small win" })[key] ?? key;
 
 const formatClock = (value?: string | Date) => {
   const d = value ? new Date(value) : new Date();
@@ -125,6 +131,19 @@ function MessageBubble({
               <span className="text-primary">View post →</span>
             </span>
           </Link>
+        ) : null}
+        {message.diyaCard ? (
+          <span
+            className={cn(
+              "mb-1 block rounded-xl border-l-4 px-2.5 py-1.5 text-caption",
+              message.mine ? "border-white/60 bg-white/15 text-white/90" : "border-primary bg-card text-muted",
+            )}
+          >
+            <span className="block font-bold">
+              {message.diyaCard.name}&apos;s diya · {moodLabel(message.diyaCard.mood)}
+            </span>
+            {message.diyaCard.note ? <span className="block truncate">{message.diyaCard.note}</span> : null}
+          </span>
         ) : null}
         {message.text ? <p className="text-step leading-relaxed whitespace-pre-wrap">{message.text}</p> : null}
         <p className={cn("mt-1 text-right text-[10px]", message.mine ? "text-white/80" : "text-muted")}>
@@ -194,6 +213,7 @@ function ChatThread({ chat }: { chat: ChatListItem }) {
                 text: message.text,
                 image: message.image,
                 sharedPost: message.sharedPost as SharedPostCard | null,
+                diyaCard: (message as { diyaCard?: ChatMessage["diyaCard"] }).diyaCard ?? null,
                 time: formatClock(message.time),
               },
             ],
@@ -361,6 +381,7 @@ function ChatThread({ chat }: { chat: ChatListItem }) {
 export default function ChatsWorkspace({ activeChatId }: { activeChatId?: string }) {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const { unreadTotal } = useChatNotifications();
   const [chats, setChats] = useState<ChatListItem[]>(isAuthenticated ? [] : DEMO_CHATS);
   const [loadingChats, setLoadingChats] = useState(isAuthenticated);
   const [query, setQuery] = useState("");
@@ -385,6 +406,14 @@ export default function ChatsWorkspace({ activeChatId }: { activeChatId?: string
     return () => clearInterval(interval);
   }, [loadChats]);
 
+  // The notifications engine hears every socket message; when the account's
+  // unread total moves (new message, or a chat marked read), refresh the list
+  // immediately instead of waiting out the 15s poll.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- same deliberate refetch as above
+    loadChats();
+  }, [unreadTotal, loadChats]);
+
   const q = query.trim().toLowerCase();
   const visible = q
     ? chats.filter((c) => c.name.toLowerCase().includes(q) || c.last.toLowerCase().includes(q))
@@ -397,7 +426,7 @@ export default function ChatsWorkspace({ activeChatId }: { activeChatId?: string
 
   return (
     // dvh on mobile (browser chrome + bottom tab bar in play); vh on desktop.
-    <div className="mx-auto h-[calc(100dvh-11rem)] max-w-5xl overflow-hidden rounded-2xl border border-line bg-card lg:h-[calc(100vh-6.5rem)]">
+    <div className="mx-auto h-[calc(100dvh-11rem)] max-w-5xl overflow-hidden rounded-2xl border border-line bg-card shadow-soft lg:h-[calc(100vh-6.5rem)]">
       <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)] md:grid-cols-[300px_minmax(0,1fr)]">
         {/* List pane */}
         <div className={cn("min-h-0 flex-col overflow-hidden border-r border-line", activeChatId ? "hidden md:flex" : "flex")}>
@@ -437,7 +466,17 @@ export default function ChatsWorkspace({ activeChatId }: { activeChatId?: string
                       <span className="truncate text-step font-semibold text-ink">{c.name}</span>
                       <span className="shrink-0 text-caption text-muted">{c.time}</span>
                     </span>
-                    <span className="block truncate text-caption text-muted">{c.last}</span>
+                    {/* Unread chats keep their last message private until opened */}
+                    <span
+                      className={cn(
+                        "block truncate text-caption",
+                        c.unread > 0 ? "font-semibold text-primary" : "text-muted",
+                      )}
+                    >
+                      {c.unread > 0
+                        ? `${c.unread > 99 ? "99+" : c.unread} new ${c.unread === 1 ? "message" : "messages"}`
+                        : c.last}
+                    </span>
                   </span>
                   {c.unread > 0 ? (
                     <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">

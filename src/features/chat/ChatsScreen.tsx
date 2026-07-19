@@ -101,7 +101,12 @@ export default function ChatsScreen() {
               <Text style={styles.name}>{c.name}</Text>
               <Text style={styles.time}>{c.time}</Text>
             </View>
-            <Text style={styles.last} numberOfLines={1}>{c.last}</Text>
+            {/* Unread chats keep their last message private until opened */}
+            <Text style={[styles.last, c.unread > 0 && styles.lastUnread]} numberOfLines={1}>
+              {c.unread > 0
+                ? `${c.unread > 99 ? "99+" : c.unread} new ${c.unread === 1 ? "message" : "messages"}`
+                : c.last}
+            </Text>
           </View>
           {c.unread > 0 ? (
             <View style={styles.unreadBadge}>
@@ -177,6 +182,11 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
     marginTop: moderateVerticalScale(2),
     fontSize: TextStyles.caption,
     color: colors.mutedText,
+  },
+
+  lastUnread: {
+    color: colors.primary,
+    fontWeight: "600",
   },
 
   unreadBadge: {

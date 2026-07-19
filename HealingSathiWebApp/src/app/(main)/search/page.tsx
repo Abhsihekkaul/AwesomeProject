@@ -109,7 +109,7 @@ export default function SearchPage() {
       </div>
 
       {!isAuthenticated ? (
-        <p className="mt-6 rounded-2xl border border-line bg-card p-6 text-center text-step text-muted">
+        <p className="mt-6 rounded-2xl border border-line bg-card shadow-soft p-6 text-center text-step text-muted">
           Search works on real accounts — sign in to find your people.
         </p>
       ) : q.length < 2 ? (
@@ -133,7 +133,7 @@ export default function SearchPage() {
                     {users.map((u) => {
                       const relation = requested[u.id] ? "pending" : u.relation;
                       return (
-                        <div key={u.id} className="flex items-center gap-3 rounded-2xl border border-line bg-card p-3">
+                        <div key={u.id} className="flex items-center gap-3 rounded-2xl border border-line bg-card shadow-soft p-3">
                           <Link href={`/user/${u.id}`} className="flex min-w-0 flex-1 items-center gap-3">
                             <UserAvatar name={u.name} size={42} />
                             <span className="min-w-0">
@@ -177,7 +177,7 @@ export default function SearchPage() {
                       <Link
                         key={g.id}
                         href={`/groups/${g.id}`}
-                        className="flex items-center gap-3 rounded-2xl border border-line bg-card p-3 hover:bg-light-blue"
+                        className="flex items-center gap-3 rounded-2xl border border-line bg-card shadow-soft p-3 hover:bg-light-blue"
                       >
                         <span className="flex h-10 w-10 items-center justify-center rounded-full bg-light-purple text-primary">
                           <Icon name="people" size={18} />
@@ -205,7 +205,7 @@ export default function SearchPage() {
                   <h2 className="text-caption font-bold tracking-wide text-muted uppercase">Consultants</h2>
                   <div className="mt-2 space-y-2">
                     {consultants.map((c) => (
-                      <div key={c.id} className="flex items-center gap-3 rounded-2xl border border-line bg-card p-3">
+                      <div key={c.id} className="flex items-center gap-3 rounded-2xl border border-line bg-card shadow-soft p-3">
                         <UserAvatar name={c.name} size={42} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-step font-bold text-ink">{c.name}</span>

@@ -3,6 +3,7 @@ import React, { useRef, useState } from "react";
 import { Image, PanResponder, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { moderateScale, moderateVerticalScale } from "react-native-size-matters";
 import ScreenWrapper from "../../components/ui/ScreenWrapper";
+import DiyaBar from "../diya/DiyaBar";
 import UserAvatar from "../../components/ui/UserAvatar";
 import PostCard from "../../components/ui/PostCard";
 import SearchBar from "../../components/ui/SearchBar";
@@ -156,17 +157,25 @@ export default function HomeScreen() {
                     ))}
                 </View>
 
+                {/* Diya — the daily check-in ring bar (DiyaFeature.md) */}
+                <DiyaBar />
+
+                {/* Quick links — tinted icon tiles, same card language as the tips shelf */}
                 <Pressable style={styles.QuickTips} onPress={() => navigation.navigate("HealthTips")}>
-                    <Image style={styles.HeartBtn} source={imagePath.HeartIcon} tintColor={colors.text}/>
+                    <View style={[styles.quickLinkTile, { backgroundColor: colors.lightPurple }]}>
+                        <Image style={styles.quickLinkIcon} source={imagePath.HeartIcon} tintColor={colors.primary} />
+                    </View>
                     <View style={{ flex: 1 }}>
-                        <Text style={styles.TipsTitle}>Need Quick Health Tips</Text>
-                        <Text style={styles.TipsSub}>100+ resources available</Text>
+                        <Text style={styles.TipsTitle}>Health Tips</Text>
+                        <Text style={styles.TipsSub}>Daily habits, doctor-written guides & more</Text>
                     </View>
                     <Image style={styles.RightIcon} source={imagePath.RightIcon} />
                 </Pressable>
 
                 <Pressable style={styles.QuickTips} onPress={() => navigation.navigate("HealingDiary")}>
-                    <Text style={styles.DiaryEmoji}>📔</Text>
+                    <View style={[styles.quickLinkTile, { backgroundColor: colors.lightBlue }]}>
+                        <Image style={styles.quickLinkIcon} source={imagePath.PostIcon} tintColor={colors.info} />
+                    </View>
                     <View style={{ flex: 1 }}>
                         <Text style={styles.TipsTitle}>Healing Diary</Text>
                         <Text style={styles.TipsSub}>Private journal — stored only on this phone</Text>
@@ -249,20 +258,25 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet
     QuickTips: {
         flexDirection: "row",
         alignItems: "center",
+        backgroundColor: colors.card,
         borderColor: colors.border,
         borderWidth: StyleSheet.hairlineWidth,
         borderRadius: radius.md,
-        padding: moderateScale(11),
-        marginBottom: moderateVerticalScale(12),
+        padding: moderateScale(10),
+        marginBottom: moderateVerticalScale(10),
     },
-    HeartBtn: {
-        height: moderateVerticalScale(20),
-        width: moderateScale(22),
-        marginRight: moderateScale(12)
+    quickLinkTile: {
+        width: moderateScale(38),
+        height: moderateScale(38),
+        borderRadius: radius.sm,
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: moderateScale(11),
     },
-    DiaryEmoji: {
-        fontSize: moderateScale(18),
-        marginRight: moderateScale(12),
+    quickLinkIcon: {
+        width: moderateScale(18),
+        height: moderateScale(18),
+        resizeMode: "contain",
     },
     TipsTitle: {
         fontSize: TextStyles.stepCounts,

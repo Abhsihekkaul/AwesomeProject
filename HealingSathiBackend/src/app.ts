@@ -11,6 +11,9 @@ import sathiRoutes from "./routes/sathi";
 import userRoutes from "./routes/users";
 import miscRoutes from "./routes/misc";
 import adminRoutes from "./routes/admin";
+import diyaRoutes from "./routes/diyas";
+import habitRoutes from "./routes/habits";
+import diaryRoutes from "./routes/diary";
 import { errorHandler } from "./middleware/error";
 import { env } from "./config/env";
 
@@ -84,6 +87,9 @@ export const createApp = () => {
   app.use("/api/sathi", sathiRoutes);
   app.use("/api/users", userRoutes);
   app.use("/api/admin", adminRoutes);
+  app.use("/api/diyas", diyaRoutes);
+  app.use("/api/habits", habitRoutes);
+  app.use("/api/diary", diaryRoutes);
   app.use("/api", miscRoutes); // /api/notifications, /api/consultants, /api/bookings, /api/tips
 
   app.use((_req, res) => res.status(404).json({ error: "Route not found" }));

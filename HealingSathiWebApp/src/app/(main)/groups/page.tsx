@@ -17,6 +17,7 @@ type Group = {
   tag?: string;
   memberCount: number;
   joined: boolean;
+  coverUrl?: string | null;
 };
 
 const DEMO_GROUPS: Group[] = [
@@ -66,7 +67,13 @@ export default function GroupsPage() {
         {loading
           ? [0, 1, 2].map((i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)
           : groups.map((g) => (
-              <div key={g.id} className="rounded-2xl border border-line bg-card p-4">
+              <div key={g.id} className="overflow-hidden rounded-2xl border border-line bg-card shadow-soft">
+                {/* Cover band — the server always sends one (member photo or healing preset) */}
+                {g.coverUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={g.coverUrl} alt="" className="h-20 w-full object-cover" />
+                ) : null}
+                <div className="p-4">
                 <div className="flex items-start gap-3">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-light-purple text-primary">
                     <Icon name="people" size={20} />
@@ -99,6 +106,7 @@ export default function GroupsPage() {
                   >
                     {g.joined ? "Joined ✓" : "Join"}
                   </button>
+                </div>
                 </div>
               </div>
             ))}
@@ -155,7 +163,7 @@ function RequestGroupModal({ onClose, canSubmit }: { onClose: () => void; canSub
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-2xl border border-line bg-card p-5" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-2xl border border-line bg-card shadow-soft p-5" onClick={(e) => e.stopPropagation()}>
         {done ? (
           <div className="text-center">
             <h2 className="text-heading font-bold text-ink">Proposal sent 💜</h2>

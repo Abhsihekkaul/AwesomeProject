@@ -1,0 +1,301 @@
+// AUTO-MIRRORED from HealingSathiBackend/src/data/tipsSeed.ts — keep in sync.
+// The demo tips library (signed-out mode) + the type both tips screens share.
+// Live mode fetches the same 20 articles from the backend's lazy-seeded copy.
+
+export type Tip = {
+  id: string;
+  type: string;
+  title: string;
+  summary: string;
+  author: string;
+  condition: string;
+  duration: string;
+  content: string[];
+};
+
+const RAW = [
+  {
+    type: "Article",
+    title: "Pacing 101: escape the boom-and-bust cycle",
+    summary: "Why doing 70% of what you can on good days protects your bad days.",
+    author: "Dr. Sarah Chen",
+    condition: "Fibromyalgia",
+    duration: "4 min read",
+    content: [
+      "On a good day, the temptation is to do everything: the laundry, the errands, the catch-up work, the social visit. Then the crash comes, and the next three days are lost to it. Clinicians call this the boom-and-bust cycle, and it is one of the most common patterns in fibromyalgia and other energy-limiting conditions.",
+      "Pacing breaks the cycle by capping your good days. The working rule: estimate what you could do today, then deliberately do about 70% of it. That unspent 30% is not wasted — it is the buffer that keeps tomorrow usable. Over weeks, many people find their baseline slowly rises because they stop paying the crash tax.",
+      "Practical ways in: break tasks into 20-minute blocks with sit-down breaks between them; alternate physical, mental, and social activities rather than stacking the same kind; and decide your stopping point before you start, not when you feel tired — by then it is usually too late.",
+      "Pacing is a skill, and the first weeks feel frustratingly slow. Track your activity and symptoms for a fortnight (the Healing Diary works well for this) and look for your personal thresholds. And if your energy pattern changes suddenly, bring the diary to your doctor — that data is gold in a ten-minute appointment.",
+    ],
+  },
+  {
+    type: "Photo Guide",
+    title: "Desk ergonomics for flare-up days",
+    summary: "Set up your workspace to spend less energy sitting.",
+    author: "Dr. Robert Vance",
+    condition: "Fibromyalgia",
+    duration: "2 min",
+    content: [
+      "Sitting is not rest — held badly, it is isometric exercise you never signed up for. On flare days, a poor desk setup quietly drains the energy you were trying to save.",
+      "The checklist: screen top at eye height (stack books under a laptop); elbows at 90 degrees resting on the desk or armrests; feet flat on the floor or a box; lower back supported by the chair or a rolled towel. Every joint the chair holds is a joint your muscles don't have to.",
+      "Add a movement anchor: every 30 minutes, stand, roll your shoulders, and take three slow breaths before sitting back down. A timer feels silly for exactly two days, and then it becomes the most protective habit of your workday.",
+    ],
+  },
+  {
+    type: "Video",
+    title: "5 gentle bed stretches for morning stiffness",
+    summary: "Follow along before you get up — no equipment needed.",
+    author: "Dr. Robert Vance",
+    condition: "Chronic Pain",
+    duration: "6 min watch",
+    content: [
+      "Morning stiffness eases faster with motion that starts *before* you stand up. These five stretches are done lying or sitting on the bed, and none of them should hurt — mild pulling is the target, pain is the stop signal.",
+      "The sequence: (1) knee-to-chest, one leg at a time, five slow breaths each; (2) lying spinal twist, knees dropping gently to each side; (3) cat-cow on all fours or seated; (4) seated neck half-circles, ear toward shoulder; (5) ankle pumps and wrist circles while you plan your day.",
+      "Go at half the speed you think you should. The goal is to warm the joints and wake the nervous system gently, not to achieve a range-of-motion record before breakfast. If any movement consistently worsens your pain, skip it and mention it at your next appointment.",
+    ],
+  },
+  {
+    type: "Article",
+    title: "Talking to your doctor about pain that moves",
+    summary: "How to describe wandering pain so it gets taken seriously.",
+    author: "Dr. Anna Kowalski",
+    condition: "Chronic Pain",
+    duration: "5 min read",
+    content: [
+      "Pain that migrates — hips today, shoulders tomorrow — is real, common in central sensitisation, and notoriously hard to describe in a short appointment. Vague descriptions get vague answers, so preparation is your best tool.",
+      "Keep a two-week log with four columns: where it hurt, what it felt like (burning, aching, stabbing, electric), what you were doing in the hours before, and what — if anything — eased it. Patterns you cannot see day-to-day become obvious on paper, and doctors act on patterns.",
+      "In the room, lead with function, not adjectives: \"On bad days I cannot open jars or climb the stairs\" lands harder than \"it hurts a lot.\" Ask directly: \"What diagnoses are we trying to rule in or out?\" — it politely signals that you expect a plan, not just sympathy.",
+      "If you leave feeling dismissed, that is information too. A second opinion is not disloyalty; it is standard practice for complex pain. Your record travels with you, and the log you kept makes the second conversation twice as productive.",
+    ],
+  },
+  {
+    type: "Article",
+    title: "Understanding blood sugar spikes after meals",
+    summary: "The order you eat food in matters more than you think.",
+    author: "Dr. Marcus Williams",
+    condition: "Diabetes",
+    duration: "5 min read",
+    content: [
+      "Two people can eat the same plate and see very different glucose curves — and one of the levers is simply the order the food goes in. Vegetables and protein eaten before starch slow stomach emptying, which flattens the spike that follows.",
+      "The practical version: start with the salad or vegetables, move to the protein, and save the rice, bread, or potatoes for last. Studies on this \"food order\" effect show meaningfully lower post-meal peaks with zero change to what is actually on the plate.",
+      "Two more flattening tools: a 10–15 minute walk after eating (your muscles pull glucose out of the blood without insulin's help), and pairing any carbohydrate snack with protein or fat rather than eating it alone.",
+      "None of this replaces your medication plan — it stacks on top of it. If you use a glucose meter or CGM, experiment for a week and watch your own curves; your body will tell you which habits move your numbers. Bring surprises to your care team.",
+    ],
+  },
+  {
+    type: "Photo Guide",
+    title: "Plate method: portioning without weighing",
+    summary: "One image to plan every diabetic-friendly meal.",
+    author: "Dr. Priya Patel",
+    condition: "Diabetes",
+    duration: "2 min",
+    content: [
+      "Carb counting works, but it exhausts a lot of people into quitting. The plate method trades precision for consistency — and consistency is what your glucose actually responds to.",
+      "Picture a standard dinner plate: half of it non-starchy vegetables (greens, beans, tomatoes, cauliflower), one quarter lean protein (fish, chicken, tofu, eggs, dal), one quarter carbohydrate (rice, roti, potatoes, pasta). Water or unsweetened tea alongside.",
+      "That is the whole system. It survives restaurants, weddings, and tired weeknights because there is nothing to weigh or look up. Use it as the default, and save your detailed counting energy for the meals that genuinely need it.",
+    ],
+  },
+  {
+    type: "Article",
+    title: "Post-exertional malaise: plan your energy envelope",
+    summary: "Track, predict, and respect your limits while recovering.",
+    author: "Dr. James Lin",
+    condition: "Long COVID",
+    duration: "7 min read",
+    content: [
+      "Post-exertional malaise (PEM) is the hallmark that separates Long COVID fatigue from ordinary tiredness: symptoms crash 12–48 hours *after* exertion, not during it. That delay is why \"just push a little more each day\" advice so often backfires here.",
+      "The energy envelope approach: your usable energy each day is a budget, and PEM is the overdraft fee — charged with interest, one to two days later. The work is learning the size of today's envelope and staying inside it, even when you feel fine in the moment. Feeling fine during activity is not evidence you are inside the envelope; PEM's delay hides the cost.",
+      "Track three things daily for two weeks: what you did (physical, cognitive, and emotional exertion all count), how you felt that evening, and how you felt two mornings later. Most people find a repeatable threshold — a number of hours upright, a type of task, a heart-rate zone — beyond which the crash reliably follows.",
+      "Once you know the threshold, plan backwards from it: hard tasks early in the day, rest *before* you are tired (pre-emptive rest is the single most protective habit), and one planned recovery day after unavoidable big days. Graded activity increases only make sense once crashes have stopped for several weeks — and ideally with a clinician who understands PEM guiding the steps.",
+    ],
+  },
+  {
+    type: "Article",
+    title: "Brain fog at work: scripts and workarounds",
+    summary: "Meeting notes, task anchors and the art of the graceful pause.",
+    author: "Dr. James Lin",
+    condition: "Long COVID",
+    duration: "5 min read",
+    content: [
+      "Brain fog is not a character flaw — it is a measurable processing-speed and working-memory deficit, and it responds to the same accommodations any cognitive load problem does: externalise, single-task, and schedule around your best hours.",
+      "Externalise everything: one running document per project, decisions written down the moment they are made, meetings recorded or summarised immediately. The goal is a workday where remembering is optional because everything important lives outside your head.",
+      "Have two scripts ready. For the mid-sentence blank: \"Let me come back to that thought — carry on.\" For the overloaded meeting: \"I want to give this a proper answer; can I confirm by email this afternoon?\" Both are normal professional sentences; nobody hears them as symptoms.",
+      "Guard your peak window — most people with fog have two or three genuinely sharp hours a day. Spend them on the work that actually needs your brain, and push email, admin, and routine calls into the fog hours. If fog is worsening rather than plateauing, tell your doctor; trajectory matters diagnostically.",
+    ],
+  },
+  {
+    type: "Video",
+    title: "4-7-8 breathing, guided",
+    summary: "The technique our community recommends most for panic moments.",
+    author: "Dr. Fatima Al-Sayed",
+    condition: "Anxiety",
+    duration: "3 min watch",
+    content: [
+      "When panic spikes, your breath is the one lever of the nervous system you can grab directly. The 4-7-8 pattern works because the long exhale activates the parasympathetic brake — it is physiology, not positive thinking.",
+      "The pattern: breathe in quietly through the nose for a count of 4, hold for 7, exhale slowly through pursed lips for 8. The exhale should feel like air leaking from a tyre — slow and controlled. Four rounds is one set; that is usually enough to feel the shift.",
+      "Two notes from practice: dizziness means your counts are too aggressive — shrink them to 3-5-6 and keep the *ratio* rather than the numbers. And the technique works far better if you also practise it calm, twice a day, so the pathway is warm when you actually need it.",
+    ],
+  },
+  {
+    type: "Article",
+    title: "Grounding techniques for health anxiety",
+    summary: "Three exercises to interrupt symptom-checking spirals.",
+    author: "Dr. Sarah Chen",
+    condition: "Anxiety",
+    duration: "5 min read",
+    content: [
+      "Health anxiety runs on a loop: notice a sensation, scan for danger, find something (you always find something), scan harder. Grounding techniques work by yanking attention out of the loop and into the present, where the sensory world is boringly safe.",
+      "5-4-3-2-1: name five things you can see, four you can touch, three you can hear, two you can smell, one you can taste. Say them out loud if you can. The exercise is mildly tedious — that is the point; tedium is incompatible with panic.",
+      "Temperature shift: hold something cold (an ice cube, a cold can) or splash cold water on your face. The dive reflex slows your heart rate mechanically. Feet on floor: press both feet down hard for ten seconds, release, repeat — it moves attention to the largest, calmest signal your body has.",
+      "Grounding manages the spiral; it does not treat the anxiety underneath. If checking, reassurance-seeking, or symptom-googling is eating hours of your week, that is exactly what CBT for health anxiety is built for — and it has some of the best outcomes in the entire anxiety literature. Asking for that referral is a strength move.",
+    ],
+  },
+  {
+    type: "Article",
+    title: "Sleep hygiene that actually works with chronic pain",
+    summary: "Position, temperature, and timing adjustments that help.",
+    author: "Dr. Anna Kowalski",
+    condition: "Sleep",
+    duration: "6 min read",
+    content: [
+      "Standard sleep hygiene lists assume the only thing keeping you awake is your phone. With chronic pain, the list needs rebuilding: the goal is to remove every obstacle *except* the pain, so the pain has to work alone.",
+      "Position is the first lever. Side sleepers: pillow between the knees to unload the hips and lower back. Back sleepers: pillow under the knees. Shoulder pain: hug a pillow to keep the top arm from dragging the joint forward. Expect to spend a week experimenting — write down what you tried.",
+      "Run the bedroom cool (18–20°C); pain processing is worse when you are too warm, and deep sleep needs a falling core temperature. Keep the wake-up time fixed even after a terrible night — consistency at the wake end trains the clock far more than bedtime discipline does.",
+      "The 20-minute rule still applies, pain edition: if you have been awake and hurting for what feels like 20 minutes, get up, keep lights dim, do something genuinely boring, and return when drowsy. Beds must stay associated with sleep, not with lying-awake-hurting. If pain wakes you at the same hour nightly, tell your doctor — timing patterns can point at causes.",
+    ],
+  },
+  {
+    type: "Article",
+    title: "Caffeine, naps and your sleep debt",
+    summary: "How to use both without wrecking tonight's sleep.",
+    author: "Dr. Anna Kowalski",
+    condition: "Sleep",
+    duration: "4 min read",
+    content: [
+      "Caffeine and naps are tools, and like all tools they have a right and a wrong grip. Used deliberately, both can rescue a bad-sleep day without stealing from the next night.",
+      "Caffeine's half-life is five to six hours, longer if you are on certain medications — a 4 pm coffee is still half-present at 10 pm. The practical cutoff for most people is eight hours before bed. And caffeine on top of real sleep deprivation masks impairment more than it removes it; treat it as a loan, not income.",
+      "Naps: keep them to 20 minutes (set an alarm) and before 2 pm. Twenty minutes skims the light stages and leaves you refreshed; forty drops you into deep sleep and you wake groggier than you started, having also shaved pressure off tonight's sleep.",
+      "If you need caffeine all day and naps every day just to function, that is not a habit problem — it is a sleep-quality signal worth investigating properly. Sleep apnoea in particular is wildly underdiagnosed and very treatable; one conversation with your doctor can start that.",
+    ],
+  },
+  {
+    type: "Article",
+    title: "Migraine triggers: keeping an honest diary",
+    summary: "Most 'triggers' are actually early symptoms — here's how to tell.",
+    author: "Dr. Fatima Al-Sayed",
+    condition: "Migraine",
+    duration: "5 min read",
+    content: [
+      "Chocolate cravings, yawning, neck stiffness, light sensitivity — many famous migraine \"triggers\" are actually the *prodrome*: the attack has already started, and the craving is a symptom, not a cause. Confusing the two leads people to restrict half their diet for nothing.",
+      "An honest diary records forwards, not backwards. Each day, log sleep hours, meals and timing, stress level, weather if you are curious, and hormonal cycle where relevant — *before* you know whether an attack is coming. After three months, look for what reliably preceded attacks by a day or more. That is a trigger. What appeared six hours before is probably prodrome.",
+      "The triggers with the strongest evidence are unglamorous: skipped meals, dehydration, sleep schedule changes (both directions — weekend lie-ins count), and stress *let-down* (the Saturday migraine after a hard week). Alcohol, particularly red wine, earns its reputation for a subset of people.",
+      "Bring the diary to your appointment. Attack frequency is the number that decides whether preventive treatment makes sense, and the modern preventive options are considerably better than the folklore about them. More than four migraine days a month is worth that conversation.",
+    ],
+  },
+  {
+    type: "Video",
+    title: "A dark-room rescue routine for migraine attacks",
+    summary: "What to set up now, so the next attack is less brutal.",
+    author: "Dr. Fatima Al-Sayed",
+    condition: "Migraine",
+    duration: "4 min watch",
+    content: [
+      "Mid-attack is the worst time to hunt for medication, water, and an eye mask. A rescue kit assembled on a good day turns the first ten minutes of an attack — the minutes that most influence how bad it gets — from a scramble into a routine.",
+      "The kit, kept in one place: your acute medication (taken *early* — most acute treatments work dramatically better in the first 30–60 minutes), a full water bottle, an eye mask, earplugs, a cold pack in the freezer, and something plain to eat, since nausea plus an empty stomach feed each other.",
+      "The routine: medication at first clear sign, water, cold pack on forehead or neck — whichever your body prefers — then the darkest, quietest room available. Set a timer and lie down without your phone; screens fight the recovery you are trying to buy.",
+      "If attacks routinely last beyond a day, or your acute medication is needed more than two or three days a week, take that pattern to your doctor — frequent acute-medication use can itself perpetuate headaches, and there are better exits from that loop than willpower.",
+    ],
+  },
+  {
+    type: "Article",
+    title: "Joint protection: work with your arthritis, not against it",
+    summary: "Small technique changes that spare your joints all day.",
+    author: "Dr. Marcus Williams",
+    condition: "Arthritis",
+    duration: "5 min read",
+    content: [
+      "Joint protection is not about doing less — it is about doing the same things with better mechanics, so each joint takes the load it was built for and no more.",
+      "The core principles: use the largest joint that can do the job (carry bags on your forearm or shoulder, not your fingers; push doors with your hip). Avoid a tight sustained grip — fat pens, jar openers, and two hands on the kettle exist for a reason. Slide instead of lift wherever a surface allows it.",
+      "Distribute and alternate: heavy tasks split into lighter trips, gripping tasks broken by stretch breaks, and the day's hard jobs scheduled for the hours your joints are most cooperative — for most people with inflammatory arthritis, that is not first thing in the morning.",
+      "Stiffness after rest eases with gentle range-of-motion movement, and regular strengthening around a joint is one of the best-evidenced protections it has — physiotherapists build programmes for exactly this. New swelling, heat, or a joint that suddenly will not bear weight is a different category: that is a call to your care team, not a push-through.",
+    ],
+  },
+  {
+    type: "Photo Guide",
+    title: "Warm hands in the morning: a 3-minute routine",
+    summary: "Wake stiff hands gently before asking them to work.",
+    author: "Dr. Marcus Williams",
+    condition: "Arthritis",
+    duration: "2 min",
+    content: [
+      "Stiff morning hands respond to warmth plus motion — in that order. Three minutes before breakfast pays back all day.",
+      "Minute one: warmth. Run the wrists and hands under comfortably warm water, or wrap them around a hot mug. Warmth loosens the synovial fluid that stiffened overnight.",
+      "Minutes two and three: motion, slow and painless. Open and close the fists five times; touch thumb to each fingertip; spread the fingers wide and release; roll the wrists both directions. Nothing should hurt — you are lubricating, not stretching.",
+      "If one joint stays hot, swollen, or newly misshapen, photograph it in good light and show your rheumatology team — morning photos of flares are genuinely useful clinical evidence.",
+    ],
+  },
+  {
+    type: "Article",
+    title: "The low-and-slow start: exercise with depression",
+    summary: "Why 'go for a run' is bad advice, and what works instead.",
+    author: "Dr. Priya Patel",
+    condition: "Depression",
+    duration: "5 min read",
+    content: [
+      "Exercise genuinely helps depression — the evidence is strong. But the standard advice fails because it prescribes amounts designed for motivated people, and depression's core symptom is that motivation is broken. The fix is to shrink the ask until motivation is unnecessary.",
+      "Start insultingly small: put on your shoes and step outside. That is the whole task. If more happens, fine; if not, the task succeeded, because the goal at this stage is rebuilding the link between intending and doing — not fitness. Streaks of tiny wins restore that link faster than occasional heroic efforts.",
+      "Attach movement to an existing anchor rather than a feeling: after morning tea, five minutes of walking. Feelings are unreliable schedulers in depression; anchors are not. Outdoors beats indoors when possible — daylight has its own mood effect, especially in the morning.",
+      "Treat exercise as one tool alongside treatment, never as a test of character or a replacement for it. If you are struggling to start even the tiny version, that is useful information for your doctor or therapist — dosing the first step is exactly the kind of problem they are for.",
+    ],
+  },
+  {
+    type: "Article",
+    title: "The evening spiral: building a shutdown ritual",
+    summary: "Rumination loves an unstructured evening. Give it less room.",
+    author: "Dr. Sarah Chen",
+    condition: "Depression",
+    duration: "4 min read",
+    content: [
+      "For many people with depression, evenings are the hard part: the day's structure dissolves, and rumination expands to fill the space. A shutdown ritual is scaffolding for exactly those hours — decided once, so no nightly willpower is required.",
+      "Build it from three blocks. Closure: a two-minute note of anything unresolved from today and one intention for tomorrow — parked on paper, not circling in your head. Comfort: one reliably pleasant, low-effort activity (a shower, a show, tea, a call) — scheduled, because in depression pleasant things stop volunteering. Wind-down: lights lower, screens dimmer, same order every night, so your body learns the off-ramp.",
+      "Keep the whole thing under an hour and expect it to feel mechanical at first — mechanical is fine. The ritual is not trying to make you happy; it is trying to make the evening *shorter and softer* so tonight's sleep can do its work.",
+      "If the spiral includes thoughts of harming yourself, that is beyond what any routine should carry alone — tell your doctor, your therapist, or a crisis line. In India, call or WhatsApp Tele-MANAS at 14416; it is free and open around the clock.",
+    ],
+  },
+  {
+    type: "Article",
+    title: "IBS and the gut-brain loop: calming both ends",
+    summary: "Why stress management is gut management, and where to start.",
+    author: "Dr. James Lin",
+    condition: "Gut Health",
+    duration: "6 min read",
+    content: [
+      "The gut and brain talk constantly over the vagus nerve, and in IBS the conversation is turned up too loud in both directions: stress triggers symptoms, symptoms trigger stress. This is not \"it's in your head\" — it is a real feedback loop with two ends you can work on.",
+      "The gut end: eat at regular times (the gut loves rhythm), chew slowly, and keep a simple food-and-symptom log for a few weeks before cutting anything major. Restrictive diets like low-FODMAP genuinely help many people, but they are diagnostic tools meant to be run *with* a dietitian and then re-expanded — not permanent eating plans.",
+      "The brain end: any practice that downshifts the nervous system helps the gut directly — slow breathing before meals, regular walks, adequate sleep. Gut-directed hypnotherapy sounds implausible and has surprisingly strong trial evidence; several clinically-validated app versions now exist.",
+      "Know the red flags that mean this is a doctor conversation, not a self-management one: blood in stool, unintended weight loss, symptoms that wake you at night, or onset after 50. IBS is common, but it is a diagnosis your clinician makes after ruling those out — not one to self-assign.",
+    ],
+  },
+  {
+    type: "Article",
+    title: "Fibre, gently: upgrading your gut without the bloat",
+    summary: "How to add fibre in a way your gut will actually accept.",
+    author: "Dr. Priya Patel",
+    condition: "Gut Health",
+    duration: "4 min read",
+    content: [
+      "Fibre is the best-evidenced everyday tool for gut health — and the most common reason people give up on it is going too fast. A gut used to 15 grams a day treats a sudden 30 as an invasion, and answers with gas and bloating.",
+      "Go up by roughly five grams a week: one extra fruit, a handful of nuts, swapping white bread for whole grain — one change at a time, so you can tell what your gut liked. Soluble fibre (oats, bananas, cooked vegetables, psyllium) is usually the gentler starting family; rough bran is the advanced class.",
+      "Water is the silent partner — fibre without fluid can worsen constipation rather than fix it. And movement counts: a daily walk is measurably good for gut transit.",
+      "Expect two to four weeks of adjustment as your gut bacteria retool for the new menu; mild extra gas early on is the sound of that renovation, not failure. If pain, bleeding, or severe symptoms appear, stop escalating and talk to your doctor.",
+    ],
+  },
+];
+
+export const DEMO_TIPS: Tip[] = RAW.map((t, i) => ({
+  ...t,
+  content: [...t.content],
+  id: `t${i + 1}`,
+}));
+
+export const demoTipById = (id: string) => DEMO_TIPS.find((t) => t.id === id) ?? null;

@@ -55,7 +55,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
 
   return (
     <div className="mx-auto max-w-xl">
-      <div className="rounded-2xl border border-line bg-card p-5">
+      <div className="rounded-2xl border border-line bg-card shadow-soft p-5">
         <h1 className="text-heading font-bold text-ink">Edit post</h1>
         {error ? <p className="mt-3 text-step font-medium text-danger">{error}</p> : null}
         {!isAuthenticated ? (

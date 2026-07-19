@@ -108,6 +108,7 @@ Every app component gets a web sibling with the same name, so the codebases rhym
 | `PostCard` (+ ⋯ menu, reactions) | `<PostCard>` | Identical layout; hover states added; ⋯ menu becomes a dropdown |
 | `ImageCarousel` | `<ImageCarousel>` | Arrows on hover + dots; swipe on touch |
 | `CommentsSheet` / `CommentItem` | `<CommentThread>` | Not a bottom sheet on desktop — comments render inline under the post (Facebook-style); bottom sheet only on mobile web |
+
 | `ShareSheet` (quick row + picker) | `<ShareDialog>` | Modal dialog; same top-5 + multi-select picker + "copy link" (links are REAL on web — see §6) |
 | `UserAvatar` | `<UserAvatar>` | Initials fallback + photo, identical colors |
 | `ChatMessageBanner` | `<Toast>` + browser `Notification` | Web can also notify when the tab is in the background — better than the app until push lands |
@@ -340,16 +341,235 @@ _Same convention as `pendingTask.md`: `[x]` done · `[~]` in progress · `[ ]` p
 Every build session updates this section (and only this section), so the doc above
 stays the stable blueprint while this is the heartbeat._
 
-**Status (2026-07-18, end of session): W1–W5 CODE COMPLETE. This session:
-Google Identity Services wired into the login button (dormant until the web
-OAuth client id exists), block/unblock UI on profiles, Lighthouse accessibility
-100 (login/signup/tips), pre-existing lint errors in the call files fixed.
-Build green (26 routes), lint 0 errors.**
+**Status (2026-07-18, session 2): app↔web PARITY AUDIT run and the three gaps
+it found are CLOSED — (1) EditProfileDialog on /profile (name + the app's 6
+named avatar colors + conditions chips, one PATCH /auth/me; UserAvatar now
+honors avatarColor everywhere it's passed), (2) /welcome 3-step post-signup
+setup (ProfileName → HealthJourney w/ the app's 102-condition list →
+Privacy & safety; signup now routes here; unlike the app's visual-only
+screens it actually persists), (3) Language picker (6 langs, same
+healingsathi:language key) in /settings. Deliberately NOT ported: onboarding
+slide carousel (marketing site covers it) and the app's dead public-profile/
+anonymous-posts toggles (no backend fields — the /welcome step 3 shows the
+real notifyOnMessages toggle instead). Build green (27 routes), lint 0.
+NOTE for the app backlog: the app's profileSetup screens save nothing —
+port the web /welcome persistence back.
+Also this session (user-reported, BOTH clients): unread chat rows now hide
+the last-message preview and show "N new messages" in primary instead
+(count badge on the right was already there); web list additionally
+refetches the moment the notifications engine's unreadTotal moves, so the
+badge/preview update instantly on a socket message instead of on the 15s
+poll.
+Also: "crispness" UI pass (user said the web app looked phika/flat) —
+theme-aware elevation tokens (--elev-soft/--elev-lift → shadow-soft/
+shadow-lift utilities) on all ~50 card surfaces, gradient primary Button w/
+press feedback, frosted TopBar+BottomTabs (backdrop-blur) w/ the gradient
+brand lockup, LeftNav active gradient indicator bar, PostCard hover-lift +
+fade-up entrance (reduced-motion respected), dialogs/menus animate in w/
+t
+shadow-lift, subtle brand radial glow behind the page. All token-based —
+both themes verified in the compiled bundle.
+Also: full consultant profile at /help/[id] (user found web only had cards):
+the app's ConsultantProfileScreen ported — hero w/ online dot + rating,
+About, Specializes In pills, info tiles (languages/rating/fee — all real
+fields; the app's fabricated "available today" tile was not carried),
+session-type + REAL next-6-days date picker + time slots that pre-fill the
+booking dialog, and the app's reviews section (seed reviews + write-a-review,
+local-only on both clients until a reviews endpoint exists). BookingModal
+extracted to components/ (shared by /help and the profile), consultant type/
+demo data to lib/consultants.ts; /help cards now link to the profile.
+28 routes, lint 0.**
+
+_Previous session: GIS login button (dormant until the web OAuth client id),
+block/unblock UI, Lighthouse a11y 100, call-file lint fixes._
+
+**Status (2026-07-18, session 3 — huge feature day, ALL VERIFIED: web lint 0 +
+build green, backend typecheck OK + serving):**
+- **Cover photos** everywhere: backend `coverUrl` (model + PATCH /auth/me +
+  public profile now also returns avatarUrl/coverUrl) · web /profile (cover
+  band + change/remove, avatar overlaps, ring) · web /user/[id] · app
+  ProfileScreen (tap cover → take/pick/remove) + UserProfileScreen.
+- **Profile upgrades**: My Sathis + My Groups directory cards on web /profile
+  (phones never see the desktop rail); **"Commented" tab** on BOTH clients
+  (new backend GET /posts/commented).
+- **🪔 DIYA — the signature feature** (see DiyaFeature.md): backend complete
+  (up to 20/day, 24h expiry, gentle streak, supports, diya-reply snapshot
+  cards in chat messages + socket emit). WEB complete: ring bar on /feed
+  (45s poll), light dialog (6 preset moods + custom word, photo), story
+  viewer w/ segmented multi-diya navigation, Hold, INLINE reply → lands in
+  the 1:1 chat with a diya reference card (rendered in the web thread).
+  APP: bar + light modal (custom mood ✓) + full-screen 30s blurred story
+  viewer + Hold + Message — but SEE PENDING 1: still on the old single-diya
+  shape.
+- **"2026 healing" design v2**: Nunito (next/font), aurora drift backdrop,
+  breathing ∞ brand (logo = purple infinity, web TopBar + BrandMark +
+  favicon icon.svg), softer radii, pill buttons, REDESIGNED account popup
+  (identity header → /profile, segmented theme control, icon rows),
+  ThemeToggle now the same segmented pills (emoji buttons removed).
+- Diya fixes from live testing: dialogs portal to <body> (the animated card
+  hijacked position:fixed — dialog opened off-center).**
+
+**Status (2026-07-19, session 4 — pending list worked through; all builds
+verified: app tsc 0 / lint 0 errors, web tsc 0 / lint 0 / build green
+(28 routes), backend tsc 0):**
+- **Item 0 CLOSED (app diya catch-up)**: (a)+(b) were already done in the
+  working tree (DiyaBar reads `mine.diyas[]`/`circle[].diyas[]`, segmented
+  story + inline reply); this session added (c): `diyaCard` reference strips
+  now render in ChatRoomScreen bubbles (snapshot outlives the 24h diya),
+  mapped from both the poll and the socket path — full parity with the web
+  thread. Root tsconfig now excludes the web projects (they have their own).
+- **Item 2 CLOSED (real i18n)**: shared en/hi/es dictionaries —
+  web `src/lib/i18n.tsx` (localStorage external store, hydration-safe) and
+  app `src/i18n/index.tsx` (LanguageProvider in App.tsx, AsyncStorage boot).
+  Chrome wired: web LeftNav/BottomTabs/TopBar/login/signup/settings; app tab
+  bar, SettingsScreen, AuthScreen, LanguageScreen (picker now applies
+  instantly via context). USER decisions: Spanish added as a full dictionary;
+  picker trimmed to en/hi/es only (no options that silently fall back).
+- **Item 3 CLOSED (tips search)**: the app screen already had search (stale
+  tracker); web /tips got it this session — then superseded by the redesign:
+- **Health Tips v2 (user-requested redesign, BOTH clients)**: tip-of-the-day
+  gradient hero (deterministic daily pick), quick-wins tinted strip (now on
+  web too), search + condition chips with counts, richer cards (type tile,
+  author avatar footer, condition pill, hover-lift on web), and tips matching
+  the user's saved conditions float first with a "For your journey" tag.
+- **Item 4 CLOSED (app brand refresh, bounded)**: infinity mark lockup on
+  AuthScreen (splash already had it), Primary/SecondaryButton → design-v2
+  pill radius. (Deeper design-v2 pass — aurora backdrops etc. — still open
+  as polish if wanted.)
+
+**Also session 4 (user-requested): HEALTH TIPS v3 — a real content product now.**
+- **Backend**: `content: [String]` on HealthTip + new `TipComment` model ·
+  `GET /tips/:id` (full article) · `GET/POST /tips/:id/comments` ·
+  `DELETE /tips/comments/:id` (own only) · 20-article launch library
+  (`src/data/tipsSeed.ts`, 10 conditions, doctor-voiced, 3–4 paragraphs each,
+  every article defers medication questions to the reader's clinician) —
+  lazy-seeded on first GET /tips; content-less legacy collections are
+  replaced once, dev-migration style. NOTE: restart the backend to pick up
+  the new routes.
+- **Every tip has its own page now** (like posts): web `/tips/[id]` + app
+  `TipDetailsScreen` (registered as TipDetails) — gradient hero, full article,
+  medical disclaimer, and a "Questions & experiences" thread: flat comments
+  w/ composer (Enter-to-post on web), delete-own, 20s poll, sign-in gate in
+  demo mode, demo thread seeded. Cards + the tip-of-the-day hero link/navigate.
+- **Personalization**: tips matching the user's saved conditions form a
+  "For your journey" section at the TOP of the first screen (rest under
+  "More tips"), and the tip-of-the-day hero prefers those tips too.
+- **Shared library**: clients carry the same 20 articles as the demo dataset
+  (`HealingSathiWebApp/src/lib/tips.ts` + `src/features/tips/tipsLibrary.ts`,
+  auto-mirrored from the backend seed — keep the three in sync).
+- Verified: backend tsc 0 · app tsc 0 + lint clean · web tsc 0 + lint clean +
+  build green (29 routes incl. /tips/[id]).
+
+**Also session 4: 🌱 HEALING HABITS — the gamification layer (user-designed,
+built on ALL THREE TIERS; verified: backend/app/web tsc 0, web build green).**
+
+_Complete structure (for future sessions):_
+- **Concept**: a daily health checklist everyone shares (drink 2–4L water,
+  sleep 7–8h, 30-min walk, 60s breathing, one extra fruit/veg). Ticking earns
+  **Healing Points** (1/task, +10 full-day bonus → a perfect day = 15;
+  retuned down from 10/+20 on user request, applied retroactively since
+  points are derived). Sathis see each other's
+  daily progress and **cheer** each other (once/day, arrives as a real
+  notification). Monthly progress strip + all-time points → **badge ladder**.
+  GENTLE BY DESIGN (diya philosophy): no streak-loss warnings, no red failure
+  states, no public leaderboard — you chase your own health, not other people.
+- **Backend** (`routes/habits.ts`, models `HabitDay` {user, day, completed[]}
+  unique/user/day + `HabitCheer` {from, to, day} unique/day):
+  `GET /habits/today` (tasks w/ done flags, points {today,month,total},
+  month strip, badge + nextBadge + full `levels` ladder) ·
+  `POST /habits/toggle {taskKey}` · `GET /habits/circle` (each sathi's
+  today n/5 + month points + cheeredToday) · `POST /habits/:userId/cheer`.
+  Points are ALWAYS DERIVED from HabitDay records — never stored, can't drift.
+  Task list is SERVER-OWNED → disease-specific checklists later are a
+  backend-only change (the planned next step of this feature).
+- **Badge ladder** (`utils/healingLevels.ts`, single source of truth):
+  🌱 Seedling 0 · 🌿 Sprout 150 · 🌸 Bloom 600 · ✨ Glow 1500 ·
+  🌟 Radiant 3000 · 🌞 Luminary 6000 (user-tuned twice — with a 15-pt perfect
+  day: Sprout ~2 weeks, Luminary ~a year+). Public profiles return
+  healingPoints + badge (`/users/:id/profile`). Demo constants in the four
+  client habit/badge components mirror these numbers — update together.
+- **UI**: HealingHabits card at the TOP of Health Tips (web
+  `components/HealingHabits.tsx`, app `features/habits/HealingHabitsCard.tsx`):
+  checklist w/ optimistic ticks, progress bar, points badge, month dot strip,
+  "Your circle today" row w/ Cheer buttons. Own profile gets the
+  HealingBadge card (points, level, progress-to-next, and the FULL ladder
+  grid — user request: everyone sees the missions ahead); public profiles
+  (web /user/[id] + app UserProfileScreen) show the badge pill.
+
+**Also session 4: group COVER PHOTOS (user request) + polish.**
+- Six illustrated healing-scene presets (misty mountains, rolling meadow,
+  ocean sunrise, zen stones, moonlit calm, lotus pond) — generated as SVG →
+  JPEG data-URIs (~10kb each), auto-mirrored in `HealingSathiBackend/src/data/
+  groupCovers.ts` + `HealingSathiWebApp/src/lib/groupCovers.ts` +
+  `src/features/groups/groupCovers.ts` (keep the three in sync). v1 plain
+  gradients were replaced after user feedback. NOTE: sips center-crops
+  (ignores --cropOffset) — scenes are authored in the middle band of a square
+  canvas so the crop is deterministic.
+- Backend: `Group.coverUrl` + `PATCH /groups/:id/cover` (members only; preset
+  key, image data-URI, or null→preset). `shapeGroup` ALWAYS returns a cover —
+  stored one, else a preset picked deterministically by group id — so every
+  EXISTING group got a cover with zero migration.
+- Web: cover band on /groups cards + /groups/[id] hero, "📷 Change cover"
+  (members) → picker dialog (presets grid + upload w/ canvas compression +
+  back-to-preset). App: GroupsScreen banners show live covers,
+  GroupDetailsScreen cover band + camera badge → bottom-sheet picker
+  (presets rail + pickImage upload + back-to-preset).
+- Home quick-link rows (Health Tips / Healing Diary) redesigned: tinted icon
+  tiles, no raw emoji, design-v2 card language (user said they looked weird).
+
+**Also session 4: 🔐 HEALING DIARY v2 — E2EE cloud diary, redesigned on BOTH
+clients (user request; replaces the device-only localStorage/AsyncStorage
+diary; verified: all tsc 0, web build+lint green, and a node test proving
+app↔web crypto compatibility end-to-end).**
+- **Zero-knowledge backend** (`routes/diary.ts`, models `DiaryMeta`
+  {user, salt, checkCiphertext, checkIv} + `DiaryEntry` {user, ciphertext,
+  iv}): `GET /diary` (meta null until set up + sealed pages) ·
+  `POST /diary/meta` (one-time passphrase setup) · `POST/PATCH/DELETE
+  /diary/entries`. The server stores blobs it can NEVER read; no recovery
+  path exists by design and the UI says so plainly.
+- **Crypto** (same wire format both clients — one passphrase opens the same
+  pages on phone + laptop, PROVEN by cross-decrypt tests):
+  key = PBKDF2-SHA256(passphrase, per-user salt, 100k iters) →
+  AES-256-GCM per entry. Web: WebCrypto (`lib/diaryCrypto.ts`). App:
+  pure-JS @noble/ciphers + @noble/hashes (`utils/diaryCrypto.ts`, NEW DEPS,
+  npm-only — no pod install needed); nonces are hash-derived unique (GCM
+  needs uniqueness, not unpredictability → no native RNG module required).
+  Passphrase verification is local: decrypt a stored sentinel ("key check").
+  Entry plaintext is JSON {text, mood?} — moods encrypted too.
+- **Redesigned UI** (both clients): dusk-gradient hero w/ "🔒 End-to-end
+  encrypted — only you hold the key" badge · create-passphrase flow w/ the
+  honest warning (forgotten passphrase = pages sealed forever) · unlock
+  screen · "Tonight's page" composer w/ 6 mood chips (encrypted with the
+  page) · sealed-page timeline w/ date + mood + Edit + "Burn" · Lock button ·
+  pages sealed under an OLD passphrase render as honest "can't be opened"
+  cards instead of crashing.
+- **Migration**: on first unlock, legacy device-only entries
+  (web `healingsathi:diary`, app `healingsathi.diaryEntries`) are encrypted,
+  uploaded, and cleared locally — with a "N pages were sealed into your
+  diary" notice.
 
 ### ⚡ PENDING — IN PRIORITY ORDER (start the next session here)
+0. **Healing Habits next steps**: (a) disease-specific checklists per user
+   conditions (server-side only — swap DEFAULT_TASKS for a per-condition map);
+   (b) habit reminders (needs push/notification scheduling); (c) points for
+   other healthy actions (lighting a diya, supportive comments) — decide the
+   economy carefully so support never feels farmed.
+1. **Diya video (30–60s)** — user-requested; blocked on cloud media storage
+   (base64 JSON can't carry a minute of video) + react-native-video/camera
+   native modules. Documented in DiyaFeature.md → Later.
+2. **TEST live** (unchanged): web↔phone call, §10 sync checklist — plus NEW:
+   diya round-trip phone↔laptop (incl. diya reply cards in BOTH chat threads),
+   cover-photo sync, i18n hi/es chrome on both clients.
+3. **DEPLOY** (unchanged): Render/Fly + Vercel + CNAME + prod CORS.
+4. **Google sign-in** (unchanged, USER): web OAuth client id.
+5. Report-post (blocked on backlog A2) + app items in pendingTask.md
+   (incl. app profileSetup screens save nothing — port /welcome persistence).
+6. i18n breadth: extend t() coverage beyond chrome (feed/chat/help strings).
+
+### (superseded) previous pending list
 1. **TEST the web↔phone call live** (code done, not yet exercised end-to-end):
    both servers running, web signed in as one user, phone as their sathi, ring
-   from the chat header. Note: browsers require HTTPS for mic/camera EXCEPT on
+   from the chat header. Note: browsers require HTTPS for mic/mera EXCEPT on
    localhost — testing from another device on the LAN needs the deploy (item 3)
    or an https tunnel.
 2. **Run the full §10 sync checklist** phone↔laptop (post/like/message/badge/
@@ -363,7 +583,7 @@ Build green (26 routes), lint 0 errors.**
    `GoogleSignInSetup.md` (updated with the web-app steps: Authorized
    JavaScript origins + the web env var + backend `GOOGLE_CLIENT_IDS`).
 5. Report-post (still blocked on the APP backlog A2 endpoint).
-6. APP-side items living in `pendingTask.md`: shimmer skeletons, chat-photo
+\6. APP-side items living in `pendingTask.md`: shimmer skeletons, chat-photo
    save-to-camera-roll, and the whole A–E backlog (report post, Apple sign-in,
    push notifications, cloud media storage).
 
@@ -496,4 +716,4 @@ first-class, not an afterthought._
       timer setState-in-effect → self-contained `CallTimer`)
 - [ ] Deploy: Vercel + `app.healingsathi.com` CNAME + backend `CORS_ORIGIN` +
       hosted backend URL in `NEXT_PUBLIC_API_HOST`
-- [ ] Final phone↔laptop sync checklist from §10 — all green (user + one session)
+- [ ] Final phone↔laptop sync checklist from §10 — all green (user + one session) 

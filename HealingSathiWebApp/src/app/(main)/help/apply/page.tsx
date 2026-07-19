@@ -65,7 +65,7 @@ export default function ApplyPage() {
 
   if (application && application.status !== "rejected") {
     return (
-      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card p-8 text-center">
+      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card shadow-soft p-8 text-center">
         <h1 className="text-heading font-bold text-ink">
           {application.status === "approved" ? "You're approved! 🎉" : "Application under review"}
         </h1>
@@ -91,7 +91,7 @@ export default function ApplyPage() {
         </p>
       ) : null}
 
-      <div className="space-y-4 rounded-2xl border border-line bg-card p-5">
+      <div className="space-y-4 rounded-2xl border border-line bg-card shadow-soft p-5">
         {error ? <p className="text-step font-medium text-danger">{error}</p> : null}
         <Field label="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Dr. ..." />
         <Field label="Specialty" value={specialty} onChange={(e) => setSpecialty(e.target.value)} placeholder="e.g. Clinical Psychologist" />

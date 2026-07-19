@@ -70,7 +70,7 @@ export const resourcesApi = {
   getMessages: async (chatId: string) => (await http.get(`/chats/${chatId}/messages`)).data.messages,
   // A message carries text, a photo (base64 data-URI), and/or a shared post
   // (sharedPostId → the other side receives a tappable post card).
-  sendMessage: async (chatId: string, body: { text?: string; image?: string; sharedPostId?: string }) =>
+  sendMessage: async (chatId: string, body: { text?: string; image?: string; sharedPostId?: string; diyaId?: string }) =>
     (await http.post(`/chats/${chatId}/messages`, body)).data.message,
   // Opening a chat zeroes its unread counter (feeds the Chats-tab badge).
   markChatRead: async (chatId: string) => (await http.post(`/chats/${chatId}/read`)).data,
@@ -115,6 +115,38 @@ export const resourcesApi = {
   // Health tips
   getHealthTips: async (condition?: string) =>
     (await http.get("/tips", { params: { condition } })).data.tips,
+  getHealthTip: async (id: string) => (await http.get(`/tips/${id}`)).data.tip,
+  getTipComments: async (id: string) => (await http.get(`/tips/${id}/comments`)).data.comments,
+  addTipComment: async (id: string, text: string) =>
+    (await http.post(`/tips/${id}/comments`, { text })).data.comment,
+  deleteTipComment: async (commentId: string) =>
+    (await http.delete(`/tips/comments/${commentId}`)).data,
+
+  // Healing Habits — the daily checklist + Healing Points (gamification)
+  getHabitsToday: async () => (await http.get("/habits/today")).data,
+  toggleHabit: async (taskKey: string) => (await http.post("/habits/toggle", { taskKey })).data,
+  getHabitsCircle: async () => (await http.get("/habits/circle")).data.circle,
+  cheerHabits: async (userId: string) => (await http.post(`/habits/${userId}/cheer`)).data,
+  setGroupCover: async (groupId: string, coverUrl: string | null) =>
+    (await http.patch(`/groups/${groupId}/cover`, { coverUrl })).data,
+
+  // E2EE Healing Diary — the server only ever sees ciphertext blobs
+  getDiary: async () => (await http.get("/diary")).data,
+  setupDiary: async (meta: { salt: string; checkCiphertext: string; checkIv: string }) =>
+    (await http.post("/diary/meta", meta)).data.meta,
+  addDiaryEntry: async (blob: { ciphertext: string; iv: string }) =>
+    (await http.post("/diary/entries", blob)).data.entry,
+  updateDiaryEntry: async (id: string, blob: { ciphertext: string; iv: string }) =>
+    (await http.patch(`/diary/entries/${id}`, blob)).data.entry,
+  deleteDiaryEntry: async (id: string) => (await http.delete(`/diary/entries/${id}`)).data,
+
+  getCommentedPosts: async () => (await http.get("/posts/commented")).data.posts,
+
+  // Diya — the daily check-in ritual (mood + optional thought/photo, sathi-visible)
+  getDiyas: async () => (await http.get("/diyas")).data,
+  lightDiya: async (body: { mood: string; note?: string; photo?: string | null }) =>
+    (await http.post("/diyas", body)).data,
+  supportDiya: async (id: string) => (await http.post(`/diyas/${id}/support`)).data,
 
   // Admin review queue (role "admin" only): group proposals + consultant applications
   getAdminReviews: async () => (await http.get("/admin/reviews")).data,

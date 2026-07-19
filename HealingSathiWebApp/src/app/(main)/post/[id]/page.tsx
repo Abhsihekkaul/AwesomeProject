@@ -37,7 +37,7 @@ export default function PostDetailsPage({ params }: { params: Promise<{ id: stri
 
   if (isLive && !post) {
     return (
-      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card p-8 text-center">
+      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card shadow-soft p-8 text-center">
         <h1 className="text-body font-bold text-ink">This post is gone</h1>
         <p className="mt-2 text-step text-muted">It may have been deleted by its author.</p>
       </div>
@@ -47,7 +47,7 @@ export default function PostDetailsPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="mx-auto max-w-xl space-y-5">
       {post ? <PostCard post={post} /> : null}
-      <div className="rounded-2xl border border-line bg-card p-4">
+      <div className="rounded-2xl border border-line bg-card shadow-soft p-4">
         <CommentThread postId={id} />
       </div>
     </div>

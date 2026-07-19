@@ -15,10 +15,13 @@ import { resourcesApi } from "@/api/resourcesApi";
 import { apiErrorMessage } from "@/api/http";
 import { tokenStorage } from "@/api/tokenStorage";
 import { cn } from "@/lib/cn";
+// The language store + en/hi chrome dictionary live in lib/i18n (same
+// healingsathi:language key as the app's LanguageScreen).
+import { LANGUAGES, setLanguage, useLanguage, useT } from "@/lib/i18n";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-line bg-card p-5">
+    <section className="rounded-2xl border border-line bg-card shadow-soft p-5">
       <h2 className="text-caption font-bold tracking-wide text-muted uppercase">{title}</h2>
       <div className="mt-3 space-y-3">{children}</div>
     </section>
@@ -35,6 +38,8 @@ export default function SettingsPage() {
   const { user, isAuthenticated, signOut, updateUser } = useAuth();
   const { notificationsEnabled, setNotificationsEnabled } = useChatNotifications();
   const { theme, setTheme } = useTheme();
+  const language = useLanguage();
+  const t = useT();
 
   const [openForm, setOpenForm] = useState<"password" | "email" | null>(null);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -102,9 +107,9 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <h1 className="text-heading font-bold text-ink">Settings</h1>
+      <h1 className="text-heading font-bold text-ink">{t("settings")}</h1>
 
-      <Section title="Appearance">
+      <Section title={t("appearance")}>
         <div className="flex gap-2">
           {(["system", "light", "dark"] as const).map((mode) => (
             <button
@@ -115,19 +120,43 @@ export default function SettingsPage() {
                 theme === mode ? "border-primary bg-primary text-white" : "border-line bg-page text-muted",
               )}
             >
-              {mode}
+              {mode === "system" ? t("themeSystem") : mode === "light" ? t("themeLight") : t("themeDark")}
             </button>
           ))}
         </div>
       </Section>
 
-      <Section title="Notifications">
+      <Section title={t("language")}>
+        <p className="text-caption text-muted">{t("languageHint")}</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {LANGUAGES.map((lang) => {
+            const active = language === lang.code;
+            return (
+              <button
+                key={lang.code}
+                onClick={() => setLanguage(lang.code)}
+                aria-pressed={active}
+                className={cn(
+                  "rounded-xl border p-3 text-left",
+                  active ? "border-primary" : "border-line",
+                )}
+              >
+                <span className="flex items-center justify-between">
+                  <span className="block text-step font-semibold text-ink">{lang.label}</span>
+                  {active ? <span className="text-step font-bold text-primary">✓</span> : null}
+                </span>
+                <span className="block text-caption text-muted">{lang.native}</span>
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+
+      <Section title={t("notificationsSection")}>
         <label className="flex items-center justify-between">
           <span>
-            <span className="block text-step font-medium text-ink">Chat messages</span>
-            <span className="block text-caption text-muted">
-              Popups & alerts when someone messages you (synced with the app)
-            </span>
+            <span className="block text-step font-medium text-ink">{t("chatMessages")}</span>
+            <span className="block text-caption text-muted">{t("chatMessagesHint")}</span>
           </span>
           <button
             role="switch"
@@ -150,7 +179,7 @@ export default function SettingsPage() {
 
       {isAuthenticated ? (
         <>
-          <Section title="Account">
+          <Section title={t("account")}>
             {formNotice ? <p className="text-step font-medium text-success">{formNotice}</p> : null}
             {formError ? <p className="text-step font-medium text-danger">{formError}</p> : null}
 
@@ -164,7 +193,7 @@ export default function SettingsPage() {
                 <Field label="New password" type="password" placeholder="At least 8 characters" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                 <div className="flex gap-2">
                   <Button onClick={submitPassword} disabled={busy}>{busy ? "Saving..." : "Update Password"}</Button>
-                  <Button variant="outline" onClick={() => setOpenForm(null)}>Cancel</Button>
+                  <Button variant="outline" onClick={() => setOpenForm(null)}>{t("cancel")}</Button>
                 </div>
               </div>
             ) : openForm === "email" ? (
@@ -173,31 +202,31 @@ export default function SettingsPage() {
                 <Field label="Your password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
                 <div className="flex gap-2">
                   <Button onClick={submitEmail} disabled={busy}>{busy ? "Saving..." : "Update Email"}</Button>
-                  <Button variant="outline" onClick={() => setOpenForm(null)}>Cancel</Button>
+                  <Button variant="outline" onClick={() => setOpenForm(null)}>{t("cancel")}</Button>
                 </div>
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" className="w-auto" onClick={() => { setOpenForm("password"); setFormNotice(null); }}>
-                  Change password
+                  {t("changePassword")}
                 </Button>
                 <Button variant="outline" className="w-auto" onClick={() => { setOpenForm("email"); setFormNotice(null); }}>
-                  Change email
+                  {t("changeEmail")}
                 </Button>
               </div>
             )}
           </Section>
 
-          <Section title="Blocked users">
+          <Section title={t("blockedUsers")}>
             {blocked.length === 0 ? (
-              <p className="text-step text-muted">Nobody is blocked.</p>
+              <p className="text-step text-muted">{t("nobodyBlocked")}</p>
             ) : (
               blocked.map((b) => (
                 <div key={b.id} className="flex items-center gap-3">
                   <UserAvatar name={b.name} size={34} />
                   <span className="flex-1 text-step text-ink">{b.name}</span>
                   <button onClick={() => unblock(b.id)} className="rounded-full bg-light-blue px-3.5 py-1.5 text-caption font-semibold text-muted hover:text-ink">
-                    Unblock
+                    {t("unblock")}
                   </button>
                 </div>
               ))
@@ -205,7 +234,7 @@ export default function SettingsPage() {
           </Section>
 
           {user?.role === "admin" ? (
-            <Section title="Admin">
+            <Section title={t("admin")}>
               <Link href="/admin" className="block text-step font-semibold text-primary hover:underline">
                 Review queue → approve group proposals & consultant applications
               </Link>
@@ -213,8 +242,8 @@ export default function SettingsPage() {
           ) : null}
         </>
       ) : (
-        <Section title="Account">
-          <p className="text-step text-muted">Demo mode — sign in to manage a real account.</p>
+        <Section title={t("account")}>
+          <p className="text-step text-muted">{t("demoAccountHint")}</p>
         </Section>
       )}
 
@@ -222,13 +251,13 @@ export default function SettingsPage() {
         onClick={handleSignOut}
         className="w-full rounded-2xl border border-danger bg-card py-3.5 text-step font-semibold text-danger hover:bg-light-blue"
       >
-        {isAuthenticated ? "Sign Out" : "Exit demo"}
+        {isAuthenticated ? t("signOut") : t("exitDemo")}
       </button>
 
       {isAuthenticated ? (
         <p className="text-center">
           <Link href="/settings/delete-account" className="text-caption text-muted underline hover:text-danger">
-            Delete my account
+            {t("deleteMyAccount")}
           </Link>
         </p>
       ) : null}

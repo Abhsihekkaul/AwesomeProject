@@ -65,9 +65,10 @@ export const SecondaryButton = ({ title, icon, onPress, style, size = "full" }: 
 };
 
 const styles = StyleSheet.create({
+  // Design v2: pill buttons, matching PrimaryButton and the web app.
   button: {
     height: moderateScale(58),
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,

@@ -45,7 +45,7 @@ export default function AdminPage() {
 
   if (user?.role !== "admin") {
     return (
-      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card p-8 text-center">
+      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card shadow-soft p-8 text-center">
         <h1 className="text-body font-bold text-ink">Admins only</h1>
         <p className="mt-2 text-step text-muted">This area is for the review team.</p>
       </div>
@@ -71,12 +71,12 @@ export default function AdminPage() {
         {loading ? (
           <Skeleton className="mt-2 h-28 w-full rounded-2xl" />
         ) : data.groupProposals.length === 0 ? (
-          <p className="mt-2 rounded-2xl border border-line bg-card p-5 text-center text-step text-muted">
+          <p className="mt-2 rounded-2xl border border-line bg-card shadow-soft p-5 text-center text-step text-muted">
             Nothing waiting. ✓
           </p>
         ) : (
           data.groupProposals.map((p) => (
-            <div key={p.id} className="mt-2 rounded-2xl border border-line bg-card p-4">
+            <div key={p.id} className="mt-2 rounded-2xl border border-line bg-card shadow-soft p-4">
               <h3 className="text-step font-bold text-ink">{p.condition}</h3>
               <p className="mt-1 text-step text-muted">{p.description}</p>
               <p className="mt-1 text-caption text-muted">
@@ -111,12 +111,12 @@ export default function AdminPage() {
         {loading ? (
           <Skeleton className="mt-2 h-28 w-full rounded-2xl" />
         ) : data.consultantApplications.length === 0 ? (
-          <p className="mt-2 rounded-2xl border border-line bg-card p-5 text-center text-step text-muted">
+          <p className="mt-2 rounded-2xl border border-line bg-card shadow-soft p-5 text-center text-step text-muted">
             Nothing waiting. ✓
           </p>
         ) : (
           data.consultantApplications.map((a) => (
-            <div key={a.id} className="mt-2 rounded-2xl border border-line bg-card p-4">
+            <div key={a.id} className="mt-2 rounded-2xl border border-line bg-card shadow-soft p-4">
               <h3 className="text-step font-bold text-ink">
                 {a.fullName} <span className="font-normal text-muted">· {a.specialty}</span>
               </h3>

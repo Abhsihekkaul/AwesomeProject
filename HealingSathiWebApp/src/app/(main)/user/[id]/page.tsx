@@ -16,10 +16,15 @@ type PublicProfile = {
   user: {
     id: string;
     name: string;
+    avatarColor?: string;
+    avatarUrl?: string | null;
+    coverUrl?: string | null;
     conditions: string[];
     memberSince: string;
     sathiCount: number;
     relation: "none" | "pending" | "sathi" | "self";
+    healingPoints?: number;
+    badge?: { level: number; name: string; icon: string };
   };
   posts: Post[];
   likedPosts: Post[];
@@ -58,7 +63,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
 
   if (!isAuthenticated) {
     return (
-      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card p-8 text-center">
+      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card shadow-soft p-8 text-center">
         <h1 className="text-body font-bold text-ink">Profiles are for members</h1>
         <p className="mt-2 text-step text-muted">Sign in to see who&apos;s behind a post.</p>
       </div>
@@ -76,7 +81,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
       }
     };
     return (
-      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card p-8 text-center">
+      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card shadow-soft p-8 text-center">
         <h1 className="text-body font-bold text-ink">{blockedName} is blocked</h1>
         <p className="mt-2 text-step text-muted">
           They can&apos;t message you or send you sathi requests, and neither of you sees the
@@ -95,7 +100,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
   if (loading) {
     return (
       <div className="mx-auto max-w-xl space-y-4">
-        <div className="h-40 animate-pulse rounded-2xl border border-line bg-card" />
+        <div className="h-40 animate-pulse rounded-2xl border border-line bg-card shadow-soft" />
         <SkeletonPostCard />
       </div>
     );
@@ -103,7 +108,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
 
   if (isLive && !profile) {
     return (
-      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card p-8 text-center">
+      <div className="mx-auto max-w-xl rounded-2xl border border-line bg-card shadow-soft p-8 text-center">
         <h1 className="text-body font-bold text-ink">Profile unavailable</h1>
         <p className="mt-2 text-step text-muted">This account may no longer exist.</p>
       </div>
@@ -153,13 +158,34 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      {/* Hero */}
-      <div className="rounded-2xl border border-line bg-card p-6 text-center">
-        <UserAvatar name={user.name} size={72} className="mx-auto" />
+      {/* Hero with cover */}
+      <div className="overflow-hidden rounded-2xl border border-line bg-card text-center shadow-soft">
+        <div className="relative h-28 bg-gradient-to-r from-primary/25 via-info/15 to-primary/25 sm:h-36">
+          {user.coverUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- covers are data-URIs
+            <img src={user.coverUrl} alt="" className="h-full w-full object-cover" />
+          ) : null}
+        </div>
+        <div className="p-6 pt-0">
+        <UserAvatar
+          name={user.name}
+          src={user.avatarUrl}
+          color={user.avatarColor}
+          size={72}
+          className="mx-auto -mt-9 ring-4 ring-card"
+        />
         <h1 className="mt-3 text-heading font-bold text-ink">{user.name}</h1>
         <p className="mt-1 text-caption text-muted">
           Member since {memberSince} · {user.sathiCount} {user.sathiCount === 1 ? "sathi" : "sathis"}
         </p>
+        {user.badge ? (
+          <p className="mt-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-light-purple px-3 py-1 text-caption font-bold text-primary">
+              {user.badge.icon} {user.badge.name} · Level {user.badge.level}
+              <span className="font-semibold text-muted">· ✨ {user.healingPoints ?? 0} pts</span>
+            </span>
+          </p>
+        ) : null}
         {user.conditions.length > 0 ? (
           <div className="mt-3 flex flex-wrap justify-center gap-2">
             {user.conditions.map((c) => (
@@ -203,6 +229,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
             Block {user.name.split(" ")[0]}
           </button>
         ) : null}
+        </div>
       </div>
 
       {/* Posts / Liked tabs */}
@@ -222,7 +249,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
       </div>
 
       {shown.length === 0 ? (
-        <p className="rounded-2xl border border-line bg-card p-6 text-center text-step text-muted">
+        <p className="rounded-2xl border border-line bg-card shadow-soft p-6 text-center text-step text-muted">
           Nothing here yet.
         </p>
       ) : (

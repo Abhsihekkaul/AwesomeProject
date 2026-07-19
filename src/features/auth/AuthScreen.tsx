@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -19,6 +20,7 @@ import imagePath from "../../constant/imagePath";
 import { GOOGLE_IOS_CLIENT_ID, GOOGLE_WEB_CLIENT_ID } from "../../api/config";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../theme/ThemeContext";
+import { useT } from "../../i18n";
 import { TextStyles } from "../../theme/typography";
 
 type AuthTab = "signin" | "signup";
@@ -40,6 +42,7 @@ const AuthScreen = ({ navigation }: any) => {
   const { signIn, signUp, signInWithGoogle } = useAuth();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
+  const t = useT();
 
   const isSignIn = tab === "signin";
 
@@ -144,8 +147,11 @@ const AuthScreen = ({ navigation }: any) => {
           // dismisses the keyboard on iOS — the sign-in button felt dead there.
           keyboardShouldPersistTaps="handled"
         >
+          {/* Design-v2 brand lockup: the infinity mark above the title (same ∞ the web TopBar and splash use). */}
+          <Image source={imagePath.InfinityMark} style={styles.brandMark} resizeMode="contain" />
+
           <Text style={styles.title}>
-            {isSignIn ? "Welcome back" : "HealingSathi"}
+            {isSignIn ? t("welcomeBack") : "HealingSathi"}
           </Text>
 
           <Text style={styles.subtitle}>
@@ -170,7 +176,7 @@ const AuthScreen = ({ navigation }: any) => {
               />
 
               <AppInput
-                label="Password"
+                label={t("password")}
                 value={signInForm.password}
                 onChangeText={(password) => setSignInForm((f) => ({ ...f, password }))}
                 placeholder="••••••••"
@@ -181,7 +187,7 @@ const AuthScreen = ({ navigation }: any) => {
                 style={styles.forgot}
                 onPress={() => navigation.navigate("ForgotPassword", { email: signInForm.email.trim() })}
               >
-                <Text style={styles.forgotText}>Forgot password?</Text>
+                <Text style={styles.forgotText}>{t("forgotPassword")}</Text>
               </Pressable>
 
               <PrimaryButton
@@ -299,6 +305,13 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet
     flexGrow: 1,
   },
 
+  brandMark: {
+    alignSelf: "center",
+    width: moderateScale(44),
+    height: moderateScale(44),
+    marginTop: moderateScale(6),
+    tintColor: colors.primary,
+  },
   title: {
     fontSize: TextStyles.title,
     fontWeight: "800",

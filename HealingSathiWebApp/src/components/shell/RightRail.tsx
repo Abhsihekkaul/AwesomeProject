@@ -52,7 +52,7 @@ export default function RightRail() {
 
   return (
     <aside className="flex flex-col gap-4 p-4">
-      <section className="rounded-2xl border border-line bg-card p-4">
+      <section className="rounded-2xl border border-line bg-card shadow-soft p-4">
         <h2 className="text-step font-bold text-ink">My Sathis</h2>
         {sathis.length === 0 ? (
           <p className="mt-2 text-caption text-muted">
@@ -90,7 +90,7 @@ export default function RightRail() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-line bg-card p-4">
+      <section className="rounded-2xl border border-line bg-card shadow-soft p-4">
         <h2 className="text-step font-bold text-ink">My Groups</h2>
         {groups.length === 0 ? (
           <p className="mt-2 text-caption text-muted">

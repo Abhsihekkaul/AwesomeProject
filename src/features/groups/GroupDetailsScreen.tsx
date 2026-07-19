@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { FlatList, LayoutAnimation, StyleSheet, Text, View, Pressable } from "react-native";
+import {
+  Alert,
+  FlatList,
+  Image,
+  LayoutAnimation,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  Pressable,
+} from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTheme } from "../../theme/ThemeContext";
 import { moderateScale, moderateVerticalScale, scale } from "react-native-size-matters";
@@ -16,6 +27,10 @@ import { useAuth } from "../../context/AuthContext";
 import { resourcesApi } from "../../api/resourcesApi";
 import { useLiveOrDemo } from "../../hooks/useLiveOrDemo";
 import { timeAgo } from "../../utils/timeAgo";
+import { apiErrorMessage } from "../../api/http";
+import { pickImageAsDataUri } from "../../utils/pickImage";
+import { GROUP_COVER_PRESETS } from "./groupCovers";
+import imagePath from "../../constant/imagePath";
 
 const initialsOf = (name: string) =>
   name
@@ -69,6 +84,26 @@ export default function GroupDetailsScreen() {
   const joined: boolean = route.params?.joined ?? true;
 
   const [tab, setTab] = useState<"Posts" | "Members" | "HealthTips" | "About">("Posts");
+
+  // Group cover: arrives with the directory data; members can change it
+  // (healing presets first, own photo second — same contract as the web).
+  const [coverUrl, setCoverUrl] = useState<string | null>(route.params?.coverUrl ?? null);
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false);
+  const [savingCover, setSavingCover] = useState(false);
+
+  const saveCover = async (value: string | null) => {
+    if (!groupId) return;
+    setSavingCover(true);
+    try {
+      const res = await resourcesApi.setGroupCover(groupId, value);
+      setCoverUrl(res.coverUrl);
+      setCoverPickerOpen(false);
+    } catch (err) {
+      Alert.alert("Couldn't change the cover", apiErrorMessage(err));
+    } finally {
+      setSavingCover(false);
+    }
+  };
 
   // This group's posts. Refetches on focus, so a post created via the FAB is
   // visible the moment you're back — this was the reported "posted to a group but
@@ -127,6 +162,18 @@ export default function GroupDetailsScreen() {
           </View>
         ) : null}
       </View>
+
+      {/* Cover — every live group has one; members can change it */}
+      {coverUrl ? (
+        <View style={styles.coverWrap}>
+          <Image source={{ uri: coverUrl }} style={styles.coverImage} />
+          {joined && groupId ? (
+            <Pressable style={styles.coverEditBtn} onPress={() => setCoverPickerOpen(true)} hitSlop={6}>
+              <Image source={imagePath.CameraIcon} style={styles.coverEditIcon} />
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
 
       {/* Meta Info */}
       <View style={styles.metaRow}>
@@ -281,6 +328,44 @@ export default function GroupDetailsScreen() {
         post={selectedSharePost}
         postUrl={selectedSharePost ? `https://healingstream.app/p/${selectedSharePost.id}` : undefined}
       />
+
+      {/* Cover picker: healing presets first, own photo second */}
+      {coverPickerOpen ? (
+        <Modal transparent animationType="slide" onRequestClose={() => setCoverPickerOpen(false)}>
+          <Pressable style={styles.coverBackdrop} onPress={() => setCoverPickerOpen(false)}>
+            <Pressable style={styles.coverSheet} onPress={() => {}}>
+              <Text style={styles.coverSheetTitle}>Group cover</Text>
+              <Text style={styles.coverSheetHint}>
+                Pick a healing scene, or add your own — calm imagery keeps the space gentle.
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetRow}>
+                {GROUP_COVER_PRESETS.map((p) => (
+                  <Pressable key={p.key} onPress={() => saveCover(p.key)} disabled={savingCover} style={styles.presetCell}>
+                    <Image source={{ uri: p.uri }} style={styles.presetThumb} />
+                    <Text style={styles.presetName}>{p.name}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+              <View style={styles.coverActionsRow}>
+                <Pressable
+                  style={styles.coverActionBtn}
+                  disabled={savingCover}
+                  onPress={async () => {
+                    const uri = await pickImageAsDataUri();
+                    if (uri) saveCover(uri);
+                  }}
+                >
+                  <Text style={styles.coverActionText}>Upload a photo</Text>
+                </Pressable>
+                <Pressable style={styles.coverActionBtn} disabled={savingCover} onPress={() => saveCover(null)}>
+                  <Text style={styles.coverActionText}>Use the preset</Text>
+                </Pressable>
+              </View>
+              {savingCover ? <Text style={styles.coverSaving}>Saving…</Text> : null}
+            </Pressable>
+          </Pressable>
+        </Modal>
+      ) : null}
     </ScreenWrapper>
   );
 }
@@ -309,6 +394,98 @@ const makeStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       fontWeight: "500",
       color: colors.text,
       marginRight: moderateScale(10),
+    },
+    coverWrap: {
+      borderRadius: radius.md,
+      overflow: "hidden",
+      marginBottom: moderateVerticalScale(10),
+    },
+    coverImage: {
+      width: "100%",
+      height: moderateScale(110),
+      resizeMode: "cover",
+    },
+    coverEditBtn: {
+      position: "absolute",
+      right: moderateScale(10),
+      bottom: moderateScale(10),
+      width: moderateScale(30),
+      height: moderateScale(30),
+      borderRadius: moderateScale(15),
+      backgroundColor: "rgba(0,0,0,0.45)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    coverEditIcon: {
+      width: moderateScale(15),
+      height: moderateScale(15),
+      resizeMode: "contain",
+      tintColor: "#FFFFFF",
+    },
+    coverBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.6)",
+      justifyContent: "flex-end",
+    },
+    coverSheet: {
+      backgroundColor: colors.card,
+      borderTopLeftRadius: radius.lg,
+      borderTopRightRadius: radius.lg,
+      padding: moderateScale(18),
+      paddingBottom: moderateScale(28),
+    },
+    coverSheetTitle: {
+      fontSize: TextStyles.subtitle,
+      fontWeight: "700",
+      color: colors.text,
+    },
+    coverSheetHint: {
+      fontSize: TextStyles.caption,
+      color: colors.mutedText,
+      marginTop: moderateVerticalScale(3),
+      marginBottom: moderateVerticalScale(12),
+    },
+    presetRow: {
+      gap: moderateScale(10),
+    },
+    presetCell: {
+      width: moderateScale(120),
+    },
+    presetThumb: {
+      width: moderateScale(120),
+      height: moderateScale(46),
+      borderRadius: radius.sm,
+      resizeMode: "cover",
+    },
+    presetName: {
+      fontSize: scale(10),
+      fontWeight: "600",
+      color: colors.mutedText,
+      textAlign: "center",
+      marginTop: moderateVerticalScale(3),
+    },
+    coverActionsRow: {
+      flexDirection: "row",
+      gap: moderateScale(10),
+      marginTop: moderateVerticalScale(14),
+    },
+    coverActionBtn: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.pill,
+      paddingVertical: moderateVerticalScale(9),
+      alignItems: "center",
+    },
+    coverActionText: {
+      fontSize: TextStyles.caption,
+      fontWeight: "700",
+      color: colors.text,
+    },
+    coverSaving: {
+      fontSize: TextStyles.caption,
+      color: colors.mutedText,
+      marginTop: moderateVerticalScale(8),
     },
     joinedPill: {
       backgroundColor: colors.lightPurple,
